@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>VodCoins Cloud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* --- ESTILOS (Mantenemos el diseño bonito) --- */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 80px; }
+        .full-screen-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f2027, #2c5364); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; }
+        .caja-central { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .btn-grande { background: #007bff; color: white; padding: 12px; width: 100%; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 15px; }
+        .btn-curso { width: 100%; padding: 15px; margin-bottom: 10px; background: #f8f9fa; border: 2px solid #ddd; border-radius: 10px; font-weight: bold; cursor: pointer; text-align: left; display: flex; align-items: center; }
+        .btn-curso:hover { background: #e2e6ea; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; display: none; }
+        .seccion { display: none; animation: fadeIn 0.4s; }
+        .seccion.activa { display: block; }
+        .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        nav { background: #333; position: fixed; bottom: 0; width: 100%; display: none; justify-content: space-around; padding: 10px 0; z-index: 500; }
+        nav button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; flex-grow: 1; }
+        .loading { font-style: italic; color: #666; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="pantalla-cursos" class="full-screen-bg">
+        <div class="caja-central">
+            <h1>☁️ VodCoins Online</h1>
+            <p style="color: #666;">Sistema en la Nube</p>
+            <div id="lista-botones-cursos">
+                <button class="btn-curso" onclick="seleccionarCurso('curso_8b')">🏐 8º Básico</button>
+                <button class="btn-curso" onclick="seleccionarCurso('curso_limites')">📈 Límites y Derivadas</button>
+                <button class="btn-curso" onclick="seleccionarCurso('curso_4to')">🎓 4º Matemática (S.V.)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pantalla-login" class="full-screen-bg" style="display: none;">
+        <div class="caja-central">
+            <button onclick="location.reload()" style="background:none; border:none; cursor:pointer;">← Volver</button>
+            <h2 id="titulo-login">Login</h2>
+            <select id="login-selector"><option>Cargando lista...</option></select>
+            <input type="password" id="login-pin" placeholder="CLAVE" style="text-align:center; font-size:20px; text-transform:uppercase;">
+            <button class="btn-grande" onclick="intentarLogin()">Entrar</button>
+            <p id="error-login" style="color:red; font-weight:bold; margin-top:10px;"></p>
+        </div>
+    </div>
+
+    <div class="container" id="app-container">
+        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>Hola, <strong id="lbl-nombre">Usuario</strong></div>
+            <div style="background: #eef; padding: 5px 10px; border-radius: 15px;">💰 <strong id="lbl-saldo">-</strong></div>
+        </div>
+
+        <div id="inicio" class="seccion activa">
+            <h2 style="text-align:center">Panel de Control</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="background:white; padding:20px; border-radius:10px; text-align:center" onclick="navegar('lista')">👥 Ver Curso</div>
+                <div style="background:white; padding:20px; border-radius:10px; text-align:center" onclick="navegar('transferencias')">💸 Transferir</div>
+            </div>
+            <button class="btn-grande" style="background:#dc3545; margin-top:30px" onclick="location.reload()">🔒 Salir</button>
+
+            <div id="zona-profe" style="display:none; margin-top:30px; border-top:1px solid #ccc; padding-top:20px;">
+                <h3>🔧 Configuración Nube</h3>
+                <p>Si es la primera vez, pulsa abajo para crear la base de datos en la nube.</p>
+                <button onclick="inicializarBaseDatosNube()" style="background:#28a745; color:white; padding:10px; border:none; border-radius:5px; width:100%;">🚀 Subir Datos Iniciales a la Nube</button>
+                <br><br>
+                <button onclick="mostrarClaves()" style="background:#17a2b8; color:white; padding:10px; border:none; border-radius:5px; width:100%;">🔑 Ver Claves</button>
+            </div>
+        </div>
+
+        <div id="lista" class="seccion">
+            <h2>Curso en Vivo</h2>
+            <div id="contenedor-lista">Loading...</div>
+        </div>
+
+        <div id="transferencias" class="seccion">
+            <h2>Realizar Transferencia</h2>
+            <form style="background:white; padding:20px; border-radius:10px;">
+                <label>Para:</label>
+                <select id="select-destino"></select>
+                <label>Monto:</label>
+                <input type="number" id="monto" placeholder="0">
+                <button type="button" class="btn-grande" onclick="realizarTransferencia()">Enviar</button>
+            </form>
+        </div>
+    </div>
+
+    <nav id="menu-inferior">
+        <button onclick="navegar('inicio')">🏠</button>
+        <button onclick="navegar('lista')">👥</button>
+        <button onclick="navegar('transferencias')">💸</button>
+    </nav>
+
+    <script type="module">
+        // 1. IMPORTAR LIBRERÍAS DE GOOGLE (No tocar)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, getDoc, runTransaction } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ============================================================
+        // 2. PEGAR AQUÍ TU CONFIGURACIÓN DE FIREBASE (LO QUE COPIASTE)
+         const firebaseConfig = {
+    apiKey: "AIzaSyB-WmhXSQWbDz8CoRI4LJ7RtFGOeOz_ZQU",
+    authDomain: "vodcoins-clase.firebaseapp.com",
+    projectId: "vodcoins-clase",
+    storageBucket: "vodcoins-clase.firebasestorage.app",
+    messagingSenderId: "305176031472",
+    appId: "1:305176031472:web:727cd3497c44bc835a9235"
+  };
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", 
+            authDomain: "tu-proyecto.firebaseapp.com",
+            projectId: "tu-proyecto",
+            storageBucket: "tu-proyecto.appspot.com",
+            messagingSenderId: "123...",
+            appId: "1:123..."
+        };
+        // ============================================================
+
+        // INICIAR FIREBASE
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // VARIABLES GLOBALES
+        let cursoID = null;
+        let estudiantes = [];
+        let usuarioLogueado = null;
+        window.estudiantes = []; // Para debug
+
+        // DATOS INICIALES (Solo para la primera subida a la nube)
+        const DATA_BASE = {
+            "curso_8b": [
+                { id: 1, nombre: "Alumno 8B Uno", saldo: 200 },
+                { id: 2, nombre: "Alumno 8B Dos", saldo: 200 }
+            ],
+            "curso_limites": [ { id: 1, nombre: "Estudiante Limite 1", saldo: 500 } ],
+            "curso_4to": [ { id: 1, nombre: "Santi Vodanovic 1", saldo: 1000 } ]
+        };
+
+        // --- FUNCIONES EXPORTADAS AL WINDOW (Para que el HTML las vea) ---
+        window.seleccionarCurso = (id) => {
+            cursoID = id;
+            document.getElementById('pantalla-cursos').style.display = 'none';
+            document.getElementById('pantalla-login').style.display = 'flex';
+            document.getElementById('titulo-login').textContent = id.replace('curso_', 'Clase: ').toUpperCase();
+            
+            // CONECTAR A LA NUBE EN TIEMPO REAL
+            conectarBaseDatos(id);
+        };
+
+        window.intentarLogin = () => {
+            const sel = document.getElementById('login-selector');
+            const pin = document.getElementById('login-pin').value.toUpperCase();
+            const idUser = sel.value;
+
+            if(idUser === 'profe' && pin === 'ADMIN1') {
+                usuarioLogueado = { id: 'banco', nombre: 'Profesor', saldo: '∞', esProfe: true };
+                entrar();
+                return;
+            }
+
+            const alumno = estudiantes.find(e => e.id == idUser);
+            if(alumno && alumno.pin === pin) {
+                usuarioLogueado = { ...alumno, esProfe: false };
+                entrar();
+            } else {
+                alert("❌ Clave incorrecta");
+            }
+        };
+
+        function entrar() {
+            document.getElementById('pantalla-login').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            document.getElementById('menu-inferior').style.display = 'flex';
+            
+            if(usuarioLogueado.esProfe) document.getElementById('zona-profe').style.display = 'block';
+            actualizarUI();
+        }
+
+        window.navegar = (seccion) => {
+            document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+            document.getElementById(seccion).classList.add('activa');
+        }
+
+        // --- LÓGICA DE NUBE (REAL TIME) ---
+        function conectarBaseDatos(colName) {
+            const selector = document.getElementById('login-selector');
+            selector.innerHTML = '<option>Cargando datos de la nube...</option>';
+
+            // ESCUCHADOR EN TIEMPO REAL (La magia de Firebase)
+            onSnapshot(collection(db, colName), (snapshot) => {
+                estudiantes = [];
+                snapshot.forEach((doc) => {
+                    estudiantes.push(doc.data());
+                });
+                
+                // Si la nube está vacía...
+                if(estudiantes.length === 0) {
+                    selector.innerHTML = '<option value="">⚠ Base de datos vacía (Entra como profe)</option>';
+                } else {
+                    llenarSelectores();
+                }
+
+                // Si ya estamos dentro, actualizar saldos en vivo
+                if(usuarioLogueado) actualizarUI();
+            });
+        }
+
+        function llenarSelectores() {
+            const sel = document.getElementById('login-selector');
+            sel.innerHTML = '<option value="">-- Soy... --</option><option value="profe">👨‍🏫 Profesor</option>';
+            
+            // Ordenar por nombre
+            estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
+
+            estudiantes.forEach(est => {
+                let op = document.createElement('option');
+                op.value = est.id; op.text = est.nombre;
+                sel.add(op);
+            });
+        }
+
+        window.realizarTransferencia = async () => {
+            const destinoId = document.getElementById('select-destino').value;
+            const monto = parseInt(document.getElementById('monto').value);
+
+            if(!destinoId || isNaN(monto) || monto <= 0) return alert("Datos inválidos");
+
+            // Referencias a los documentos en la nube
+            const destinoRef = doc(db, cursoID, destinoId.toString());
+            
+            try {
+                if(usuarioLogueado.esProfe) {
+                    // Profe solo suma (crea dinero)
+                    const destinoDoc = await getDoc(destinoRef);
+                    let nuevoSaldo = destinoDoc.data().saldo + monto;
+                    await updateDoc(destinoRef, { saldo: nuevoSaldo });
+                    alert("✅ Transferencia realizada");
+                } else {
+                    // Alumno: Resta al origen, Suma al destino (Transacción Atómica)
+                    const origenRef = doc(db, cursoID, usuarioLogueado.id.toString());
+                    
+                    await runTransaction(db, async (transaction) => {
+                        const oDoc = await transaction.get(origenRef);
+                        const dDoc = await transaction.get(destinoRef);
+
+                        if(oDoc.data().saldo < monto) throw "Saldo insuficiente";
+
+                        transaction.update(origenRef, { saldo: oDoc.data().saldo - monto });
+                        transaction.update(destinoRef, { saldo: dDoc.data().saldo + monto });
+                    });
+                    alert("✅ Transferencia exitosa");
+                }
+                document.getElementById('monto').value = '';
+            } catch (e) {
+                alert("❌ Error: " + e);
+            }
+        };
+
+        // --- INICIALIZADOR (SOLO PROFE) ---
+        window.inicializarBaseDatosNube = async () => {
+            if(!confirm("¿Subir datos iniciales? Esto sobrescribirá lo que haya.")) return;
+            
+            const lista = DATA_BASE[cursoID];
+            if(!lista) return alert("No hay datos base para este curso");
+
+            for(let est of lista) {
+                // Generar PIN si no tiene
+                if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
+                // Subir a Firebase (El ID del documento será el ID del alumno)
+                await setDoc(doc(db, cursoID, est.id.toString()), est);
+            }
+            alert("🚀 ¡Base de datos en la nube creada!");
+        };
+
+        window.mostrarClaves = () => {
+            let txt = "";
+            estudiantes.forEach(e => txt += `${e.nombre}: ${e.pin}\n`);
+            alert(txt);
+        }
+
+        // --- UI UPDATER ---
+        function actualizarUI() {
+            if(!usuarioLogueado) return;
+            
+            // Header
+            if(!usuarioLogueado.esProfe) {
+                // Buscar datos frescos
+                const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+                if(yo) document.getElementById('lbl-saldo').textContent = "$" + yo.saldo;
+            } else {
+                document.getElementById('lbl-saldo').textContent = "∞";
+            }
+            document.getElementById('lbl-nombre').textContent = usuarioLogueado.nombre;
+
+            // Lista
+            const divLista = document.getElementById('contenedor-lista');
+            divLista.innerHTML = '';
+            estudiantes.forEach(est => {
+                divLista.innerHTML += `<div class="tarjeta-alumno"><b>${est.nombre}</b> <span>$${est.saldo}</span></div>`;
+            });
+
+            // Select Destino
+            const selDest = document.getElementById('select-destino');
+            selDest.innerHTML = '';
+            estudiantes.forEach(est => {
+                if(usuarioLogueado.id != est.id) {
+                     let op = document.createElement('option');
+                     op.value = est.id; op.text = est.nombre; selDest.add(op);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
