@@ -3,38 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <title>VodCoins CSCJ</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* --- ESTILOS GENERALES --- */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 80px; }
-        .full-screen-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f2027, #2c5364); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; }
-        .caja-central { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .btn-grande { background: #007bff; color: white; padding: 12px; width: 100%; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 15px; }
-        
-        .btn-curso { width: 100%; padding: 15px; margin-bottom: 10px; background: #f8f9fa; border: 2px solid #ddd; border-radius: 10px; font-weight: bold; cursor: pointer; text-align: left; display: flex; align-items: center; }
-        .btn-curso:hover { background: #e2e6ea; }
-        
+        /* --- ESTILOS MODERNOS (V16.0) --- */
+        :root {
+            --primary-color: #4a90e2;
+            --accent-color: #50e3c2;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; 
+            background: var(--bg-gradient); 
+            background-attachment: fixed;
+            color: #333; 
+            padding-bottom: 90px; 
+            min-height: 100vh;
+        }
+
+        /* Pantallas de Carga/Login con fondo inmersivo */
+        .full-screen-bg { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 1000; color: white; 
+        }
+
+        .caja-central { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 40px 30px; 
+            border-radius: 20px; 
+            width: 85%; max-width: 350px; 
+            text-align: center; 
+            color: #333; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); 
+            backdrop-filter: blur(10px);
+        }
+
+        h1 { margin: 0 0 10px 0; font-weight: 600; color: #1e3c72; }
+        h2 { margin-top: 0; color: #333; }
+
+        /* Botones Mejorados */
+        .btn-grande { 
+            background: linear-gradient(90deg, #4a90e2, #007bff); 
+            color: white; padding: 14px; width: 100%; 
+            border: none; border-radius: 12px; 
+            font-size: 16px; font-weight: 600; 
+            cursor: pointer; margin-top: 15px; 
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+        }
+        .btn-grande:active { transform: scale(0.98); }
+
+        .btn-curso { 
+            width: 100%; padding: 18px; margin-bottom: 12px; 
+            background: white; border: none; 
+            border-radius: 15px; font-weight: 600; color: #444;
+            cursor: pointer; text-align: left; 
+            display: flex; align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .btn-curso:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); color: #007bff; }
+        .btn-curso span { font-size: 20px; margin-right: 15px; }
+
         .container { padding: 20px; max-width: 600px; margin: 0 auto; display: none; }
         .seccion { display: none; animation: fadeIn 0.4s; }
         .seccion.activa { display: block; }
-        
-        /* TARJETA ALUMNO */
-        .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.1s; }
-        .tarjeta-alumno:active { transform: scale(0.98); background: #eee; }
-        
-        /* PERFIL */
-        .perfil-card { background: white; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .dato-perfil { border-bottom: 1px solid #eee; padding: 15px 0; text-align: left; font-size: 16px; }
-        .emoji-perfil { font-size: 60px; margin-bottom: 10px; display: block; }
-        .btn-volver-atras { background: transparent; color: #555; border: none; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: block; }
 
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        nav { background: #333; position: fixed; bottom: 0; width: 100%; display: none; justify-content: space-around; padding: 10px 0; z-index: 500; }
-        nav button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; flex-grow: 1; }
-        
-        /* ADMIN */
-        .panel-admin { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff; margin-top: 40px; display: none; }
-        .sub-panel { background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #eee; }
+        /* Header de Usuario */
+        .user-header {
+            background: var(--card-bg); padding: 20px; 
+            border-radius: 15px; margin-bottom: 25px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow);
+        }
+        .saldo-badge {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            color: #2e7d32; padding: 8px 15px; 
+            border-radius: 20px; font-weight: bold;
+            box-shadow: 0 2px 10px rgba(150, 230, 161, 0.4);
+        }
+
+        /* Tarjetas de Menú Principal */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-card {
+            background: white; padding: 25px 15px; 
+            border-radius: 15px; text-align: center; 
+            cursor: pointer; box-shadow: var(--shadow);
+            transition: transform 0.2s;
+            font-weight: 600; color: #555;
+        }
+        .menu-card:active { transform: scale(0.95); }
+        .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+
+        /* Lista de Alumnos */
+        .tarjeta-alumno { 
+            background: white; padding: 18px; 
+            margin-bottom: 12px; border-radius: 12px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.1s; 
+        }
+        .tarjeta-alumno:active { transform: scale(0.98); background: #f8f9fa; }
+        .tarjeta-alumno b { font-size: 15px; color: #333; }
+
+        /* Perfil */
+        .perfil-card { 
+            background: white; padding: 30px; 
+            border-radius: 20px; text-align: center; 
+            box-shadow: var(--shadow); position: relative;
+        }
+        .emoji-perfil { 
+            font-size: 80px; margin-bottom: 10px; display: block; 
+            background: #f0f2f5; width: 120px; height: 120px; 
+            line-height: 120px; border-radius: 50%; margin: 0 auto 20px;
+        }
+        .dato-perfil { border-bottom: 1px solid #f0f0f0; padding: 15px 0; text-align: left; }
+        .dato-perfil strong { color: #888; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .dato-perfil span { display: block; font-size: 18px; color: #333; font-weight: 500; margin-top: 5px; }
+
+        /* Inputs y Selects */
+        input, select { 
+            width: 100%; padding: 15px; margin: 10px 0; 
+            border: 2px solid #eee; border-radius: 12px; 
+            box-sizing: border-box; font-size: 16px; outline: none;
+            background: #f9f9f9; transition: border-color 0.3s;
+        }
+        input:focus, select:focus { border-color: #4a90e2; background: white; }
+
+        /* Navbar Inferior */
+        nav { 
+            background: white; position: fixed; bottom: 0; width: 100%; 
+            display: none; justify-content: space-around; padding: 15px 0; 
+            z-index: 500; box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+        }
+        nav button { 
+            background: none; border: none; color: #ccc; 
+            font-size: 26px; cursor: pointer; flex-grow: 1; transition: color 0.3s;
+        }
+        nav button.active-nav { color: #4a90e2; transform: translateY(-3px); }
+
+        /* Admin Styles */
+        .panel-admin { 
+            background: white; padding: 20px; border-radius: 15px; 
+            border-left: 5px solid #ffc107; margin-top: 40px; display: none; 
+            box-shadow: var(--shadow);
+        }
+        .sub-panel { background: #fffcf0; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ffeeba; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -42,17 +164,17 @@
 
     <div id="pantalla-cursos" class="full-screen-bg">
         <div class="caja-central">
-            <h1>☁️ VodCoins CSCJ</h1>
-            <p style="color: #666;">Sistema de Economía Escolar</p>
+            <h1>☁️ VodCoins</h1>
+            <p style="color: #666; margin-bottom: 25px;">CSCJ - Economía Escolar</p>
             <div id="lista-botones-cursos">
                 <button class="btn-curso" onclick="seleccionarCurso('curso_1mb')">
-                    📘 Iº Medio B
+                    <span>📘</span> Iº Medio B
                 </button>
                 <button class="btn-curso" onclick="seleccionarCurso('curso_limites')">
-                    📈 Límites y Derivadas
+                    <span>📈</span> Límites y Derivadas
                 </button>
                 <button class="btn-curso" onclick="seleccionarCurso('curso_4m')">
-                    🎓 IVº Matemática (S. Vodanovic)
+                    <span>🎓</span> IVº Matemática (S.V.)
                 </button>
             </div>
         </div>
@@ -60,45 +182,56 @@
 
     <div id="pantalla-login" class="full-screen-bg" style="display: none;">
         <div class="caja-central">
-            <button onclick="location.reload()" style="background:none; border:none; cursor:pointer;">← Volver</button>
-            <h2 id="titulo-login">Login</h2>
+            <button onclick="location.reload()" style="background:none; border:none; cursor:pointer; font-size:14px; color:#666;">← Volver atrás</button>
+            <h2 id="titulo-login" style="margin-top:10px;">Login</h2>
             
             <select id="login-selector"><option>Conectando...</option></select>
             
-            <input type="password" id="login-pin" placeholder="CLAVE" style="text-align:center; font-size:20px; text-transform:uppercase;">
-            <button class="btn-grande" onclick="intentarLogin()">Entrar</button>
-            <p id="error-login" style="color:red; font-weight:bold; margin-top:10px; font-size:12px;"></p>
+            <input type="password" id="login-pin" placeholder="TU CLAVE" style="text-align:center; font-size:20px; text-transform:uppercase; letter-spacing: 2px;">
+            <button class="btn-grande" onclick="intentarLogin()">Ingresar</button>
+            <p id="error-login" style="color:#e74c3c; font-weight:bold; margin-top:15px; font-size:13px;"></p>
         </div>
     </div>
 
     <div class="container" id="app-container">
-        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>Hola, <strong id="lbl-nombre">Usuario</strong></div>
-            <div style="background: #eef; padding: 5px 10px; border-radius: 15px;">💰 <strong id="lbl-saldo">-</strong></div>
+        <div class="user-header">
+            <div>
+                <span style="font-size:12px; color:#888; text-transform:uppercase; letter-spacing:1px;">Bienvenido,</span><br>
+                <strong id="lbl-nombre" style="font-size:18px;">Usuario</strong>
+            </div>
+            <div class="saldo-badge">
+                💰 <span id="lbl-saldo">-</span>
+            </div>
         </div>
 
         <div id="inicio" class="seccion activa">
-            <h2 style="text-align:center">Panel de Control</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div style="background:white; padding:20px; border-radius:10px; text-align:center" onclick="navegar('lista')">👥 Ver Curso</div>
-                <div style="background:white; padding:20px; border-radius:10px; text-align:center" onclick="navegar('transferencias')">💸 Transferir</div>
+            <h2 style="margin-bottom:20px;">Panel de Control</h2>
+            <div class="menu-grid">
+                <div class="menu-card" onclick="navegar('lista')">
+                    <span class="menu-icon">👥</span>
+                    Ver Curso
+                </div>
+                <div class="menu-card" onclick="navegar('transferencias')">
+                    <span class="menu-icon">💸</span>
+                    Transferir
+                </div>
             </div>
-            <button class="btn-grande" style="background:#dc3545; margin-top:30px" onclick="location.reload()">🔒 Salir</button>
+            
+            <button class="btn-grande" style="background: linear-gradient(90deg, #ff6b6b, #ee5253); margin-top:30px; box-shadow: 0 4px 15px rgba(238, 82, 83, 0.4);" onclick="location.reload()">🔒 Cerrar Sesión</button>
 
             <div id="zona-profe" class="panel-admin">
-                <h3 style="margin-top:0;">🔧 Administración Nube</h3>
+                <h3 style="margin-top:0; color:#d35400;">🔧 Profe Admin</h3>
                 
                 <div class="sub-panel">
-                    <p style="font-size:12px; margin:5px 0"><b>Inicializar Curso:</b> (Crea lista con saldo $0)</p>
-                    <button onclick="inicializarBaseDatosNube()" style="background:#28a745; color:white; padding:8px; border:none; border-radius:5px; width:100%;">🚀 Crear Base de Datos</button>
+                    <p style="font-size:12px; margin:5px 0"><b>Inicializar Curso:</b></p>
+                    <button onclick="inicializarBaseDatosNube()" style="background:#2ecc71; color:white; padding:10px; border:none; border-radius:8px; width:100%; font-weight:bold;">🚀 Resetear / Crear DB</button>
                 </div>
 
                 <div class="sub-panel">
                     <strong>👶 Nuevo Alumno:</strong>
                     <div style="display:flex; gap:5px; margin-top:5px;">
                         <input type="text" id="nuevo-nombre" placeholder="Nombre" style="margin:0">
-                        <input type="text" id="nuevo-cumple" placeholder="Cumple" style="margin:0; width:80px;">
-                        <button onclick="agregarAlumnoNube()" style="background:#007bff; color:white; border:none; border-radius:5px; width:40px;">+</button>
+                        <button onclick="agregarAlumnoNube()" style="background:#3498db; color:white; border:none; border-radius:8px; width:50px; font-size:20px;">+</button>
                     </div>
                 </div>
 
@@ -106,75 +239,77 @@
                     <strong>🚫 Eliminar:</strong>
                     <div style="display:flex; gap:5px; margin-top:5px;">
                         <select id="sel-eliminar" style="margin:0"></select>
-                        <button onclick="eliminarAlumnoNube()" style="background:#dc3545; color:white; border:none; border-radius:5px; width:40px;">X</button>
+                        <button onclick="eliminarAlumnoNube()" style="background:#e74c3c; color:white; border:none; border-radius:8px; width:50px; font-size:16px;">✕</button>
                     </div>
                 </div>
 
-                <div class="sub-panel" style="background: #d1ecf1; border-color: #bee5eb;">
-                    <strong>📊 Excel:</strong>
-                    <button onclick="descargarExcelNube()" style="background: #117a8b; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; margin-top:5px;">📥 Descargar Reporte</button>
+                <div class="sub-panel" style="background: #e8f4f8; border-color: #b3e5fc;">
+                    <strong>📊 Reportes:</strong>
+                    <button onclick="descargarExcelNube()" style="background: #00bcd4; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; margin-top:5px; font-weight:bold;">📥 Descargar Excel</button>
                 </div>
 
-                <div class="sub-panel">
-                    <button onclick="mostrarClaves()" style="background:#6c757d; color:white; padding:8px; border:none; border-radius:5px; width:100%;">🔑 Ver Claves</button>
+                <div class="sub-panel" style="background:#f0f0f0; border:none;">
+                    <button onclick="mostrarClaves()" style="background:#95a5a6; color:white; padding:10px; border:none; border-radius:8px; width:100%;">🔑 Ver Claves</button>
                 </div>
             </div>
         </div>
 
         <div id="lista" class="seccion">
-            <h2>Curso en Vivo</h2>
-            <p style="color:#666; font-size:12px; text-align:center;">Toca un alumno para ver su ficha.</p>
+            <h2 style="margin-bottom:10px;">Compañeros</h2>
+            <p style="color:#999; font-size:13px; margin-bottom:20px;">Toca un nombre para ver detalles.</p>
             <div id="contenedor-lista">Cargando...</div>
         </div>
 
         <div id="perfil" class="seccion">
             <button class="btn-volver-atras" onclick="navegar('lista')">← Volver a la lista</button>
             <div class="perfil-card">
-                <span class="emoji-perfil">👤</span>
-                <h2 id="p-nombre" style="margin:0;">Nombre</h2>
-                <p id="p-curso" style="color:gray;">Curso</p>
+                <span class="emoji-perfil">🎓</span>
+                <h2 id="p-nombre" style="margin:0; color:#1e3c72;">Nombre</h2>
+                <p id="p-curso" style="color:#999; margin-top:5px;">Curso</p>
                 
-                <div class="dato-perfil">
-                    <strong>💰 Saldo Actual:</strong><br>
-                    <span id="p-saldo" style="color:green; font-size:24px; font-weight:bold;">$0</span>
+                <div style="margin: 30px 0;">
+                    <span style="font-size:14px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Saldo Disponible</span>
+                    <div id="p-saldo" style="color:#2ecc71; font-size:42px; font-weight:800; text-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);">$0</div>
                 </div>
                 
                 <div class="dato-perfil">
-                    <strong>🎂 Cumpleaños:</strong><br>
+                    <strong>Cumpleaños</strong>
                     <span id="p-cumple">No registrado</span>
                 </div>
 
                 <div class="dato-perfil" style="border:none;">
-                    <strong>🆔 ID Estudiante:</strong> <span id="p-id">0</span>
+                    <strong>ID Estudiante</strong> 
+                    <span id="p-id">0</span>
                 </div>
             </div>
         </div>
 
         <div id="transferencias" class="seccion">
-            <h2>Realizar Transferencia</h2>
-            <form style="background:white; padding:20px; border-radius:10px;">
-                <label>Para:</label>
+            <h2>Enviar Monedas</h2>
+            <div style="background:white; padding:25px; border-radius:20px; box-shadow:var(--shadow);">
+                <label style="font-weight:600; color:#555;">¿A quién?</label>
                 <select id="select-destino"></select>
-                <label>Monto:</label>
-                <input type="number" id="monto" placeholder="Ej: 500 o -200 (Solo Profe)">
-                <button type="button" class="btn-grande" onclick="realizarTransferencia()">Enviar</button>
-            </form>
+                
+                <label style="font-weight:600; color:#555; margin-top:15px; display:block;">¿Cuánto?</label>
+                <input type="number" id="monto" placeholder="Ej: 500" style="font-size:24px; font-weight:bold; color:#333;">
+                
+                <button type="button" class="btn-grande" onclick="realizarTransferencia()">Confirmar Envío</button>
+            </div>
         </div>
     </div>
 
     <nav id="menu-inferior">
-        <button onclick="navegar('inicio')">🏠</button>
-        <button onclick="navegar('lista')">👥</button>
-        <button onclick="navegar('transferencias')">💸</button>
+        <button onclick="navegar('inicio')" id="nav-inicio" class="active-nav">🏠</button>
+        <button onclick="navegar('lista')" id="nav-lista">👥</button>
+        <button onclick="navegar('transferencias')" id="nav-transf">💸</button>
     </nav>
 
     <script type="module">
-        // 1. IMPORTAR LIBRERÍAS
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, addDoc, runTransaction, query, orderBy } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 2. CONFIGURACIÓN
+        // CONFIGURACIÓN (Tu misma config)
         const firebaseConfig = {
           apiKey: "AIzaSyB-WmhXSQWbDz8CoRI4LJ7RtFGOeOz_ZQU",
           authDomain: "vodcoins-clase.firebaseapp.com",
@@ -184,18 +319,16 @@
           appId: "1:305176031472:web:727cd3497c44bc835a9235"
         };
 
-        // INICIAR
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // VARIABLES
         let cursoID = null;
         let nombreCursoDisplay = ""; 
         let historialID = null;
         let estudiantes = [];
         let usuarioLogueado = null;
 
-        // DATOS BASE
+        // DATOS BASE (Tus datos)
         const DATA_BASE = {
             "curso_1mb": [ { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "-" } ],
             "curso_limites": [
@@ -294,6 +427,12 @@
         window.navegar = (seccion) => {
             document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
             document.getElementById(seccion).classList.add('activa');
+            
+            // Highlight Icono Menu
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
+            if(seccion == 'inicio') document.getElementById('nav-inicio').classList.add('active-nav');
+            if(seccion == 'lista') document.getElementById('nav-lista').classList.add('active-nav');
+            if(seccion == 'transferencias') document.getElementById('nav-transf').classList.add('active-nav');
         }
 
         // --- FIREBASE ---
@@ -311,7 +450,7 @@
 
         function llenarSelectores() {
             const sel = document.getElementById('login-selector');
-            sel.innerHTML = '<option value="">-- Selecciona --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
+            sel.innerHTML = '<option value="">-- Selecciona tu nombre --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
             if(estudiantes.length === 0) {
                  let op = document.createElement('option');
                  op.text = "⚠ (Base vacía - Entra como Profe)"; op.disabled = true; sel.add(op);
@@ -344,18 +483,12 @@
             navegar('perfil');
         };
 
-        // --- TRANSFERENCIA (MODIFICADA) ---
         window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
             const monto = parseInt(document.getElementById('monto').value);
 
-            // Validaciones básicas
             if(!destinoId || isNaN(monto)) return alert("Faltan datos");
-
-            // VALIDACIÓN DE SEGURIDAD
-            if(!usuarioLogueado.esProfe && monto <= 0) {
-                return alert("⛔ ¡Alto ahí! Solo el Profesor puede restar dinero.");
-            }
+            if(!usuarioLogueado.esProfe && monto <= 0) return alert("⛔ Solo el Profesor puede restar dinero.");
             if(monto === 0) return alert("El monto no puede ser 0");
 
             const destinoRef = doc(db, cursoID, destinoId.toString());
@@ -365,13 +498,10 @@
                 let nombreDestino = "";
 
                 if(usuarioLogueado.esProfe) {
-                    // Profe (Suma o Resta permitido)
                     const dDoc = await getDoc(destinoRef);
                     nombreDestino = dDoc.data().nombre;
-                    // Suma algebraica (si monto es negativo, resta)
                     await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
                 } else {
-                    // Alumno (Solo resta a sí mismo y suma a otro)
                     const origenRef = doc(db, cursoID, usuarioLogueado.id.toString());
                     await runTransaction(db, async (transaction) => {
                         const oDoc = await transaction.get(origenRef);
@@ -392,8 +522,7 @@
                     timestamp: new Date()
                 });
 
-                let verbo = monto > 0 ? "Enviado" : "Descontado";
-                alert(`✅ ${verbo} exitosamente`);
+                alert(`✅ Transferencia realizada`);
                 document.getElementById('monto').value = '';
 
             } catch (e) {
@@ -404,12 +533,12 @@
         // ADMIN
         window.agregarAlumnoNube = async () => {
             const nombre = document.getElementById('nuevo-nombre').value;
-            const cumple = document.getElementById('nuevo-cumple').value;
+            const cumple = ""; // Simplificado para admin rapido
             if(!nombre) return;
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
             const nuevoAlumno = {
-                id: nuevoID, nombre: nombre, saldo: 0, cumpleanos: cumple || "-",
+                id: nuevoID, nombre: nombre, saldo: 0, cumpleanos: "-",
                 pin: Math.random().toString(36).substring(2,8).toUpperCase()
             };
             await setDoc(doc(db, cursoID, nuevoID.toString()), nuevoAlumno);
@@ -430,8 +559,8 @@
             const q = query(collection(db, historialID), orderBy("timestamp", "desc"));
             const querySnapshot = await getDocs(q);
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += `REPORTE: ${nombreCursoDisplay}\nID,Nombre,Saldo,Cumple\n`;
-            estudiantes.forEach(e => { csvContent += `${e.id},${e.nombre},${e.saldo},${e.cumpleanos}\n`; });
+            csvContent += `REPORTE: ${nombreCursoDisplay}\nID,Nombre,Saldo\n`;
+            estudiantes.forEach(e => { csvContent += `${e.id},${e.nombre},${e.saldo}\n`; });
             csvContent += "\n--- HISTORIAL ---\nFecha,Hora,Origen,Destino,Monto\n";
             querySnapshot.forEach((doc) => {
                 const h = doc.data();
@@ -447,13 +576,13 @@
         };
 
         window.inicializarBaseDatosNube = async () => {
-            if(!confirm("⚠️ ¿Estás seguro de crear la base de datos?\nSi ya existían alumnos, esto podría duplicarlos o reiniciarlos.")) return;
+            if(!confirm("⚠️ ¿Resetear Base de Datos?")) return;
             const lista = DATA_BASE[cursoID];
             for(let est of lista) {
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
                 await setDoc(doc(db, cursoID, est.id.toString()), est);
             }
-            alert("✅ Lista cargada con éxito.");
+            alert("✅ Listo.");
         };
 
         window.mostrarClaves = () => {
@@ -464,22 +593,29 @@
 
         function actualizarUI() {
             if(!usuarioLogueado) return;
+            
+            // Header
+            document.getElementById('lbl-nombre').textContent = usuarioLogueado.nombre;
             if(!usuarioLogueado.esProfe) {
                 const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
                 if(yo) document.getElementById('lbl-saldo').textContent = "$" + yo.saldo;
             } else { document.getElementById('lbl-saldo').textContent = "∞"; }
-            document.getElementById('lbl-nombre').textContent = usuarioLogueado.nombre;
 
+            // Lista con Estilo Nuevo
             const divLista = document.getElementById('contenedor-lista');
             divLista.innerHTML = '';
             estudiantes.forEach(est => {
                 divLista.innerHTML += `
                 <div class="tarjeta-alumno" onclick="verPerfil('${est.id}')">
-                    <b>${est.nombre}</b> 
-                    <span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:10px; font-weight:bold;">$${est.saldo}</span>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="background:#eef; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; color:#555;">👤</div>
+                        <b>${est.nombre}</b> 
+                    </div>
+                    <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px; font-size:14px;">$${est.saldo}</span>
                 </div>`;
             });
 
+            // Selector Destino
             const selDest = document.getElementById('select-destino');
             selDest.innerHTML = '';
             estudiantes.forEach(est => {
