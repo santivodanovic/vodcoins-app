@@ -2,20 +2,31 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins Cloud V14.1</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VodCoins CSCJ</title> <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         /* --- ESTILOS GENERALES --- */
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 80px; }
         .full-screen-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f2027, #2c5364); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; }
         .caja-central { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 350px; text-align: center; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .btn-grande { background: #007bff; color: white; padding: 12px; width: 100%; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 15px; }
+        
         .btn-curso { width: 100%; padding: 15px; margin-bottom: 10px; background: #f8f9fa; border: 2px solid #ddd; border-radius: 10px; font-weight: bold; cursor: pointer; text-align: left; display: flex; align-items: center; }
         .btn-curso:hover { background: #e2e6ea; }
+        
         .container { padding: 20px; max-width: 600px; margin: 0 auto; display: none; }
         .seccion { display: none; animation: fadeIn 0.4s; }
         .seccion.activa { display: block; }
-        .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        
+        /* TARJETA ALUMNO (Clickeable para ver perfil) */
+        .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.1s; }
+        .tarjeta-alumno:active { transform: scale(0.98); background: #eee; }
+        
+        /* VISTA PERFIL PERSONAL */
+        .perfil-card { background: white; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .dato-perfil { border-bottom: 1px solid #eee; padding: 15px 0; text-align: left; font-size: 16px; }
+        .emoji-perfil { font-size: 60px; margin-bottom: 10px; display: block; }
+        .btn-volver-atras { background: transparent; color: #555; border: none; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: block; }
+
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         nav { background: #333; position: fixed; bottom: 0; width: 100%; display: none; justify-content: space-around; padding: 10px 0; z-index: 500; }
         nav button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; flex-grow: 1; }
@@ -30,12 +41,18 @@
 
     <div id="pantalla-cursos" class="full-screen-bg">
         <div class="caja-central">
-            <h1>☁️ VodCoins Online</h1>
-            <p style="color: #666;">Sistema en la Nube</p>
+            <h1>☁️ VodCoins CSCJ</h1>
+            <p style="color: #666;">Sistema de Economía Escolar</p>
             <div id="lista-botones-cursos">
-                <button class="btn-curso" onclick="seleccionarCurso('curso_8b')">🏐 8º Básico</button>
-                <button class="btn-curso" onclick="seleccionarCurso('curso_limites')">📈 Límites y Derivadas</button>
-                <button class="btn-curso" onclick="seleccionarCurso('curso_4to')">🎓 4º Matemática (S.V.)</button>
+                <button class="btn-curso" onclick="seleccionarCurso('curso_1mb')">
+                    📘 Iº Medio B
+                </button>
+                <button class="btn-curso" onclick="seleccionarCurso('curso_limites')">
+                    📈 Límites y Derivadas
+                </button>
+                <button class="btn-curso" onclick="seleccionarCurso('curso_4m')">
+                    🎓 IVº Matemática (S. Vodanovic)
+                </button>
             </div>
         </div>
     </div>
@@ -71,7 +88,7 @@
                 <h3 style="margin-top:0;">🔧 Administración Nube</h3>
                 
                 <div class="sub-panel">
-                    <p style="font-size:12px; margin:5px 0">Si el curso está vacío, pulsa aquí:</p>
+                    <p style="font-size:12px; margin:5px 0"><b>Inicializar Curso:</b> (Crea lista con saldo $0)</p>
                     <button onclick="inicializarBaseDatosNube()" style="background:#28a745; color:white; padding:8px; border:none; border-radius:5px; width:100%;">🚀 Crear Base de Datos</button>
                 </div>
 
@@ -94,7 +111,7 @@
 
                 <div class="sub-panel" style="background: #d1ecf1; border-color: #bee5eb;">
                     <strong>📊 Excel:</strong>
-                    <button onclick="descargarExcelNube()" style="background: #117a8b; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; margin-top:5px;">📥 Descargar Reporte Completo</button>
+                    <button onclick="descargarExcelNube()" style="background: #117a8b; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; margin-top:5px;">📥 Descargar Reporte</button>
                 </div>
 
                 <div class="sub-panel">
@@ -105,7 +122,31 @@
 
         <div id="lista" class="seccion">
             <h2>Curso en Vivo</h2>
+            <p style="color:#666; font-size:12px; text-align:center;">Toca un alumno para ver su ficha.</p>
             <div id="contenedor-lista">Cargando...</div>
+        </div>
+
+        <div id="perfil" class="seccion">
+            <button class="btn-volver-atras" onclick="navegar('lista')">← Volver a la lista</button>
+            <div class="perfil-card">
+                <span class="emoji-perfil">👤</span>
+                <h2 id="p-nombre" style="margin:0;">Nombre</h2>
+                <p id="p-curso" style="color:gray;">Curso</p>
+                
+                <div class="dato-perfil">
+                    <strong>💰 Saldo Actual:</strong><br>
+                    <span id="p-saldo" style="color:green; font-size:24px; font-weight:bold;">$0</span>
+                </div>
+                
+                <div class="dato-perfil">
+                    <strong>🎂 Cumpleaños:</strong><br>
+                    <span id="p-cumple">No registrado</span>
+                </div>
+
+                <div class="dato-perfil" style="border:none;">
+                    <strong>🆔 ID Estudiante:</strong> <span id="p-id">0</span>
+                </div>
+            </div>
         </div>
 
         <div id="transferencias" class="seccion">
@@ -148,27 +189,38 @@
 
         // VARIABLES GLOBALES
         let cursoID = null;
+        let nombreCursoDisplay = ""; // Para mostrar bonito en el perfil
         let historialID = null;
         let estudiantes = [];
         let usuarioLogueado = null;
 
-        // DATOS BASE
+        // DATOS BASE CON SALDO 0 (PARA LOS NUEVOS CURSOS)
         const DATA_BASE = {
-            "curso_8b": [
-                { id: 1, nombre: "Alumno 8B Uno", saldo: 200, cumpleanos: "1 Enero" },
-                { id: 2, nombre: "Alumno 8B Dos", saldo: 200, cumpleanos: "2 Febrero" }
+            "curso_1mb": [
+                { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "1 Enero" }
             ],
-            "curso_limites": [ { id: 1, nombre: "Estudiante Limite 1", saldo: 500, cumpleanos: "-" } ],
-            "curso_4to": [ { id: 1, nombre: "Santi Vodanovic 1", saldo: 1000, cumpleanos: "-" } ]
+            "curso_limites": [ 
+                { id: 1, nombre: "Alumno Ejemplo Limites", saldo: 0, cumpleanos: "-" } 
+            ],
+            "curso_4m": [ 
+                { id: 1, nombre: "Alumno Ejemplo 4M", saldo: 0, cumpleanos: "-" } 
+            ]
+        };
+
+        const NOMBRES_BONITOS = {
+            "curso_1mb": "Iº Medio B",
+            "curso_limites": "Límites y derivadas",
+            "curso_4m": "IVº Matemática (S.V.)"
         };
 
         // --- FUNCIONES WINDOW ---
         window.seleccionarCurso = (id) => {
             cursoID = id;
+            nombreCursoDisplay = NOMBRES_BONITOS[id];
             historialID = "historial_" + id; 
             document.getElementById('pantalla-cursos').style.display = 'none';
             document.getElementById('pantalla-login').style.display = 'flex';
-            document.getElementById('titulo-login').textContent = id.replace('curso_', 'Clase: ').toUpperCase();
+            document.getElementById('titulo-login').textContent = nombreCursoDisplay;
             conectarBaseDatos(id);
         };
 
@@ -187,7 +239,7 @@
                     usuarioLogueado = { id: 'banco', nombre: 'Profesor', saldo: '∞', esProfe: true };
                     entrar();
                 } else {
-                     document.getElementById('error-login').textContent = "❌ Clave incorrecta (Prueba ADMIN1)";
+                     document.getElementById('error-login').textContent = "❌ Clave incorrecta";
                 }
                 return;
             }
@@ -230,21 +282,16 @@
                     estudiantes.push(doc.data());
                 });
                 
-                // --- CORRECCIÓN CLAVE: SIEMPRE LLENAR SELECTOR ---
-                // No importa si está vacía, el Profe debe poder entrar
                 llenarSelectores(); 
-                
                 if(usuarioLogueado) actualizarUI(); 
             });
         }
 
         function llenarSelectores() {
             const sel = document.getElementById('login-selector');
-            // AQUÍ ESTÁ EL ARREGLO: Siempre se crea la opción Profe
             sel.innerHTML = '<option value="">-- Selecciona --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
             
             if(estudiantes.length === 0) {
-                 // Aviso visual
                  let op = document.createElement('option');
                  op.text = "⚠ (Base de datos vacía - Entra como Profe)";
                  op.disabled = true;
@@ -268,6 +315,20 @@
                 op.value = est.id; op.text = est.nombre; sel.add(op);
             });
         }
+
+        // --- FUNCIONES PERFIL ---
+        window.verPerfil = (id) => {
+            const alumno = estudiantes.find(e => e.id == id);
+            if(!alumno) return;
+
+            document.getElementById('p-nombre').textContent = alumno.nombre;
+            document.getElementById('p-curso').textContent = nombreCursoDisplay;
+            document.getElementById('p-saldo').textContent = "$" + alumno.saldo;
+            document.getElementById('p-cumple').textContent = alumno.cumpleanos || "-";
+            document.getElementById('p-id').textContent = alumno.id;
+
+            navegar('perfil');
+        };
 
         // TRANSFERENCIA
         window.realizarTransferencia = async () => {
@@ -347,7 +408,7 @@
             const q = query(collection(db, historialID), orderBy("timestamp", "desc"));
             const querySnapshot = await getDocs(q);
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += `REPORTE: ${cursoID.toUpperCase()}\n`;
+            csvContent += `REPORTE: ${nombreCursoDisplay}\n`;
             csvContent += "ID,Nombre,Saldo,Cumple\n";
             estudiantes.forEach(e => {
                 csvContent += `${e.id},${e.nombre},${e.saldo},${e.cumpleanos}\n`;
@@ -368,17 +429,19 @@
         };
 
         window.inicializarBaseDatosNube = async () => {
-            if(!confirm("¿Crear base de datos inicial?")) return;
+            if(!confirm("¿Crear base de datos inicial? Esto borrará/reiniciará el curso actual a los valores por defecto.")) return;
             const lista = DATA_BASE[cursoID];
+            // Borrar existentes (para evitar duplicados al reiniciar)
+            // Nota: En una app simple, sobreescribir suele ser suficiente.
             for(let est of lista) {
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
                 await setDoc(doc(db, cursoID, est.id.toString()), est);
             }
-            alert("Base creada.");
+            alert("Base creada/reiniciada con éxito.");
         };
 
         window.mostrarClaves = () => {
-            let txt = "";
+            let txt = `CLAVES: ${nombreCursoDisplay}\n----------------\n`;
             estudiantes.forEach(e => txt += `${e.nombre}: ${e.pin}\n`);
             alert(txt);
         };
@@ -393,10 +456,15 @@
             }
             document.getElementById('lbl-nombre').textContent = usuarioLogueado.nombre;
 
+            // Render lista con CLICK
             const divLista = document.getElementById('contenedor-lista');
             divLista.innerHTML = '';
             estudiantes.forEach(est => {
-                divLista.innerHTML += `<div class="tarjeta-alumno"><b>${est.nombre}</b> <span>$${est.saldo}</span></div>`;
+                divLista.innerHTML += `
+                <div class="tarjeta-alumno" onclick="verPerfil('${est.id}')">
+                    <b>${est.nombre}</b> 
+                    <span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:10px; font-weight:bold;">$${est.saldo}</span>
+                </div>`;
             });
 
             const selDest = document.getElementById('select-destino');
