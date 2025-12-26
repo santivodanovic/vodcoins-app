@@ -156,7 +156,7 @@
                 <label>Para:</label>
                 <select id="select-destino"></select>
                 <label>Monto:</label>
-                <input type="number" id="monto" placeholder="0">
+                <input type="number" id="monto" placeholder="Ej: 500 o -200 (Solo Profe)">
                 <button type="button" class="btn-grande" onclick="realizarTransferencia()">Enviar</button>
             </form>
         </div>
@@ -169,12 +169,12 @@
     </nav>
 
     <script type="module">
-        // 1. IMPORTAR LIBRERÍAS DE GOOGLE
+        // 1. IMPORTAR LIBRERÍAS
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, addDoc, runTransaction, query, orderBy } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 2. TU CONFIGURACIÓN DE FIREBASE
+        // 2. CONFIGURACIÓN
         const firebaseConfig = {
           apiKey: "AIzaSyB-WmhXSQWbDz8CoRI4LJ7RtFGOeOz_ZQU",
           authDomain: "vodcoins-clase.firebaseapp.com",
@@ -188,21 +188,16 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // VARIABLES GLOBALES
+        // VARIABLES
         let cursoID = null;
         let nombreCursoDisplay = ""; 
         let historialID = null;
         let estudiantes = [];
         let usuarioLogueado = null;
 
-        // --- DATOS REALES CARGADOS AQUÍ ---
+        // DATOS BASE
         const DATA_BASE = {
-            // Iº Medio B (Aún en espera)
-            "curso_1mb": [
-                { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "-" }
-            ],
-            
-            // LISTA REAL LÍMITES Y DERIVADAS (38 Alumnos)
+            "curso_1mb": [ { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "-" } ],
             "curso_limites": [
                 { id: 1, nombre: "Vicente San Martin", saldo: 0, cumpleanos: "-" },
                 { id: 2, nombre: "Javiera Lillo", saldo: 0, cumpleanos: "-" },
@@ -243,11 +238,7 @@
                 { id: 37, nombre: "Emilia Silva", saldo: 0, cumpleanos: "-" },
                 { id: 38, nombre: "Jose Arriagada", saldo: 0, cumpleanos: "-" }
             ],
-
-            // IVº Matemática (Aún en espera)
-            "curso_4m": [
-                { id: 1, nombre: "Alumno Ejemplo 4M", saldo: 0, cumpleanos: "-" }
-            ]
+            "curso_4m": [ { id: 1, nombre: "Alumno Ejemplo 4M", saldo: 0, cumpleanos: "-" } ]
         };
 
         const NOMBRES_BONITOS = {
@@ -256,7 +247,7 @@
             "curso_4m": "IVº Matemática (S.V.)"
         };
 
-        // --- FUNCIONES WINDOW ---
+        // --- WINDOW FUNCTIONS ---
         window.seleccionarCurso = (id) => {
             cursoID = id;
             nombreCursoDisplay = NOMBRES_BONITOS[id];
@@ -272,18 +263,13 @@
             const pin = document.getElementById('login-pin').value.toUpperCase();
             const idUser = sel.value;
 
-            if(!idUser) {
-                document.getElementById('error-login').textContent = "⚠️ Selecciona un usuario";
-                return;
-            }
+            if(!idUser) { document.getElementById('error-login').textContent = "⚠️ Selecciona un usuario"; return; }
 
             if(idUser === 'profe') {
                 if (pin === 'ADMIN1') {
                     usuarioLogueado = { id: 'banco', nombre: 'Profesor', saldo: '∞', esProfe: true };
                     entrar();
-                } else {
-                     document.getElementById('error-login').textContent = "❌ Clave incorrecta";
-                }
+                } else { document.getElementById('error-login').textContent = "❌ Clave incorrecta"; }
                 return;
             }
 
@@ -291,16 +277,13 @@
             if(alumno && alumno.pin === pin) {
                 usuarioLogueado = { ...alumno, esProfe: false };
                 entrar();
-            } else {
-                document.getElementById('error-login').textContent = "❌ Clave incorrecta";
-            }
+            } else { document.getElementById('error-login').textContent = "❌ Clave incorrecta"; }
         };
 
         function entrar() {
             document.getElementById('pantalla-login').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             document.getElementById('menu-inferior').style.display = 'flex';
-            
             if(usuarioLogueado.esProfe) {
                 document.getElementById('zona-profe').style.display = 'block';
                 cargarSelectorEliminar();
@@ -313,18 +296,14 @@
             document.getElementById(seccion).classList.add('activa');
         }
 
-        // --- FIREBASE LOGIC ---
+        // --- FIREBASE ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando datos...</option>';
-
             const q = query(collection(db, colName));
             onSnapshot(q, (snapshot) => {
                 estudiantes = [];
-                snapshot.forEach((doc) => {
-                    estudiantes.push(doc.data());
-                });
-                
+                snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
                 llenarSelectores(); 
                 if(usuarioLogueado) actualizarUI(); 
             });
@@ -333,20 +312,15 @@
         function llenarSelectores() {
             const sel = document.getElementById('login-selector');
             sel.innerHTML = '<option value="">-- Selecciona --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
-            
             if(estudiantes.length === 0) {
                  let op = document.createElement('option');
-                 op.text = "⚠ (Base de datos vacía - Entra como Profe)";
-                 op.disabled = true;
-                 sel.add(op);
+                 op.text = "⚠ (Base vacía - Entra como Profe)"; op.disabled = true; sel.add(op);
             }
-
             estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
             estudiantes.forEach(est => {
                 let op = document.createElement('option');
                 op.value = est.id; op.text = est.nombre; sel.add(op);
             });
-            
             if(usuarioLogueado && usuarioLogueado.esProfe) cargarSelectorEliminar();
         }
 
@@ -359,26 +333,30 @@
             });
         }
 
-        // --- FUNCIONES PERFIL ---
         window.verPerfil = (id) => {
             const alumno = estudiantes.find(e => e.id == id);
             if(!alumno) return;
-
             document.getElementById('p-nombre').textContent = alumno.nombre;
             document.getElementById('p-curso').textContent = nombreCursoDisplay;
             document.getElementById('p-saldo').textContent = "$" + alumno.saldo;
             document.getElementById('p-cumple').textContent = alumno.cumpleanos || "-";
             document.getElementById('p-id').textContent = alumno.id;
-
             navegar('perfil');
         };
 
-        // TRANSFERENCIA
+        // --- TRANSFERENCIA (MODIFICADA) ---
         window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
             const monto = parseInt(document.getElementById('monto').value);
 
-            if(!destinoId || isNaN(monto) || monto <= 0) return alert("Datos inválidos");
+            // Validaciones básicas
+            if(!destinoId || isNaN(monto)) return alert("Faltan datos");
+
+            // VALIDACIÓN DE SEGURIDAD
+            if(!usuarioLogueado.esProfe && monto <= 0) {
+                return alert("⛔ ¡Alto ahí! Solo el Profesor puede restar dinero.");
+            }
+            if(monto === 0) return alert("El monto no puede ser 0");
 
             const destinoRef = doc(db, cursoID, destinoId.toString());
             
@@ -387,10 +365,13 @@
                 let nombreDestino = "";
 
                 if(usuarioLogueado.esProfe) {
+                    // Profe (Suma o Resta permitido)
                     const dDoc = await getDoc(destinoRef);
                     nombreDestino = dDoc.data().nombre;
+                    // Suma algebraica (si monto es negativo, resta)
                     await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
                 } else {
+                    // Alumno (Solo resta a sí mismo y suma a otro)
                     const origenRef = doc(db, cursoID, usuarioLogueado.id.toString());
                     await runTransaction(db, async (transaction) => {
                         const oDoc = await transaction.get(origenRef);
@@ -411,7 +392,8 @@
                     timestamp: new Date()
                 });
 
-                alert("✅ Transferencia Exitosa");
+                let verbo = monto > 0 ? "Enviado" : "Descontado";
+                alert(`✅ ${verbo} exitosamente`);
                 document.getElementById('monto').value = '';
 
             } catch (e) {
@@ -427,10 +409,7 @@
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
             const nuevoAlumno = {
-                id: nuevoID,
-                nombre: nombre,
-                saldo: 0,
-                cumpleanos: cumple || "-",
+                id: nuevoID, nombre: nombre, saldo: 0, cumpleanos: cumple || "-",
                 pin: Math.random().toString(36).substring(2,8).toUpperCase()
             };
             await setDoc(doc(db, cursoID, nuevoID.toString()), nuevoAlumno);
@@ -451,13 +430,9 @@
             const q = query(collection(db, historialID), orderBy("timestamp", "desc"));
             const querySnapshot = await getDocs(q);
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += `REPORTE: ${nombreCursoDisplay}\n`;
-            csvContent += "ID,Nombre,Saldo,Cumple\n";
-            estudiantes.forEach(e => {
-                csvContent += `${e.id},${e.nombre},${e.saldo},${e.cumpleanos}\n`;
-            });
-            csvContent += "\n--- HISTORIAL DE MOVIMIENTOS ---\n";
-            csvContent += "Fecha,Hora,Origen,Destino,Monto\n";
+            csvContent += `REPORTE: ${nombreCursoDisplay}\nID,Nombre,Saldo,Cumple\n`;
+            estudiantes.forEach(e => { csvContent += `${e.id},${e.nombre},${e.saldo},${e.cumpleanos}\n`; });
+            csvContent += "\n--- HISTORIAL ---\nFecha,Hora,Origen,Destino,Monto\n";
             querySnapshot.forEach((doc) => {
                 const h = doc.data();
                 csvContent += `${h.fecha},${h.hora},${h.origen},${h.destino},${h.monto}\n`;
@@ -492,12 +467,9 @@
             if(!usuarioLogueado.esProfe) {
                 const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
                 if(yo) document.getElementById('lbl-saldo').textContent = "$" + yo.saldo;
-            } else {
-                document.getElementById('lbl-saldo').textContent = "∞";
-            }
+            } else { document.getElementById('lbl-saldo').textContent = "∞"; }
             document.getElementById('lbl-nombre').textContent = usuarioLogueado.nombre;
 
-            // Render lista con CLICK
             const divLista = document.getElementById('contenedor-lista');
             divLista.innerHTML = '';
             estudiantes.forEach(est => {
