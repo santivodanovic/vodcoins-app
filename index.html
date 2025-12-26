@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins CSCJ</title> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VodCoins CSCJ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         /* --- ESTILOS GENERALES --- */
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; color: #333; padding-bottom: 80px; }
@@ -17,11 +18,11 @@
         .seccion { display: none; animation: fadeIn 0.4s; }
         .seccion.activa { display: block; }
         
-        /* TARJETA ALUMNO (Clickeable para ver perfil) */
+        /* TARJETA ALUMNO */
         .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.1s; }
         .tarjeta-alumno:active { transform: scale(0.98); background: #eee; }
         
-        /* VISTA PERFIL PERSONAL */
+        /* PERFIL */
         .perfil-card { background: white; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .dato-perfil { border-bottom: 1px solid #eee; padding: 15px 0; text-align: left; font-size: 16px; }
         .emoji-perfil { font-size: 60px; margin-bottom: 10px; display: block; }
@@ -31,7 +32,7 @@
         nav { background: #333; position: fixed; bottom: 0; width: 100%; display: none; justify-content: space-around; padding: 10px 0; z-index: 500; }
         nav button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; flex-grow: 1; }
         
-        /* Estilos Admin */
+        /* ADMIN */
         .panel-admin { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff; margin-top: 40px; display: none; }
         .sub-panel { background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #eee; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -173,7 +174,7 @@
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, addDoc, runTransaction, query, orderBy } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 2. TU CONFIGURACIÓN (YA INTEGRADA)
+        // 2. TU CONFIGURACIÓN DE FIREBASE
         const firebaseConfig = {
           apiKey: "AIzaSyB-WmhXSQWbDz8CoRI4LJ7RtFGOeOz_ZQU",
           authDomain: "vodcoins-clase.firebaseapp.com",
@@ -189,21 +190,63 @@
 
         // VARIABLES GLOBALES
         let cursoID = null;
-        let nombreCursoDisplay = ""; // Para mostrar bonito en el perfil
+        let nombreCursoDisplay = ""; 
         let historialID = null;
         let estudiantes = [];
         let usuarioLogueado = null;
 
-        // DATOS BASE CON SALDO 0 (PARA LOS NUEVOS CURSOS)
+        // --- DATOS REALES CARGADOS AQUÍ ---
         const DATA_BASE = {
+            // Iº Medio B (Aún en espera)
             "curso_1mb": [
-                { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "1 Enero" }
+                { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "-" }
             ],
-            "curso_limites": [ 
-                { id: 1, nombre: "Alumno Ejemplo Limites", saldo: 0, cumpleanos: "-" } 
+            
+            // LISTA REAL LÍMITES Y DERIVADAS (38 Alumnos)
+            "curso_limites": [
+                { id: 1, nombre: "Vicente San Martin", saldo: 0, cumpleanos: "-" },
+                { id: 2, nombre: "Javiera Lillo", saldo: 0, cumpleanos: "-" },
+                { id: 3, nombre: "Ignacio Torres", saldo: 0, cumpleanos: "-" },
+                { id: 4, nombre: "Marco Rios", saldo: 0, cumpleanos: "-" },
+                { id: 5, nombre: "Gabriela Lillo", saldo: 0, cumpleanos: "-" },
+                { id: 6, nombre: "Daniel Lavandero", saldo: 0, cumpleanos: "-" },
+                { id: 7, nombre: "Darynka Gómez", saldo: 0, cumpleanos: "-" },
+                { id: 8, nombre: "Agustín Salgado", saldo: 0, cumpleanos: "-" },
+                { id: 9, nombre: "Maximiliano Fuentealba", saldo: 0, cumpleanos: "-" },
+                { id: 10, nombre: "Martina Silva", saldo: 0, cumpleanos: "-" },
+                { id: 11, nombre: "Leyan Alonso", saldo: 0, cumpleanos: "-" },
+                { id: 12, nombre: "Magdalena Aranda", saldo: 0, cumpleanos: "-" },
+                { id: 13, nombre: "Alonso Vargas", saldo: 0, cumpleanos: "-" },
+                { id: 14, nombre: "Mariapaz Bascour", saldo: 0, cumpleanos: "-" },
+                { id: 15, nombre: "Felipe Uribe", saldo: 0, cumpleanos: "-" },
+                { id: 16, nombre: "Santiago López", saldo: 0, cumpleanos: "-" },
+                { id: 17, nombre: "Vicente Fernández", saldo: 0, cumpleanos: "-" },
+                { id: 18, nombre: "Antonella Figueroa", saldo: 0, cumpleanos: "-" },
+                { id: 19, nombre: "Lucas Cortés", saldo: 0, cumpleanos: "-" },
+                { id: 20, nombre: "Samuel Campos", saldo: 0, cumpleanos: "-" },
+                { id: 21, nombre: "Nicolas Castro", saldo: 0, cumpleanos: "-" },
+                { id: 22, nombre: "Tomás Ramírez", saldo: 0, cumpleanos: "-" },
+                { id: 23, nombre: "Josefa Muñoz", saldo: 0, cumpleanos: "-" },
+                { id: 24, nombre: "Tomás Arias", saldo: 0, cumpleanos: "-" },
+                { id: 25, nombre: "Ricardo Contreras", saldo: 0, cumpleanos: "-" },
+                { id: 26, nombre: "Martín Horn", saldo: 0, cumpleanos: "-" },
+                { id: 27, nombre: "Vicente Muñoz", saldo: 0, cumpleanos: "-" },
+                { id: 28, nombre: "Agustin Gonzalez", saldo: 0, cumpleanos: "-" },
+                { id: 29, nombre: "Ian Aguilera", saldo: 0, cumpleanos: "-" },
+                { id: 30, nombre: "Pía Olave", saldo: 0, cumpleanos: "-" },
+                { id: 31, nombre: "Giuliana Anselmi", saldo: 0, cumpleanos: "-" },
+                { id: 32, nombre: "Joaquin Navarro", saldo: 0, cumpleanos: "-" },
+                { id: 33, nombre: "Juan Vidal", saldo: 0, cumpleanos: "-" },
+                { id: 34, nombre: "Vicente Vera", saldo: 0, cumpleanos: "-" },
+                { id: 35, nombre: "Amanda Valeria", saldo: 0, cumpleanos: "-" },
+                { id: 36, nombre: "Joaquín Verdugo", saldo: 0, cumpleanos: "-" },
+                { id: 37, nombre: "Emilia Silva", saldo: 0, cumpleanos: "-" },
+                { id: 38, nombre: "Jose Arriagada", saldo: 0, cumpleanos: "-" }
             ],
-            "curso_4m": [ 
-                { id: 1, nombre: "Alumno Ejemplo 4M", saldo: 0, cumpleanos: "-" } 
+
+            // IVº Matemática (Aún en espera)
+            "curso_4m": [
+                { id: 1, nombre: "Alumno Ejemplo 4M", saldo: 0, cumpleanos: "-" }
             ]
         };
 
@@ -429,15 +472,13 @@
         };
 
         window.inicializarBaseDatosNube = async () => {
-            if(!confirm("¿Crear base de datos inicial? Esto borrará/reiniciará el curso actual a los valores por defecto.")) return;
+            if(!confirm("⚠️ ¿Estás seguro de crear la base de datos?\nSi ya existían alumnos, esto podría duplicarlos o reiniciarlos.")) return;
             const lista = DATA_BASE[cursoID];
-            // Borrar existentes (para evitar duplicados al reiniciar)
-            // Nota: En una app simple, sobreescribir suele ser suficiente.
             for(let est of lista) {
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
                 await setDoc(doc(db, cursoID, est.id.toString()), est);
             }
-            alert("Base creada/reiniciada con éxito.");
+            alert("✅ Lista cargada con éxito.");
         };
 
         window.mostrarClaves = () => {
