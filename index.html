@@ -2,11 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins CSCJ</title>
+    <title>VodCoins CSCJ - V17.1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("⚠️ ERROR EN EL CÓDIGO:\n" + message + "\nLínea: " + lineno);
+        };
+    </script>
+
     <style>
-        /* --- ESTILOS V17.0 (Tienda Académica) --- */
+        /* --- ESTILOS V17.1 (Reparado) --- */
         :root {
             --primary-color: #4a90e2;
             --accent-color: #50e3c2;
@@ -327,6 +334,7 @@
     <nav id="menu-inferior">
         <button onclick="navegar('inicio')" id="nav-inicio" class="active-nav">🏠</button>
         <button onclick="navegar('tienda')" id="nav-tienda">🛍️</button>
+        <button onclick="navegar('lista')" id="nav-lista">👥</button>
         <button onclick="navegar('transferencias')" id="nav-transf">💸</button>
     </nav>
 
@@ -406,7 +414,7 @@
             "curso_4m": "IVº Matemática (S.V.)"
         };
 
-        // --- FUNCIONES WINDOW ---
+        // --- FUNCIONES WINDOW (GLOBALES) ---
         window.seleccionarCurso = (id) => {
             cursoID = id;
             nombreCursoDisplay = NOMBRES_BONITOS[id];
@@ -455,9 +463,11 @@
             document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
             document.getElementById(seccion).classList.add('activa');
             
+            // Highlight nav button
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
             if(seccion == 'inicio') document.getElementById('nav-inicio').classList.add('active-nav');
             if(seccion == 'tienda') document.getElementById('nav-tienda').classList.add('active-nav');
+            if(seccion == 'lista') document.getElementById('nav-lista').classList.add('active-nav');
             if(seccion == 'transferencias') document.getElementById('nav-transf').classList.add('active-nav');
         }
 
@@ -465,7 +475,6 @@
         window.comprarItem = async (nombreItem, precio) => {
             if(usuarioLogueado.esProfe) return alert("El profe no compra, el profe vende.");
             
-            // Verificar saldo local (primera capa)
             const miSaldo = estudiantes.find(e => e.id == usuarioLogueado.id).saldo;
             if(miSaldo < precio) {
                 return alert("❌ Saldo insuficiente. Necesitas $" + precio);
@@ -479,20 +488,17 @@
                 await runTransaction(db, async (transaction) => {
                     const oDoc = await transaction.get(miRef);
                     if(oDoc.data().saldo < precio) throw "Saldo insuficiente en nube";
-                    
-                    // Descontar
                     transaction.update(miRef, { saldo: oDoc.data().saldo - precio });
                 });
 
-                // Registrar en Historial (como Compra)
                 await addDoc(collection(db, historialID), {
                     fecha: new Date().toLocaleDateString(),
                     hora: new Date().toLocaleTimeString(),
                     origen: usuarioLogueado.nombre,
                     destino: "TIENDA",
-                    item: nombreItem, // Campo especial para identificar compra
+                    item: nombreItem,
                     monto: precio,
-                    tipo: "compra", // Marca para el buzón del profe
+                    tipo: "compra",
                     timestamp: new Date()
                 });
 
@@ -519,7 +525,6 @@
 
         // --- BUZON NOTIFICACIONES PROFE ---
         function cargarNotificacionesAdmin() {
-            // Escuchar el historial y filtrar solo las compras
             const q = query(collection(db, historialID), orderBy("timestamp", "desc"), limit(20));
             onSnapshot(q, (snapshot) => {
                 const divNotif = document.getElementById('admin-notificaciones');
@@ -629,7 +634,6 @@
             }
         };
 
-        // ADMIN
         window.agregarAlumnoNube = async () => {
             const nombre = document.getElementById('nuevo-nombre').value;
             if(!nombre) return;
@@ -662,7 +666,6 @@
             csvContent += "\n--- HISTORIAL DE MOVIMIENTOS ---\nFecha,Hora,Origen,Destino,Monto,Item\n";
             querySnapshot.forEach((doc) => {
                 const h = doc.data();
-                // Incluir el Item si es compra
                 const item = h.item ? h.item : "-";
                 csvContent += `${h.fecha},${h.hora},${h.origen},${h.destino},${h.monto},${item}\n`;
             });
