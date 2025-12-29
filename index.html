@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* --- ESTILOS MODERNOS (V16.0) --- */
+        /* --- ESTILOS V17.0 (Tienda Académica) --- */
         :root {
             --primary-color: #4a90e2;
             --accent-color: #50e3c2;
@@ -25,7 +25,6 @@
             min-height: 100vh;
         }
 
-        /* Pantallas de Carga/Login con fondo inmersivo */
         .full-screen-bg { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
@@ -47,7 +46,6 @@
         h1 { margin: 0 0 10px 0; font-weight: 600; color: #1e3c72; }
         h2 { margin-top: 0; color: #333; }
 
-        /* Botones Mejorados */
         .btn-grande { 
             background: linear-gradient(90deg, #4a90e2, #007bff); 
             color: white; padding: 14px; width: 100%; 
@@ -75,7 +73,6 @@
         .seccion { display: none; animation: fadeIn 0.4s; }
         .seccion.activa { display: block; }
 
-        /* Header de Usuario */
         .user-header {
             background: var(--card-bg); padding: 20px; 
             border-radius: 15px; margin-bottom: 25px; 
@@ -89,7 +86,7 @@
             box-shadow: 0 2px 10px rgba(150, 230, 161, 0.4);
         }
 
-        /* Tarjetas de Menú Principal */
+        /* MENU GRID */
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .menu-card {
             background: white; padding: 25px 15px; 
@@ -101,7 +98,22 @@
         .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
-        /* Lista de Alumnos */
+        /* PRODUCTOS TIENDA */
+        .producto-card {
+            background: white; border-radius: 15px; padding: 20px;
+            margin-bottom: 15px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: var(--shadow);
+            border-left: 5px solid #ff9f43;
+        }
+        .btn-comprar {
+            background: #ff9f43; color: white; border: none;
+            padding: 8px 15px; border-radius: 20px; font-weight: bold;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-comprar:hover { background: #e67e22; }
+        .btn-comprar:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Lista Alumnos */
         .tarjeta-alumno { 
             background: white; padding: 18px; 
             margin-bottom: 12px; border-radius: 12px; 
@@ -110,22 +122,21 @@
             transition: transform 0.1s; 
         }
         .tarjeta-alumno:active { transform: scale(0.98); background: #f8f9fa; }
-        .tarjeta-alumno b { font-size: 15px; color: #333; }
 
-        /* Perfil */
-        .perfil-card { 
-            background: white; padding: 30px; 
-            border-radius: 20px; text-align: center; 
-            box-shadow: var(--shadow); position: relative;
+        /* Admin Styles */
+        .panel-admin { 
+            background: white; padding: 20px; border-radius: 15px; 
+            border-left: 5px solid #ffc107; margin-top: 40px; display: none; 
+            box-shadow: var(--shadow);
         }
-        .emoji-perfil { 
-            font-size: 80px; margin-bottom: 10px; display: block; 
-            background: #f0f2f5; width: 120px; height: 120px; 
-            line-height: 120px; border-radius: 50%; margin: 0 auto 20px;
+        .sub-panel { background: #fffcf0; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ffeeba; }
+        
+        /* Notificaciones Admin */
+        .notificacion-item {
+            background: #fff; padding: 10px; border-bottom: 1px solid #eee;
+            font-size: 14px; display: flex; justify-content: space-between;
         }
-        .dato-perfil { border-bottom: 1px solid #f0f0f0; padding: 15px 0; text-align: left; }
-        .dato-perfil strong { color: #888; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .dato-perfil span { display: block; font-size: 18px; color: #333; font-weight: 500; margin-top: 5px; }
+        .badge-compra { background: #ff9f43; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
 
         /* Inputs y Selects */
         input, select { 
@@ -148,14 +159,10 @@
             font-size: 26px; cursor: pointer; flex-grow: 1; transition: color 0.3s;
         }
         nav button.active-nav { color: #4a90e2; transform: translateY(-3px); }
-
-        /* Admin Styles */
-        .panel-admin { 
-            background: white; padding: 20px; border-radius: 15px; 
-            border-left: 5px solid #ffc107; margin-top: 40px; display: none; 
-            box-shadow: var(--shadow);
-        }
-        .sub-panel { background: #fffcf0; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ffeeba; }
+        
+        /* Perfil */
+        .perfil-card { background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: var(--shadow); }
+        .emoji-perfil { font-size: 80px; margin-bottom: 10px; display: block; background: #f0f2f5; width: 120px; height: 120px; line-height: 120px; border-radius: 50%; margin: 0 auto 20px; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -165,7 +172,7 @@
     <div id="pantalla-cursos" class="full-screen-bg">
         <div class="caja-central">
             <h1>☁️ VodCoins</h1>
-            <p style="color: #666; margin-bottom: 25px;">CSCJ - Economía Escolar</p>
+            <p style="color: #666; margin-bottom: 25px;">CSCJ - Economía Académica</p>
             <div id="lista-botones-cursos">
                 <button class="btn-curso" onclick="seleccionarCurso('curso_1mb')">
                     <span>📘</span> Iº Medio B
@@ -207,20 +214,30 @@
         <div id="inicio" class="seccion activa">
             <h2 style="margin-bottom:20px;">Panel de Control</h2>
             <div class="menu-grid">
-                <div class="menu-card" onclick="navegar('lista')">
-                    <span class="menu-icon">👥</span>
-                    Ver Curso
+                <div class="menu-card" onclick="navegar('tienda')">
+                    <span class="menu-icon">🛍️</span>
+                    Tienda
                 </div>
                 <div class="menu-card" onclick="navegar('transferencias')">
                     <span class="menu-icon">💸</span>
                     Transferir
+                </div>
+                <div class="menu-card" onclick="navegar('lista')">
+                    <span class="menu-icon">👥</span>
+                    Curso
                 </div>
             </div>
             
             <button class="btn-grande" style="background: linear-gradient(90deg, #ff6b6b, #ee5253); margin-top:30px; box-shadow: 0 4px 15px rgba(238, 82, 83, 0.4);" onclick="location.reload()">🔒 Cerrar Sesión</button>
 
             <div id="zona-profe" class="panel-admin">
-                <h3 style="margin-top:0; color:#d35400;">🔧 Profe Admin</h3>
+                <h3 style="margin-top:0; color:#d35400;">🔔 Buzón de Canjes</h3>
+                <p style="font-size:12px; color:#666; margin-bottom:10px;">Aquí aparecen las décimas compradas por alumnos:</p>
+                <div id="admin-notificaciones" style="max-height:200px; overflow-y:auto; background:#f9f9f9; border:1px solid #eee; border-radius:8px; margin-bottom:20px;">
+                    <div style="padding:10px; text-align:center; color:#999;">Cargando historial...</div>
+                </div>
+
+                <h3 style="margin-top:0; color:#2980b9;">🔧 Herramientas</h3>
                 
                 <div class="sub-panel">
                     <p style="font-size:12px; margin:5px 0"><b>Inicializar Curso:</b></p>
@@ -236,14 +253,6 @@
                 </div>
 
                 <div class="sub-panel">
-                    <strong>🚫 Eliminar:</strong>
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <select id="sel-eliminar" style="margin:0"></select>
-                        <button onclick="eliminarAlumnoNube()" style="background:#e74c3c; color:white; border:none; border-radius:8px; width:50px; font-size:16px;">✕</button>
-                    </div>
-                </div>
-
-                <div class="sub-panel" style="background: #e8f4f8; border-color: #b3e5fc;">
                     <strong>📊 Reportes:</strong>
                     <button onclick="descargarExcelNube()" style="background: #00bcd4; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; margin-top:5px; font-weight:bold;">📥 Descargar Excel</button>
                 </div>
@@ -254,9 +263,31 @@
             </div>
         </div>
 
+        <div id="tienda" class="seccion">
+            <h2 style="margin-bottom:10px;">Canje de Décimas</h2>
+            <p style="color:#666; font-size:13px; margin-bottom:20px;">Compra décimas para tus controles.</p>
+            
+            <div class="producto-card">
+                <div>
+                    <h3 style="margin:0;">1 Décima</h3>
+                    <p style="margin:5px 0; color:#888;">Para controles acumulativos.</p>
+                    <div style="color:#e67e22; font-weight:bold;">Precio: $10</div>
+                </div>
+                <button class="btn-comprar" onclick="comprarItem('1 Décima', 10)">COMPRAR</button>
+            </div>
+
+            <div class="producto-card" style="border-left-color: #9b59b6;">
+                <div>
+                    <h3 style="margin:0;">2 Décimas</h3>
+                    <p style="margin:5px 0; color:#888;">Pack de refuerzo.</p>
+                    <div style="color:#9b59b6; font-weight:bold;">Precio: $18</div>
+                </div>
+                <button class="btn-comprar" style="background:#9b59b6;" onclick="comprarItem('2 Décimas', 18)">COMPRAR</button>
+            </div>
+        </div>
+
         <div id="lista" class="seccion">
             <h2 style="margin-bottom:10px;">Compañeros</h2>
-            <p style="color:#999; font-size:13px; margin-bottom:20px;">Toca un nombre para ver detalles.</p>
             <div id="contenedor-lista">Cargando...</div>
         </div>
 
@@ -276,11 +307,6 @@
                     <strong>Cumpleaños</strong>
                     <span id="p-cumple">No registrado</span>
                 </div>
-
-                <div class="dato-perfil" style="border:none;">
-                    <strong>ID Estudiante</strong> 
-                    <span id="p-id">0</span>
-                </div>
             </div>
         </div>
 
@@ -291,7 +317,7 @@
                 <select id="select-destino"></select>
                 
                 <label style="font-weight:600; color:#555; margin-top:15px; display:block;">¿Cuánto?</label>
-                <input type="number" id="monto" placeholder="Ej: 500" style="font-size:24px; font-weight:bold; color:#333;">
+                <input type="number" id="monto" placeholder="Ej: 5" style="font-size:24px; font-weight:bold; color:#333;">
                 
                 <button type="button" class="btn-grande" onclick="realizarTransferencia()">Confirmar Envío</button>
             </div>
@@ -300,16 +326,16 @@
 
     <nav id="menu-inferior">
         <button onclick="navegar('inicio')" id="nav-inicio" class="active-nav">🏠</button>
-        <button onclick="navegar('lista')" id="nav-lista">👥</button>
+        <button onclick="navegar('tienda')" id="nav-tienda">🛍️</button>
         <button onclick="navegar('transferencias')" id="nav-transf">💸</button>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, addDoc, runTransaction, query, orderBy } 
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, addDoc, runTransaction, query, orderBy, limit } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN (Tu misma config)
+        // CONFIGURACIÓN
         const firebaseConfig = {
           apiKey: "AIzaSyB-WmhXSQWbDz8CoRI4LJ7RtFGOeOz_ZQU",
           authDomain: "vodcoins-clase.firebaseapp.com",
@@ -328,7 +354,7 @@
         let estudiantes = [];
         let usuarioLogueado = null;
 
-        // DATOS BASE (Tus datos)
+        // DATOS BASE
         const DATA_BASE = {
             "curso_1mb": [ { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "-" } ],
             "curso_limites": [
@@ -380,7 +406,7 @@
             "curso_4m": "IVº Matemática (S.V.)"
         };
 
-        // --- WINDOW FUNCTIONS ---
+        // --- FUNCIONES WINDOW ---
         window.seleccionarCurso = (id) => {
             cursoID = id;
             nombreCursoDisplay = NOMBRES_BONITOS[id];
@@ -402,6 +428,7 @@
                 if (pin === 'ADMIN1') {
                     usuarioLogueado = { id: 'banco', nombre: 'Profesor', saldo: '∞', esProfe: true };
                     entrar();
+                    cargarNotificacionesAdmin(); // CARGAR BUZÓN PROFE
                 } else { document.getElementById('error-login').textContent = "❌ Clave incorrecta"; }
                 return;
             }
@@ -428,14 +455,56 @@
             document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
             document.getElementById(seccion).classList.add('activa');
             
-            // Highlight Icono Menu
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
             if(seccion == 'inicio') document.getElementById('nav-inicio').classList.add('active-nav');
-            if(seccion == 'lista') document.getElementById('nav-lista').classList.add('active-nav');
+            if(seccion == 'tienda') document.getElementById('nav-tienda').classList.add('active-nav');
             if(seccion == 'transferencias') document.getElementById('nav-transf').classList.add('active-nav');
         }
 
-        // --- FIREBASE ---
+        // --- LOGICA TIENDA ---
+        window.comprarItem = async (nombreItem, precio) => {
+            if(usuarioLogueado.esProfe) return alert("El profe no compra, el profe vende.");
+            
+            // Verificar saldo local (primera capa)
+            const miSaldo = estudiantes.find(e => e.id == usuarioLogueado.id).saldo;
+            if(miSaldo < precio) {
+                return alert("❌ Saldo insuficiente. Necesitas $" + precio);
+            }
+
+            if(!confirm(`¿Comprar ${nombreItem} por $${precio}?`)) return;
+
+            const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const oDoc = await transaction.get(miRef);
+                    if(oDoc.data().saldo < precio) throw "Saldo insuficiente en nube";
+                    
+                    // Descontar
+                    transaction.update(miRef, { saldo: oDoc.data().saldo - precio });
+                });
+
+                // Registrar en Historial (como Compra)
+                await addDoc(collection(db, historialID), {
+                    fecha: new Date().toLocaleDateString(),
+                    hora: new Date().toLocaleTimeString(),
+                    origen: usuarioLogueado.nombre,
+                    destino: "TIENDA",
+                    item: nombreItem, // Campo especial para identificar compra
+                    monto: precio,
+                    tipo: "compra", // Marca para el buzón del profe
+                    timestamp: new Date()
+                });
+
+                alert("✅ ¡Compra exitosa! El profesor ha sido notificado.");
+                navegar('inicio');
+
+            } catch (e) {
+                alert("Error: " + e);
+            }
+        };
+
+        // --- FIREBASE CORE ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando datos...</option>';
@@ -445,6 +514,36 @@
                 snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
                 llenarSelectores(); 
                 if(usuarioLogueado) actualizarUI(); 
+            });
+        }
+
+        // --- BUZON NOTIFICACIONES PROFE ---
+        function cargarNotificacionesAdmin() {
+            // Escuchar el historial y filtrar solo las compras
+            const q = query(collection(db, historialID), orderBy("timestamp", "desc"), limit(20));
+            onSnapshot(q, (snapshot) => {
+                const divNotif = document.getElementById('admin-notificaciones');
+                divNotif.innerHTML = '';
+                
+                let hayCompras = false;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if(data.tipo === "compra") {
+                        hayCompras = true;
+                        divNotif.innerHTML += `
+                        <div class="notificacion-item">
+                            <div>
+                                <b>${data.origen}</b> compró 
+                                <span class="badge-compra">${data.item}</span>
+                            </div>
+                            <div style="font-size:10px; color:#999; text-align:right;">
+                                ${data.fecha}<br>${data.hora}
+                            </div>
+                        </div>`;
+                    }
+                });
+
+                if(!hayCompras) divNotif.innerHTML = '<div style="padding:10px; text-align:center; color:#999;">No hay canjes recientes.</div>';
             });
         }
 
@@ -479,7 +578,6 @@
             document.getElementById('p-curso').textContent = nombreCursoDisplay;
             document.getElementById('p-saldo').textContent = "$" + alumno.saldo;
             document.getElementById('p-cumple').textContent = alumno.cumpleanos || "-";
-            document.getElementById('p-id').textContent = alumno.id;
             navegar('perfil');
         };
 
@@ -489,7 +587,7 @@
 
             if(!destinoId || isNaN(monto)) return alert("Faltan datos");
             if(!usuarioLogueado.esProfe && monto <= 0) return alert("⛔ Solo el Profesor puede restar dinero.");
-            if(monto === 0) return alert("El monto no puede ser 0");
+            if(monto === 0) return alert("Monto inválido");
 
             const destinoRef = doc(db, cursoID, destinoId.toString());
             
@@ -519,6 +617,7 @@
                     origen: nombreOrigen,
                     destino: nombreDestino,
                     monto: monto,
+                    tipo: "transferencia",
                     timestamp: new Date()
                 });
 
@@ -533,7 +632,6 @@
         // ADMIN
         window.agregarAlumnoNube = async () => {
             const nombre = document.getElementById('nuevo-nombre').value;
-            const cumple = ""; // Simplificado para admin rapido
             if(!nombre) return;
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
@@ -561,10 +659,12 @@
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
             csvContent += `REPORTE: ${nombreCursoDisplay}\nID,Nombre,Saldo\n`;
             estudiantes.forEach(e => { csvContent += `${e.id},${e.nombre},${e.saldo}\n`; });
-            csvContent += "\n--- HISTORIAL ---\nFecha,Hora,Origen,Destino,Monto\n";
+            csvContent += "\n--- HISTORIAL DE MOVIMIENTOS ---\nFecha,Hora,Origen,Destino,Monto,Item\n";
             querySnapshot.forEach((doc) => {
                 const h = doc.data();
-                csvContent += `${h.fecha},${h.hora},${h.origen},${h.destino},${h.monto}\n`;
+                // Incluir el Item si es compra
+                const item = h.item ? h.item : "-";
+                csvContent += `${h.fecha},${h.hora},${h.origen},${h.destino},${h.monto},${item}\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -594,14 +694,12 @@
         function actualizarUI() {
             if(!usuarioLogueado) return;
             
-            // Header
             document.getElementById('lbl-nombre').textContent = usuarioLogueado.nombre;
             if(!usuarioLogueado.esProfe) {
                 const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
                 if(yo) document.getElementById('lbl-saldo').textContent = "$" + yo.saldo;
             } else { document.getElementById('lbl-saldo').textContent = "∞"; }
 
-            // Lista con Estilo Nuevo
             const divLista = document.getElementById('contenedor-lista');
             divLista.innerHTML = '';
             estudiantes.forEach(est => {
@@ -615,7 +713,6 @@
                 </div>`;
             });
 
-            // Selector Destino
             const selDest = document.getElementById('select-destino');
             selDest.innerHTML = '';
             estudiantes.forEach(est => {
