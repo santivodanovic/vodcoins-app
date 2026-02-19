@@ -2,27 +2,23 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V2.4 - Economía Completa</title>
+    <title>VodCoins V3.0 - Economía a 11k</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* --- ESTILOS GENERALES --- */
         :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); --primary: #4a90e2; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg-gradient); background-attachment: fixed; color: #333; padding-bottom: 90px; min-height: 100vh; user-select: none; }
         
-        /* PANTALLAS */
         .full-screen-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; }
         .caja-central { background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         
-        /* BOTONES E INPUTS */
         .btn-grande { background: var(--primary); color: white; padding: 14px; width: 100%; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: transform 0.1s; }
         .btn-grande:active { transform: scale(0.98); }
         .btn-curso { width: 100%; padding: 18px; margin-bottom: 12px; background: white; border: none; border-radius: 15px; font-weight: 600; color: #444; cursor: pointer; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #f9f9f9; text-align: center; }
 
-        /* HEADER Y MENU */
         .container { padding: 20px; max-width: 600px; margin: 0 auto; display: none; }
         .seccion { display: none; animation: fadeIn 0.4s; }
         .seccion.activa { display: block; }
@@ -35,7 +31,6 @@
         .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
-        /* ESTILOS NUEVOS: MERCADO / BOLSA */
         .market-card { background: #1e1e1e; color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
         .precio-gigante { font-size: 42px; font-weight: 800; margin: 10px 0; letter-spacing: -1px; }
         .subida { color: #4cd137; text-shadow: 0 0 20px rgba(76, 209, 55, 0.3); }
@@ -43,11 +38,9 @@
         .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
         .btn-market { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin: 5px; }
 
-        /* LISTA, ADMIN Y OTROS */
         .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .panel-admin { background: white; padding: 20px; border-radius: 15px; border-left: 5px solid #ffc107; margin-top: 40px; display: none; box-shadow: var(--shadow); }
         
-        /* NAV INFERIOR */
         nav { background: white; position: fixed; bottom: 0; width: 100%; display: none; justify-content: space-around; padding: 15px 0; z-index: 500; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
         nav button { background: none; border: none; color: #ccc; font-size: 24px; cursor: pointer; flex-grow: 1; }
         nav button.active-nav { color: var(--primary); transform: translateY(-3px); }
@@ -62,7 +55,7 @@
             <h1>☁️ VodCoins</h1>
             <p style="color: #ddd;">Selecciona tu curso</p>
             <div id="lista-botones-cursos">
-                <button class="btn-curso" onclick="seleccionarCurso('curso_1mb')"><span>📘</span> Iº Medio B</button>
+                <button class="btn-curso" onclick="seleccionarCurso('curso_8b')"><span>📘</span> 8º Básico</button>
                 <button class="btn-curso" onclick="seleccionarCurso('curso_limites')"><span>📈</span> Límites y Derivadas</button>
                 <button class="btn-curso" onclick="seleccionarCurso('curso_4m')"><span>🎓</span> IVº Matemática</button>
             </div>
@@ -127,8 +120,8 @@
                 </div>
                 
                 <div class="market-info">
-                    <span>🏦 RESERVA: <span id="lbl-reserva">0</span></span>
-                    <span>🔄 CIRCULANTE: <span id="lbl-circulante">0</span></span>
+                    <span>🏦 RESERVA: $<span id="lbl-reserva">0</span></span>
+                    <span>🔄 CIRCULANTE: <span id="lbl-circulante">0</span> VOD</span>
                 </div>
             </div>
 
@@ -137,10 +130,10 @@
                 <p style="font-size:13px; color:#666; margin-bottom:15px;">Aumentar la Reserva sube el precio. Disminuirla lo baja.</p>
                 
                 <div style="display:flex; flex-wrap:wrap;">
-                    <button class="btn-market" onclick="cambiarReserva(10)" style="background:#4cd137;">+ 10</button>
-                    <button class="btn-market" onclick="cambiarReserva(5)" style="background:#4cd137; opacity:0.8;">+ 5</button>
-                    <button class="btn-market" onclick="cambiarReserva(-5)" style="background:#e84118; opacity:0.8;">- 5</button>
-                    <button class="btn-market" onclick="cambiarReserva(-10)" style="background:#e84118;">- 10</button>
+                    <button class="btn-market" onclick="cambiarReserva(50000)" style="background:#4cd137;">+ $50k</button>
+                    <button class="btn-market" onclick="cambiarReserva(10000)" style="background:#4cd137; opacity:0.8;">+ $10k</button>
+                    <button class="btn-market" onclick="cambiarReserva(-10000)" style="background:#e84118; opacity:0.8;">- $10k</button>
+                    <button class="btn-market" onclick="cambiarReserva(-50000)" style="background:#e84118;">- $50k</button>
                 </div>
             </div>
         </div>
@@ -172,7 +165,6 @@
                 <button type="button" class="btn-grande" onclick="realizarTransferencia()">Procesar Transacción</button>
             </div>
         </div>
-
     </div>
 
     <nav id="menu-inferior">
@@ -187,7 +179,6 @@
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, runTransaction, query, orderBy, limit } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- 1. CONFIGURACIÓN FIREBASE (TUYA) ---
         const firebaseConfig = {
           apiKey: "AIzaSyB-WmhXSQWbDz8CoRI4LJ7RtFGOeOz_ZQU",
           authDomain: "vodcoins-clase.firebaseapp.com",
@@ -200,16 +191,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- 2. VARIABLES GLOBALES ---
         let cursoID = null;
         let estudiantes = [];
         let usuarioLogueado = null;
-        let reservaMundial = 1; 
+        let reservaMundial = 11000; 
         let chartInstance = null; 
 
-        // DATOS INICIALES PARA RESETEAR (SALDO INICIAL 1 PARA TODOS)
+        // 3 CURSOS, SALDO INICIAL 1
         const DATA_BASE = {
-            "curso_1mb": [
+            "curso_8b": [
                 { id: 1, nombre: "Abarca Pérez Maximiliano Alonso", saldo: 1 },
                 { id: 2, nombre: "Acosta Verdugo Emilia Paz", saldo: 1 },
                 { id: 3, nombre: "Aliaga Hidalgo Gabriel Esteban", saldo: 1 },
@@ -306,7 +296,7 @@
                 { id: 7, nombre: "Briones Cristóbal", saldo: 1 },
                 { id: 8, nombre: "Budaleo Francisca", saldo: 1 },
                 { id: 9, nombre: "Cases Benjamín", saldo: 1 },
-                { id: 10, nombre: "Cisternas Sofía", saldo: 1 },
+                { id: 10, দুর্নীতি "Cisternas Sofía", saldo: 1 },
                 { id: 11, nombre: "Cuevas Magdalena", saldo: 1 },
                 { id: 12, nombre: "González Emilie", saldo: 1 },
                 { id: 13, nombre: "Huillipán Lucas", saldo: 1 },
@@ -327,7 +317,6 @@
             ]
         };
 
-        // --- 3. FUNCIONES DE NAVEGACIÓN Y LOGIN ---
         window.seleccionarCurso = (id) => {
             cursoID = id;
             document.getElementById('pantalla-cursos').style.display = 'none';
@@ -342,7 +331,6 @@
 
             if(!idUser) return alert("Selecciona usuario");
 
-            // PROFE
             if(idUser === 'profe') {
                 if (pin === 'ADMIN1') {
                     usuarioLogueado = { id: 'profe', nombre: 'Profesor', saldo: 999999, esProfe: true };
@@ -351,7 +339,6 @@
                 return;
             }
 
-            // ALUMNO
             const alumno = estudiantes.find(e => e.id == idUser);
             if(alumno && alumno.pin === pin) {
                 usuarioLogueado = { ...alumno, esProfe: false };
@@ -380,7 +367,6 @@
             document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
         }
 
-        // --- 4. LÓGICA DE MERCADO ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -419,8 +405,9 @@
                     calcularPrecio();
                 } else {
                     const cantidadAlumnos = DATA_BASE[cursoID].length;
-                    setDoc(docReserva, { reserva: cantidadAlumnos }); 
-                    reservaMundial = cantidadAlumnos;
+                    const reservaInicial = cantidadAlumnos * 11000;
+                    setDoc(docReserva, { reserva: reservaInicial }); 
+                    reservaMundial = reservaInicial;
                     calcularPrecio();
                 }
             });
@@ -433,15 +420,15 @@
 
             if (circulante <= 0) circulante = 1;
 
-            const precio = reservaMundial / circulante;
+            const precio = Math.floor(reservaMundial / circulante);
 
             const lblPrecio = document.getElementById('ticker-precio');
             if(lblPrecio) {
-                lblPrecio.innerText = "$ " + precio.toFixed(2); 
-                document.getElementById('lbl-reserva').innerText = reservaMundial;
+                lblPrecio.innerText = "$ " + precio.toLocaleString('es-CL'); 
+                document.getElementById('lbl-reserva').innerText = reservaMundial.toLocaleString('es-CL');
                 document.getElementById('lbl-circulante').innerText = circulante;
 
-                if(precio >= 1.00) {
+                if(precio >= 11000) {
                     lblPrecio.className = "precio-gigante subida";
                     if(chartInstance) chartInstance.data.datasets[0].borderColor = '#4cd137';
                 } else {
@@ -472,7 +459,6 @@
             } catch(e) { alert("Error: " + e); }
         };
 
-        // --- 5. FUNCIONES CORE ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
@@ -509,7 +495,7 @@
                 const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
                 if(yo) {
                     document.getElementById('lbl-nombre').textContent = yo.nombre;
-                    document.getElementById('lbl-saldo').textContent = "$" + yo.saldo;
+                    document.getElementById('lbl-saldo').textContent = yo.saldo + " VOD";
                 }
             }
 
@@ -522,7 +508,7 @@
                 divLista.innerHTML += `
                 <div class="tarjeta-alumno">
                     <div><b>${est.nombre}</b></div>
-                    <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">$${est.saldo}</span>
+                    <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">${est.saldo} VOD</span>
                 </div>`;
 
                 if(usuarioLogueado.id != est.id) {
@@ -580,13 +566,11 @@
             } catch (e) { alert("Error: " + e); }
         };
 
-        // --- ADMIN TOOLS ---
         window.agregarAlumnoNube = async () => {
             const nombre = document.getElementById('nuevo-nombre').value;
             if(!nombre) return;
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
-            // NUEVO ALUMNO EMPIEZA CON SALDO 1
             await setDoc(doc(db, cursoID, nuevoID.toString()), {
                 id: nuevoID, nombre: nombre, saldo: 1, pin: Math.random().toString(36).substring(2,8).toUpperCase()
             });
@@ -594,9 +578,8 @@
             document.getElementById('nuevo-nombre').value = '';
         };
 
-        // --- CORRECCIÓN CLAVE: SUBIDA EN PAQUETE CON PROMISE.ALL ---
         window.inicializarBaseDatosNube = async () => {
-            if(!confirm("⚠️ ¿Resetear Base de Datos del curso actual? Se borrarán los saldos y se usarán los estudiantes base.")) return;
+            if(!confirm("⚠️ ¿Resetear Base de Datos del curso actual? Se borrarán los saldos y todos los alumnos volverán a tener 1 VodCoin, ajustando el precio a $11.000.")) return;
             
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
@@ -607,10 +590,12 @@
                 tareasDeSubida.push(setDoc(ref, est)); 
             }
 
+            const reservaRef = doc(db, "banco_central", "config_" + cursoID);
+            tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
+
             try {
-                // Subimos todo el paquete de golpe
                 await Promise.all(tareasDeSubida);
-                alert(`✅ ¡Éxito! Los ${lista.length} alumnos fueron cargados correctamente.`);
+                alert(`✅ ¡Éxito! Los ${lista.length} alumnos fueron cargados correctamente y la reserva se ajustó a $11.000.`);
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
             }
