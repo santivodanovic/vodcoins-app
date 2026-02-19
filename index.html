@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V3.1 - Interfaz Mejorada</title>
+    <title>VodCoins V3.2 - Live Ticker & Notificaciones</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -52,8 +52,8 @@
 
     <div id="pantalla-cursos" class="full-screen-bg">
         <div class="caja-central">
-            <h1>☁️ VodCoins</h1>
-            <p style="color: #ddd;">Selecciona tu curso</p>
+            <h1 style="color: #1e3c72; margin-top: 0; font-weight: 800;">☁️ VodCoins</h1>
+            <p style="color: #666; font-weight: 600;">Selecciona tu curso</p>
             <div id="lista-botones-cursos">
                 <button class="btn-curso" onclick="seleccionarCurso('curso_8b')"><span>📘</span> 8º Básico</button>
                 <button class="btn-curso" onclick="seleccionarCurso('curso_limites')"><span>📈</span> Límites y Derivadas</button>
@@ -93,9 +93,16 @@
             <button class="btn-grande" style="background:#ff6b6b; margin-top:30px;" onclick="location.reload()">🔒 Salir</button>
 
             <div id="zona-profe" class="panel-admin">
-                <h3 style="color:#d35400;">🔧 Admin Zone</h3>
+                <h3 style="color:#d35400; margin-top:0;">🔧 Admin Zone</h3>
                 
-                <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:10px;">
+                <div style="background:#fffcf0; padding:15px; border-radius:8px; margin-top:10px; border-left: 5px solid #ff9f43;">
+                    <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Registro de Compras</h4>
+                    <div id="lista-notificaciones" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
+                        <em style="color:#aaa;">Cargando notificaciones...</em>
+                    </div>
+                </div>
+
+                <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:15px;">
                     <strong>👶 Nuevo Alumno:</strong>
                     <div style="display:flex; gap:5px;">
                         <input type="text" id="nuevo-nombre" placeholder="Nombre" style="margin:5px 0;">
@@ -184,7 +191,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, runTransaction, query, orderBy, limit } 
+        // CORRECCIÓN: Agregué 'addDoc' a la importación
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, runTransaction, query, orderBy, limit, addDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -203,9 +211,12 @@
         let estudiantes = [];
         let usuarioLogueado = null;
         let reservaMundial = 11000; 
+        
         let chartInstance = null; 
+        let marketInterval = null; // Variable para el latido del gráfico
+        let precioActualGlobal = 11000; // Variable global para alimentar el latido
 
-        // 3 CURSOS, SALDO INICIAL 1
+        // BASES DE DATOS DE LOS CURSOS
         const DATA_BASE = {
             "curso_8b": [
                 { id: 1, nombre: "Abarca Pérez Maximiliano Alonso", saldo: 1 },
@@ -362,6 +373,7 @@
             if(usuarioLogueado.esProfe) {
                 document.getElementById('zona-profe').style.display = 'block';
                 document.getElementById('controles-mercado-profe').style.display = 'block';
+                escucharNotificaciones(); // Activar historial de compras
             }
             actualizarUI();
             iniciarMercado(); 
@@ -375,6 +387,7 @@
             document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
         }
 
+        // --- CÓDIGO CORREGIDO: LATIDO DEL GRÁFICO ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -406,6 +419,21 @@
                 }
             });
 
+            // Iniciar Latido para que la línea fluya siempre
+            if(marketInterval) clearInterval(marketInterval);
+            marketInterval = setInterval(() => {
+                if(precioActualGlobal > 0 && chartInstance) {
+                    const hora = new Date().toLocaleTimeString();
+                    chartInstance.data.labels.push(hora);
+                    chartInstance.data.datasets[0].data.push(precioActualGlobal);
+                    if(chartInstance.data.labels.length > 20) { 
+                        chartInstance.data.labels.shift();
+                        chartInstance.data.datasets[0].data.shift();
+                    }
+                    chartInstance.update();
+                }
+            }, 3000); // Se actualiza cada 3 segundos
+
             const docReserva = doc(db, "banco_central", "config_" + cursoID);
             onSnapshot(docReserva, (snap) => {
                 if(snap.exists()) {
@@ -428,32 +456,21 @@
 
             if (circulante <= 0) circulante = 1;
 
-            const precio = Math.floor(reservaMundial / circulante);
+            precioActualGlobal = Math.floor(reservaMundial / circulante); // Alimenta el latido
 
             const lblPrecio = document.getElementById('ticker-precio');
             if(lblPrecio) {
-                lblPrecio.innerText = "$ " + precio.toLocaleString('es-CL'); 
+                lblPrecio.innerText = "$ " + precioActualGlobal.toLocaleString('es-CL'); 
                 document.getElementById('lbl-reserva').innerText = reservaMundial.toLocaleString('es-CL');
                 document.getElementById('lbl-circulante').innerText = circulante;
 
-                if(precio >= 11000) {
+                if(precioActualGlobal >= 11000) {
                     lblPrecio.className = "precio-gigante subida";
                     if(chartInstance) chartInstance.data.datasets[0].borderColor = '#4cd137';
                 } else {
                     lblPrecio.className = "precio-gigante bajada";
                     if(chartInstance) chartInstance.data.datasets[0].borderColor = '#e84118';
                 }
-            }
-
-            if(chartInstance) {
-                const hora = new Date().toLocaleTimeString();
-                chartInstance.data.labels.push(hora);
-                chartInstance.data.datasets[0].data.push(precio);
-                if(chartInstance.data.labels.length > 20) { 
-                    chartInstance.data.labels.shift();
-                    chartInstance.data.datasets[0].data.shift();
-                }
-                chartInstance.update();
             }
         }
 
@@ -475,7 +492,6 @@
                 estudiantes = [];
                 snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
                 
-                // ORDENAR ALFABÉTICAMENTE PARA LA LISTA VISUAL
                 estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
                 
                 llenarSelectores();
@@ -502,7 +518,6 @@
                 document.getElementById('lbl-nombre').textContent = "Profesor (Banco Central)";
                 document.getElementById('lbl-saldo').textContent = "∞";
                 
-                // Cargar Selector para Eliminar
                 const selEliminar = document.getElementById('sel-eliminar');
                 if(selEliminar) {
                     selEliminar.innerHTML = '<option value="">-- Seleccionar --</option>';
@@ -525,7 +540,6 @@
             selDest.innerHTML = '<option value="">Seleccionar compañero</option>';
 
             estudiantes.forEach((est, index) => {
-                // SE AGREGA NUMERACIÓN (index + 1)
                 divLista.innerHTML += `
                 <div class="tarjeta-alumno">
                     <div><b>${index + 1}. ${est.nombre}</b></div>
@@ -536,6 +550,32 @@
                      let op = document.createElement('option');
                      op.value = est.id; op.text = est.nombre; selDest.add(op);
                 }
+            });
+        }
+
+        // --- CORRECCIÓN: ESCUCHAR NOTIFICACIONES DEL PROFESOR ---
+        function escucharNotificaciones() {
+            const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"), limit(20));
+            onSnapshot(q, (snapshot) => {
+                const divContenedor = document.getElementById('lista-notificaciones');
+                if(!divContenedor) return;
+                
+                divContenedor.innerHTML = '';
+                if(snapshot.empty) {
+                    divContenedor.innerHTML = '<em style="color:#aaa;">Sin compras recientes...</em>';
+                    return;
+                }
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const horaFormateada = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : 'Recién';
+                    divContenedor.innerHTML += `
+                        <div style="border-bottom: 1px solid #eee; padding: 6px 0;">
+                            <b>${data.alumno}</b> compró <span style="color:#e67e22; font-weight:bold;">${data.item}</span> 
+                            <span style="color:#e84118;">(-${data.precio} VOD)</span> 
+                            <div style="color:#999; font-size:10px;">${horaFormateada}</div>
+                        </div>`;
+                });
             });
         }
 
@@ -582,7 +622,16 @@
             const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
             try {
                 await updateDoc(miRef, { saldo: miSaldo - precio });
-                alert("✅ Compra exitosa. ¡Avisa al profe!");
+                
+                // GUARDAR NOTIFICACIÓN EN LA NUBE PARA EL PROFESOR
+                await addDoc(collection(db, "compras_" + cursoID), {
+                    alumno: usuarioLogueado.nombre,
+                    item: nombreItem,
+                    precio: precio,
+                    timestamp: new Date()
+                });
+
+                alert("✅ Compra exitosa. ¡El profesor ha sido notificado!");
                 navegar('inicio');
             } catch (e) { alert("Error: " + e); }
         };
@@ -599,7 +648,6 @@
             document.getElementById('nuevo-nombre').value = '';
         };
 
-        // NUEVA FUNCIÓN PARA ELIMINAR
         window.eliminarAlumnoNube = async () => {
             const id = document.getElementById('sel-eliminar').value;
             if(!id) return;
@@ -609,7 +657,6 @@
             }
         };
 
-        // RESET CON DOBLE CONFIRMACIÓN Y REINICIO DE GRÁFICO
         window.inicializarBaseDatosNube = async () => {
             const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos actuales de TODOS LOS ALUMNOS de este curso y reiniciará la economía.\n\nEscribe la palabra CONFIRMAR para proceder:");
             
@@ -633,7 +680,6 @@
             try {
                 await Promise.all(tareasDeSubida);
                 
-                // Reiniciar el gráfico
                 if(chartInstance) {
                     chartInstance.data.labels = [];
                     chartInstance.data.datasets[0].data = [];
