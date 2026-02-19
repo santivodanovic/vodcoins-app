@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V3.3 - Historial & Gestión</title>
+    <title>VodCoins V4.0 - Fintual Edition</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); --primary: #4a90e2; }
+        :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); --primary: #4a90e2; --fintual-green: #00d282; --fintual-red: #ff5252; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg-gradient); background-attachment: fixed; color: #333; padding-bottom: 90px; min-height: 100vh; user-select: none; }
         
         .full-screen-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; }
@@ -31,18 +31,19 @@
         .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
-        .market-card { background: #1e1e1e; color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
-        .precio-gigante { font-size: 42px; font-weight: 800; margin: 10px 0; letter-spacing: -1px; }
-        .subida { color: #4cd137; text-shadow: 0 0 20px rgba(76, 209, 55, 0.3); }
-        .bajada { color: #e84118; text-shadow: 0 0 20px rgba(232, 65, 24, 0.3); }
-        .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        /* Estilo Gráfico Fintual */
+        .market-card { background: #ffffff; color: #333; padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .precio-gigante { font-size: 48px; font-weight: 800; margin: 5px 0 15px 0; letter-spacing: -2px; }
+        .subida { color: var(--fintual-green); }
+        .bajada { color: var(--fintual-red); }
+        .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight:600; }
+        
+        /* Botones de Rango Fintual */
+        .rango-container { display:flex; justify-content:space-between; background:#f5f7fa; border-radius:12px; padding:5px; margin-top:20px; }
+        .rango-btn { flex:1; background: transparent; color: #888; border: none; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.3s; }
+        .rango-btn.activo { background: white; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+
         .btn-market { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin: 5px; }
-        
-        /* Botones del Gráfico Histórico */
-        .rango-btn { background: #333; color: #aaa; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
-        .rango-btn.activo { background: var(--primary); color: white; box-shadow: 0 0 10px rgba(74, 144, 226, 0.5); }
-        
-        /* Botón borrar notificación */
         .btn-del-notif { background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; float: right; margin-left: 10px; }
 
         .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -83,24 +84,24 @@
     <div class="container" id="app-container">
         <div class="user-header">
             <div>
-                <span style="font-size:12px; color:#888;">HOLA,</span><br>
-                <strong id="lbl-nombre" style="font-size:18px;">Usuario</strong>
+                <span style="font-size:12px; color:#888; font-weight:bold;">HOLA,</span><br>
+                <strong id="lbl-nombre" style="font-size:18px; color:#1e3c72;">Usuario</strong>
             </div>
             <div class="saldo-badge">💰 <span id="lbl-saldo">-</span></div>
         </div>
 
         <div id="inicio" class="seccion activa">
-            <h2 style="margin-bottom:20px;">Panel de Control</h2>
+            <h2 style="margin-bottom:20px; color:#333;">Mi Panel</h2>
             <div class="menu-grid">
-                <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Bolsa</div>
+                <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Acción VOD</div>
                 <div class="menu-card" onclick="navegar('tienda')"><span class="menu-icon">🛍️</span>Tienda</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
             </div>
-            <button class="btn-grande" style="background:#ff6b6b; margin-top:30px;" onclick="location.reload()">🔒 Salir</button>
+            <button class="btn-grande" style="background:#ff6b6b; margin-top:30px;" onclick="location.reload()">🔒 Cerrar Sesión</button>
 
             <div id="zona-profe" class="panel-admin">
-                <h3 style="color:#d35400; margin-top:0;">🔧 Admin Zone</h3>
+                <h3 style="color:#d35400; margin-top:0;">🔧 Panel de Profesor</h3>
                 
                 <div style="background:#fffcf0; padding:15px; border-radius:8px; margin-top:10px; border-left: 5px solid #ff9f43;">
                     <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Registro de Compras</h4>
@@ -131,21 +132,21 @@
         </div>
 
         <div id="mercado" class="seccion">
-            <h2 style="margin-bottom:10px;">Bolsa de Valores</h2>
+            <h2 style="margin-bottom:10px; color:#333;">Comportamiento Acción</h2>
             
             <div class="market-card">
-                <div style="font-size:12px; color:#888;">VALOR ACTUAL VODCOIN</div>
+                <div style="font-size:12px; color:#aaa; font-weight:bold;">PRECIO VODCOIN</div>
                 <div id="ticker-precio" class="precio-gigante">Cargando...</div>
                 
-                <div style="height: 200px; width: 100%;">
+                <div style="height: 220px; width: 100%;">
                     <canvas id="graficoCanvas"></canvas>
                 </div>
                 
-                <div style="display:flex; justify-content:center; gap:8px; margin-top:15px;">
-                    <button id="btn-rango-vivo" class="rango-btn activo" onclick="cambiarRangoGrafico('vivo')">🔴 En Vivo</button>
-                    <button id="btn-rango-7" class="rango-btn" onclick="cambiarRangoGrafico(7)">7 Días</button>
-                    <button id="btn-rango-30" class="rango-btn" onclick="cambiarRangoGrafico(30)">30 Días</button>
-                    <button id="btn-rango-300" class="rango-btn" onclick="cambiarRangoGrafico(300)">300 Días</button>
+                <div class="rango-container">
+                    <button id="btn-rango-vivo" class="rango-btn activo" onclick="cambiarRangoGrafico('vivo')">1D (Vivo)</button>
+                    <button id="btn-rango-7" class="rango-btn" onclick="cambiarRangoGrafico(7)">1S</button>
+                    <button id="btn-rango-30" class="rango-btn" onclick="cambiarRangoGrafico(30)">1M</button>
+                    <button id="btn-rango-300" class="rango-btn" onclick="cambiarRangoGrafico(300)">1A</button>
                 </div>
                 
                 <div class="market-info">
@@ -157,41 +158,40 @@
             <div id="controles-mercado-profe" style="display:none; background:white; padding:20px; border-radius:15px; box-shadow: var(--shadow);">
                 <h3 style="margin-top:0;">🏦 Banco Central</h3>
                 <p style="font-size:13px; color:#666; margin-bottom:15px;">Aumentar la Reserva sube el precio. Disminuirla lo baja.</p>
-                
                 <div style="display:flex; flex-wrap:wrap;">
-                    <button class="btn-market" onclick="cambiarReserva(50000)" style="background:#4cd137;">+ $50k</button>
-                    <button class="btn-market" onclick="cambiarReserva(10000)" style="background:#4cd137; opacity:0.8;">+ $10k</button>
-                    <button class="btn-market" onclick="cambiarReserva(-10000)" style="background:#e84118; opacity:0.8;">- $10k</button>
-                    <button class="btn-market" onclick="cambiarReserva(-50000)" style="background:#e84118;">- $50k</button>
+                    <button class="btn-market" onclick="ejecutarAccionMercado(50000)" style="background:#00d282;">+ $50k</button>
+                    <button class="btn-market" onclick="ejecutarAccionMercado(10000)" style="background:#00d282; opacity:0.8;">+ $10k</button>
+                    <button class="btn-market" onclick="ejecutarAccionMercado(-10000)" style="background:#ff5252; opacity:0.8;">- $10k</button>
+                    <button class="btn-market" onclick="ejecutarAccionMercado(-50000)" style="background:#ff5252;">- $50k</button>
                 </div>
             </div>
         </div>
 
         <div id="tienda" class="seccion">
-            <h2>Canje de Décimas</h2>
+            <h2 style="color:#333;">Canje de Décimas</h2>
             <div class="tarjeta-alumno" style="border-left: 5px solid #ff9f43;">
-                <div><h3>1 Décima</h3><div style="color:#e67e22; font-weight:bold;">Precio: 10 VC</div></div>
+                <div><h3 style="margin:0; color:#333;">1 Décima</h3><div style="color:#e67e22; font-weight:bold;">Precio: 10 VOD</div></div>
                 <button onclick="comprarItem('1 Décima', 10)" style="background:#ff9f43; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">COMPRAR</button>
             </div>
             <div class="tarjeta-alumno" style="border-left: 5px solid #9b59b6;">
-                <div><h3>2 Décimas</h3><div style="color:#9b59b6; font-weight:bold;">Precio: 18 VC</div></div>
+                <div><h3 style="margin:0; color:#333;">2 Décimas</h3><div style="color:#9b59b6; font-weight:bold;">Precio: 18 VOD</div></div>
                 <button onclick="comprarItem('2 Décimas', 18)" style="background:#9b59b6; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">COMPRAR</button>
             </div>
         </div>
 
         <div id="lista" class="seccion">
-            <h2>Listado del Curso</h2>
+            <h2 style="color:#333;">Listado del Curso</h2>
             <div id="contenedor-lista">Cargando...</div>
         </div>
 
         <div id="transferencias" class="seccion">
-            <h2>Enviar Monedas</h2>
+            <h2 style="color:#333;">Transferir Fondos</h2>
             <div style="background:white; padding:25px; border-radius:20px; box-shadow:var(--shadow);">
-                <label>¿A quién?</label>
+                <label style="font-weight:bold; color:#555;">¿A quién?</label>
                 <select id="select-destino"></select>
-                <label>¿Cuánto?</label>
+                <label style="font-weight:bold; color:#555;">¿Cuánto?</label>
                 <input type="number" id="monto" placeholder="Ej: 5 o -5">
-                <button type="button" class="btn-grande" onclick="realizarTransferencia()">Procesar Transacción</button>
+                <button type="button" class="btn-grande" onclick="realizarTransferencia()">Confirmar Transacción</button>
             </div>
         </div>
     </div>
@@ -226,11 +226,14 @@
         let reservaMundial = 11000; 
         
         let chartInstance = null; 
-        let marketInterval = null; 
         let precioActualGlobal = 11000; 
         let modoGraficoActual = 'vivo';
-        let historialPreciosDB = []; // Memoria de los últimos días
+        
+        // Memoria Persistente de Gráficos
+        let historialVivoDB = []; 
+        let historialLargoDB = [];
 
+        // BASE DE DATOS MAESTRA
         const DATA_BASE = {
             "curso_8b": [
                 { id: 1, nombre: "Abarca Pérez Maximiliano Alonso", saldo: 1 },
@@ -401,11 +404,12 @@
             document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
         }
 
-        // --- SISTEMA DE GRÁFICO ---
+        // --- SISTEMA DE GRÁFICO FINTUAL ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
 
+            // Configuración estética Fintual
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -413,54 +417,44 @@
                     datasets: [{
                         label: 'Valor ($)',
                         data: [],
-                        borderColor: '#4cd137',
-                        backgroundColor: 'rgba(76, 209, 55, 0.1)',
+                        borderColor: '#00d282',
+                        backgroundColor: 'rgba(0, 210, 130, 0.1)',
                         borderWidth: 3,
                         pointRadius: 0,
+                        pointHitRadius: 10,
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4 // Curvas suaves
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
                     scales: {
                         x: { display: false },
-                        y: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                        y: { display: false } // Oculta líneas de fondo para aspecto limpio
                     },
-                    animation: false
+                    animation: { duration: 400 }
                 }
             });
 
-            // Conectar a Firestore para el historial
-            onSnapshot(collection(db, "historial_" + cursoID), (snap) => {
-                let temp = [];
-                snap.forEach(doc => temp.push(doc.data()));
-                temp.sort((a,b) => a.fecha.localeCompare(b.fecha)); // Ordenar por fecha
-                historialPreciosDB = temp;
-                
-                if (modoGraficoActual !== 'vivo') {
-                    dibujarGraficoHistorico(modoGraficoActual);
+            // 1. Escuchar el documento "Memoria en Vivo"
+            onSnapshot(doc(db, "banco_central", "memoria_vivo_" + cursoID), (snap) => {
+                if(snap.exists() && snap.data().puntos) {
+                    historialVivoDB = snap.data().puntos;
+                    if(modoGraficoActual === 'vivo') dibujarGrafico(historialVivoDB);
                 }
             });
 
-            // Iniciar Latido para "En Vivo"
-            if(marketInterval) clearInterval(marketInterval);
-            marketInterval = setInterval(() => {
-                if(modoGraficoActual === 'vivo' && precioActualGlobal > 0 && chartInstance) {
-                    const hora = new Date().toLocaleTimeString();
-                    chartInstance.data.labels.push(hora);
-                    chartInstance.data.datasets[0].data.push(precioActualGlobal);
-                    if(chartInstance.data.labels.length > 20) { 
-                        chartInstance.data.labels.shift();
-                        chartInstance.data.datasets[0].data.shift();
-                    }
-                    chartInstance.update();
+            // 2. Escuchar el documento "Memoria Larga" (7D, 30D, 300D)
+            onSnapshot(doc(db, "banco_central", "memoria_larga_" + cursoID), (snap) => {
+                if(snap.exists() && snap.data().puntos) {
+                    historialLargoDB = snap.data().puntos;
+                    if(modoGraficoActual !== 'vivo') dibujarGraficoLargo(modoGraficoActual);
                 }
-            }, 3000); 
+            });
 
-            // Escuchar cambios de la Reserva para calcular precio actual
+            // 3. Escuchar precio actual
             onSnapshot(doc(db, "banco_central", "config_" + cursoID), (snap) => {
                 if(snap.exists()) {
                     reservaMundial = snap.data().reserva;
@@ -475,22 +469,43 @@
             document.getElementById('btn-rango-' + rango).classList.add('activo');
 
             if(rango === 'vivo') {
-                chartInstance.data.labels = [];
-                chartInstance.data.datasets[0].data = [];
-                chartInstance.update();
+                dibujarGrafico(historialVivoDB);
             } else {
-                dibujarGraficoHistorico(rango);
+                dibujarGraficoLargo(rango);
             }
         };
 
-        function dibujarGraficoHistorico(diasInt) {
-            let dataToShow = historialPreciosDB.slice(-diasInt);
-            chartInstance.data.labels = dataToShow.map(d => {
-                let partes = d.fecha.split('-'); // Formato: YYYY-MM-DD
-                return partes.length === 3 ? `${partes[2]}/${partes[1]}` : d.fecha;
-            });
-            chartInstance.data.datasets[0].data = dataToShow.map(d => d.precio);
+        function dibujarGrafico(arrayPuntos) {
+            if(!chartInstance || arrayPuntos.length === 0) return;
+            
+            chartInstance.data.labels = arrayPuntos.map(d => d.t);
+            chartInstance.data.datasets[0].data = arrayPuntos.map(d => d.p);
+            
+            aplicarColoresFintual(arrayPuntos);
             chartInstance.update();
+        }
+
+        function dibujarGraficoLargo(dias) {
+            if(!chartInstance || historialLargoDB.length === 0) return;
+            
+            let dataToShow = historialLargoDB.slice(-dias);
+            chartInstance.data.labels = dataToShow.map(d => d.t);
+            chartInstance.data.datasets[0].data = dataToShow.map(d => d.p);
+            
+            aplicarColoresFintual(dataToShow);
+            chartInstance.update();
+        }
+
+        function aplicarColoresFintual(dataArray) {
+            if(dataArray.length < 2) return;
+            const precioInicial = dataArray[0].p;
+            const precioActual = dataArray[dataArray.length - 1].p;
+            
+            const colorLinea = precioActual >= precioInicial ? '#00d282' : '#ff5252';
+            const colorFondo = precioActual >= precioInicial ? 'rgba(0, 210, 130, 0.1)' : 'rgba(255, 82, 82, 0.1)';
+            
+            chartInstance.data.datasets[0].borderColor = colorLinea;
+            chartInstance.data.datasets[0].backgroundColor = colorFondo;
         }
 
         function calcularPrecio() {
@@ -510,27 +525,35 @@
 
                 if(precioActualGlobal >= 11000) {
                     lblPrecio.className = "precio-gigante subida";
-                    if(chartInstance) chartInstance.data.datasets[0].borderColor = '#4cd137';
                 } else {
                     lblPrecio.className = "precio-gigante bajada";
-                    if(chartInstance) chartInstance.data.datasets[0].borderColor = '#e84118';
                 }
             }
-
-            // GUARDAR HISTORIAL DIARIO (Sobrescribe con el precio del día al cierre)
-            const hoy = new Date().toISOString().split('T')[0];
-            setDoc(doc(db, "historial_" + cursoID, hoy), {
-                fecha: hoy,
-                precio: precioActualGlobal
-            });
         }
 
-        window.cambiarReserva = async (cantidad) => {
+        // Función Maestra para inyectar/retirar del Banco Central y guardar en la memoria visual
+        window.ejecutarAccionMercado = async (cantidad) => {
             const docRef = doc(db, "banco_central", "config_" + cursoID);
+            const vivoRef = doc(db, "banco_central", "memoria_vivo_" + cursoID);
+            
             try {
                 const snap = await getDoc(docRef);
                 if(snap.exists()) {
-                    await updateDoc(docRef, { reserva: snap.data().reserva + cantidad });
+                    let nuevaReserva = snap.data().reserva + cantidad;
+                    await updateDoc(docRef, { reserva: nuevaReserva });
+                    
+                    // Actualizar memoria en vivo
+                    let circulante = estudiantes.reduce((total, est) => { return (est.id !== 'profe') ? total + (est.saldo || 0) : total; }, 0);
+                    if (circulante <= 0) circulante = 1;
+                    let nuevoPrecioCalculado = Math.floor(nuevaReserva / circulante);
+                    
+                    let hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    let vSnap = await getDoc(vivoRef);
+                    let arrayVivo = vSnap.exists() ? vSnap.data().puntos : [];
+                    arrayVivo.push({t: hora, p: nuevoPrecioCalculado});
+                    if(arrayVivo.length > 40) arrayVivo.shift(); // Mantiene los últimos 40 movimientos
+                    
+                    await setDoc(vivoRef, { puntos: arrayVivo });
                 }
             } catch(e) { alert("Error: " + e); }
         };
@@ -545,12 +568,8 @@
                 snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
                 
                 estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
-                
                 llenarSelectores();
-                if(usuarioLogueado) {
-                    actualizarUI(); 
-                    calcularPrecio(); 
-                }
+                if(usuarioLogueado) { actualizarUI(); calcularPrecio(); }
             });
         }
 
@@ -567,7 +586,7 @@
             if(!usuarioLogueado) return;
 
             if(usuarioLogueado.esProfe) {
-                document.getElementById('lbl-nombre').textContent = "Profesor (Banco Central)";
+                document.getElementById('lbl-nombre').textContent = "Profesor (Admin)";
                 document.getElementById('lbl-saldo').textContent = "∞";
                 
                 const selEliminar = document.getElementById('sel-eliminar');
@@ -605,7 +624,6 @@
             });
         }
 
-        // --- SISTEMA DE NOTIFICACIONES CON BORRADO ---
         function escucharNotificaciones() {
             const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"), limit(30));
             onSnapshot(q, (snapshot) => {
@@ -624,7 +642,7 @@
                     divContenedor.innerHTML += `
                         <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
                             <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
-                            <b>${data.alumno}</b> compró <span style="color:#e67e22; font-weight:bold;">${data.item}</span> 
+                            <b>${data.alumno}</b> canjeó <span style="color:#e67e22; font-weight:bold;">${data.item}</span> 
                             <span style="color:#e84118;">(-${data.precio} VOD)</span> 
                             <div style="color:#999; font-size:10px; margin-top:2px;">${horaFormateada}</div>
                         </div>`;
@@ -638,14 +656,12 @@
             }
         };
 
-        // --- FUNCIONES COMERCIALES ---
         window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
             const monto = parseFloat(document.getElementById('monto').value);
 
             if(!destinoId || isNaN(monto)) return alert("Datos inválidos");
-            
-            if(!usuarioLogueado.esProfe && monto <= 0) return alert("⛔ Solo el Profesor puede enviar valores negativos (multar).");
+            if(!usuarioLogueado.esProfe && monto <= 0) return alert("⛔ Solo el Profesor puede enviar valores negativos.");
             if(monto === 0) return alert("El monto no puede ser cero.");
             
             const destinoRef = doc(db, cursoID, destinoId.toString());
@@ -655,6 +671,9 @@
                     const dDoc = await getDoc(destinoRef);
                     await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
                     alert(`✅ Operación de ${monto} VodCoins realizada.`);
+                    
+                    // Si el profe emite/destruye dinero directo a un alumno, altera el circulante y por ende el gráfico.
+                    // (Opcional: registrar este evento visualmente igual que en el Banco Central)
                 } else {
                     const origenRef = doc(db, cursoID, usuarioLogueado.id.toString());
                     await runTransaction(db, async (t) => {
@@ -680,15 +699,31 @@
             if(!confirm(`¿Comprar ${nombreItem}?`)) return;
 
             const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
+            const vivoRef = doc(db, "banco_central", "memoria_vivo_" + cursoID);
+            
             try {
+                // 1. Quitar saldo al alumno
                 await updateDoc(miRef, { saldo: miSaldo - precio });
                 
+                // 2. Avisar al profe
                 await addDoc(collection(db, "compras_" + cursoID), {
                     alumno: usuarioLogueado.nombre,
                     item: nombreItem,
                     precio: precio,
                     timestamp: new Date()
                 });
+
+                // 3. Como el dinero desaparece, el circulante baja y el precio sube. Actualizar gráfico:
+                let nuevoCirculante = (estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + e.saldo : t), 0)) - precio;
+                if(nuevoCirculante <= 0) nuevoCirculante = 1;
+                let nuevoPrecioCalculado = Math.floor(reservaMundial / nuevoCirculante);
+                
+                let hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                let vSnap = await getDoc(vivoRef);
+                let arrayVivo = vSnap.exists() ? vSnap.data().puntos : [];
+                arrayVivo.push({t: hora, p: nuevoPrecioCalculado});
+                if(arrayVivo.length > 40) arrayVivo.shift(); 
+                await setDoc(vivoRef, { puntos: arrayVivo });
 
                 alert("✅ Compra exitosa. ¡El profesor ha sido notificado!");
                 navegar('inicio');
@@ -716,8 +751,9 @@
             }
         };
 
+        // --- MAGIA FINTUAL: GENERADOR DE HISTORIAL REALISTA AL RESETEAR ---
         window.inicializarBaseDatosNube = async () => {
-            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos de este curso y reiniciará la economía.\n\nEscribe CONFIRMAR para proceder:");
+            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos de este curso y reiniciará la economía a $11.000.\n\nEscribe CONFIRMAR para proceder:");
             
             if (confirmacion !== "CONFIRMAR") {
                 alert("Operación cancelada.");
@@ -727,30 +763,48 @@
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
 
+            // 1. Crear a los estudiantes
             for(let est of lista) {
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
                 const ref = doc(db, cursoID, est.id.toString());
                 tareasDeSubida.push(setDoc(ref, est)); 
             }
 
+            // 2. Setear la reserva real
             const reservaRef = doc(db, "banco_central", "config_" + cursoID);
             tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
 
-            // Semilla inicial para el gráfico histórico
-            const hoy = new Date().toISOString().split('T')[0];
-            const historialRef = doc(db, "historial_" + cursoID, hoy);
-            tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
+            // 3. Crear Memoria En Vivo (Plana para hoy, porque acaba de resetear)
+            const horaActual = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const vivoRef = doc(db, "banco_central", "memoria_vivo_" + cursoID);
+            tareasDeSubida.push(setDoc(vivoRef, { puntos: [{t: horaActual, p: 11000}] }));
+
+            // 4. GENERADOR FINTUAL: Crear 300 días de historial falso hacia atrás
+            let historialFalso = [];
+            let precioSimulado = 11000;
+            
+            // Vamos 300 días al pasado y venimos dibujando hacia hoy
+            for(let i = 300; i >= 0; i--) {
+                let fechaObj = new Date();
+                fechaObj.setDate(fechaObj.getDate() - i);
+                let fechaFormato = `${fechaObj.getDate()}/${fechaObj.getMonth()+1}`;
+                
+                // Variación aleatoria entre -3% y +3% diaria
+                let variacion = 1 + ((Math.random() * 0.06) - 0.03); 
+                precioSimulado = Math.floor(precioSimulado * variacion);
+                
+                // Forzamos a que el ÚLTIMO día termine exactamente en 11000
+                if(i === 0) precioSimulado = 11000; 
+
+                historialFalso.push({t: fechaFormato, p: precioSimulado});
+            }
+
+            const largaRef = doc(db, "banco_central", "memoria_larga_" + cursoID);
+            tareasDeSubida.push(setDoc(largaRef, { puntos: historialFalso }));
 
             try {
                 await Promise.all(tareasDeSubida);
-                
-                if(chartInstance) {
-                    chartInstance.data.labels = [];
-                    chartInstance.data.datasets[0].data = [];
-                    chartInstance.update();
-                }
-
-                alert(`✅ ¡Éxito! Los ${lista.length} alumnos fueron cargados y la reserva se ajustó a $11.000.`);
+                alert(`✅ ¡Éxito Fintual! Economía iniciada a $11.000 con historial de proyecciones cargado.`);
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
             }
