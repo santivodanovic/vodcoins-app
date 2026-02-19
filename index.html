@@ -296,7 +296,7 @@
                 { id: 7, nombre: "Briones Cristóbal", saldo: 1 },
                 { id: 8, nombre: "Budaleo Francisca", saldo: 1 },
                 { id: 9, nombre: "Cases Benjamín", saldo: 1 },
-                { id: 10, দুর্নীতি "Cisternas Sofía", saldo: 1 },
+                { id: 10, nombre: "Cisternas Sofía", saldo: 1 },
                 { id: 11, nombre: "Cuevas Magdalena", saldo: 1 },
                 { id: 12, nombre: "González Emilie", saldo: 1 },
                 { id: 13, nombre: "Huillipán Lucas", saldo: 1 },
@@ -579,7 +579,7 @@
         };
 
         window.inicializarBaseDatosNube = async () => {
-            if(!confirm("⚠️ ¿Resetear Base de Datos del curso actual? Se borrarán los saldos y todos los alumnos volverán a tener 1 VodCoin, ajustando el precio a $11.000.")) return;
+            if(!confirm("⚠️ ¿Resetear Base de Datos del curso actual? Se borrarán los saldos y se usarán los estudiantes base a 11.000.")) return;
             
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
