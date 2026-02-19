@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V4.0 - Fintual Edition</title>
+    <title>VodCoins V4.1 - Gráficos Realistas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -60,8 +60,8 @@
 
     <div id="pantalla-cursos" class="full-screen-bg">
         <div class="caja-central">
-            <h1 style="color: #1e3c72; margin-top: 0; font-weight: 800;">☁️ VodCoins</h1>
-            <p style="color: #666; font-weight: 600;">Selecciona tu curso</p>
+            <h1 style="color: #222; margin-top: 0; font-weight: 800;">☁️ VodCoins</h1>
+            <p style="color: #555; font-weight: 600;">Selecciona tu curso</p>
             <div id="lista-botones-cursos">
                 <button class="btn-curso" onclick="seleccionarCurso('curso_8b')"><span>📘</span> 8º Básico</button>
                 <button class="btn-curso" onclick="seleccionarCurso('curso_limites')"><span>📈</span> Límites y Derivadas</button>
@@ -73,7 +73,7 @@
     <div id="pantalla-login" class="full-screen-bg" style="display: none;">
         <div class="caja-central">
             <button onclick="location.reload()" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver al inicio</button>
-            <h2 id="titulo-login" style="color:#333; margin-top:0;">Login</h2>
+            <h2 id="titulo-login" style="color:#222; margin-top:0;">Login</h2>
             <select id="login-selector"><option>Cargando...</option></select>
             <input type="password" id="login-pin" placeholder="PIN" maxlength="6" style="font-size: 22px; letter-spacing: 5px;">
             <button class="btn-grande" onclick="intentarLogin()">Ingresar</button>
@@ -85,7 +85,7 @@
         <div class="user-header">
             <div>
                 <span style="font-size:12px; color:#888; font-weight:bold;">HOLA,</span><br>
-                <strong id="lbl-nombre" style="font-size:18px; color:#1e3c72;">Usuario</strong>
+                <strong id="lbl-nombre" style="font-size:18px; color:#222;">Usuario</strong>
             </div>
             <div class="saldo-badge">💰 <span id="lbl-saldo">-</span></div>
         </div>
@@ -226,14 +226,13 @@
         let reservaMundial = 11000; 
         
         let chartInstance = null; 
+        let marketInterval = null; 
         let precioActualGlobal = 11000; 
         let modoGraficoActual = 'vivo';
         
-        // Memoria Persistente de Gráficos
-        let historialVivoDB = []; 
+        let historialVivoLocal = []; 
         let historialLargoDB = [];
 
-        // BASE DE DATOS MAESTRA
         const DATA_BASE = {
             "curso_8b": [
                 { id: 1, nombre: "Abarca Pérez Maximiliano Alonso", saldo: 1 },
@@ -404,12 +403,10 @@
             document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
         }
 
-        // --- SISTEMA DE GRÁFICO FINTUAL ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
 
-            // Configuración estética Fintual
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -423,38 +420,57 @@
                         pointRadius: 0,
                         pointHitRadius: 10,
                         fill: true,
-                        tension: 0.4 // Curvas suaves
+                        tension: 0.4 
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: { top: 10, bottom: 10 } }, // Protege líneas planas
                     plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
                     scales: {
                         x: { display: false },
-                        y: { display: false } // Oculta líneas de fondo para aspecto limpio
+                        y: { display: false, grace: '5%' } // Fintual style, sin lineas de fondo y con margen
                     },
                     animation: { duration: 400 }
                 }
             });
 
-            // 1. Escuchar el documento "Memoria en Vivo"
-            onSnapshot(doc(db, "banco_central", "memoria_vivo_" + cursoID), (snap) => {
-                if(snap.exists() && snap.data().puntos) {
-                    historialVivoDB = snap.data().puntos;
-                    if(modoGraficoActual === 'vivo') dibujarGrafico(historialVivoDB);
+            // Generar un historial en vivo inicial para que se vea una línea al entrar
+            historialVivoLocal = [];
+            let tActual = new Date();
+            for(let i = 25; i >= 0; i--) {
+                let tStr = new Date(tActual.getTime() - i*3000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                historialVivoLocal.push({t: tStr, p: precioActualGlobal});
+            }
+
+            // Escuchar el Historial Diario de la Nube
+            onSnapshot(collection(db, "historial_" + cursoID), (snap) => {
+                let temp = [];
+                snap.forEach(doc => temp.push(doc.data()));
+                temp.sort((a,b) => a.fecha.localeCompare(b.fecha)); 
+                historialLargoDB = temp;
+                
+                if (modoGraficoActual !== 'vivo') {
+                    dibujarGraficoLargo(modoGraficoActual);
                 }
             });
 
-            // 2. Escuchar el documento "Memoria Larga" (7D, 30D, 300D)
-            onSnapshot(doc(db, "banco_central", "memoria_larga_" + cursoID), (snap) => {
-                if(snap.exists() && snap.data().puntos) {
-                    historialLargoDB = snap.data().puntos;
-                    if(modoGraficoActual !== 'vivo') dibujarGraficoLargo(modoGraficoActual);
+            // Motor de Latido En Vivo (RAM Local)
+            if(marketInterval) clearInterval(marketInterval);
+            marketInterval = setInterval(() => {
+                if(precioActualGlobal > 0) {
+                    let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                    historialVivoLocal.push({t: tStr, p: precioActualGlobal});
+                    if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
+                    
+                    if(modoGraficoActual === 'vivo') {
+                        dibujarGrafico(historialVivoLocal);
+                    }
                 }
-            });
+            }, 3000); 
 
-            // 3. Escuchar precio actual
+            // Escuchar cambios del precio maestro
             onSnapshot(doc(db, "banco_central", "config_" + cursoID), (snap) => {
                 if(snap.exists()) {
                     reservaMundial = snap.data().reserva;
@@ -469,7 +485,7 @@
             document.getElementById('btn-rango-' + rango).classList.add('activo');
 
             if(rango === 'vivo') {
-                dibujarGrafico(historialVivoDB);
+                dibujarGrafico(historialVivoLocal);
             } else {
                 dibujarGraficoLargo(rango);
             }
@@ -477,22 +493,45 @@
 
         function dibujarGrafico(arrayPuntos) {
             if(!chartInstance || arrayPuntos.length === 0) return;
-            
             chartInstance.data.labels = arrayPuntos.map(d => d.t);
             chartInstance.data.datasets[0].data = arrayPuntos.map(d => d.p);
-            
             aplicarColoresFintual(arrayPuntos);
             chartInstance.update();
         }
 
-        function dibujarGraficoLargo(dias) {
-            if(!chartInstance || historialLargoDB.length === 0) return;
+        function dibujarGraficoLargo(diasInt) {
+            if(!chartInstance) return;
             
-            let dataToShow = historialLargoDB.slice(-dias);
-            chartInstance.data.labels = dataToShow.map(d => d.t);
-            chartInstance.data.datasets[0].data = dataToShow.map(d => d.p);
-            
-            aplicarColoresFintual(dataToShow);
+            let dataReal = [...historialLargoDB];
+            let dataAUsar = [];
+            let diasFaltantes = diasInt - dataReal.length;
+
+            // MAGIA: Rellenar el pasado con línea plana de 11.000 si faltan días.
+            if(diasFaltantes > 0) {
+                let fechaBase = dataReal.length > 0 ? new Date(dataReal[0].fecha) : new Date();
+                // Ajuste de zona horaria para que no se corra el día
+                fechaBase.setMinutes(fechaBase.getMinutes() + fechaBase.getTimezoneOffset());
+                
+                for(let i = diasFaltantes; i > 0; i--) {
+                    let fObj = new Date(fechaBase);
+                    fObj.setDate(fObj.getDate() - i);
+                    let mes = (fObj.getMonth()+1).toString().padStart(2,'0');
+                    let dia = fObj.getDate().toString().padStart(2,'0');
+                    dataAUsar.push({ t: `${dia}/${mes}`, p: 11000 });
+                }
+            }
+
+            // Convertir las fechas reales al formato visual (DD/MM)
+            let datosRealesFormateados = dataReal.map(d => {
+                let partes = d.fecha.split('-');
+                return { t: `${partes[2]}/${partes[1]}`, p: d.precio };
+            });
+
+            dataAUsar = dataAUsar.concat(datosRealesFormateados).slice(-diasInt);
+
+            chartInstance.data.labels = dataAUsar.map(d => d.t);
+            chartInstance.data.datasets[0].data = dataAUsar.map(d => d.p);
+            aplicarColoresFintual(dataAUsar);
             chartInstance.update();
         }
 
@@ -517,6 +556,11 @@
 
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
+            // Para la primera vez que se carga el vivo
+            if(historialVivoLocal.length > 0 && historialVivoLocal[0].p !== precioActualGlobal) {
+                historialVivoLocal.forEach(h => { if(h.p === 11000) h.p = precioActualGlobal; });
+            }
+
             const lblPrecio = document.getElementById('ticker-precio');
             if(lblPrecio) {
                 lblPrecio.innerText = "$ " + precioActualGlobal.toLocaleString('es-CL'); 
@@ -529,36 +573,28 @@
                     lblPrecio.className = "precio-gigante bajada";
                 }
             }
+
+            // GUARDAR HISTORIAL DIARIO REAL EN LA NUBE (Sobrescribe con el precio final de hoy)
+            const hoyObj = new Date();
+            hoyObj.setMinutes(hoyObj.getMinutes() - hoyObj.getTimezoneOffset());
+            const hoyStr = hoyObj.toISOString().split('T')[0];
+            
+            setDoc(doc(db, "historial_" + cursoID, hoyStr), {
+                fecha: hoyStr,
+                precio: precioActualGlobal
+            });
         }
 
-        // Función Maestra para inyectar/retirar del Banco Central y guardar en la memoria visual
         window.ejecutarAccionMercado = async (cantidad) => {
             const docRef = doc(db, "banco_central", "config_" + cursoID);
-            const vivoRef = doc(db, "banco_central", "memoria_vivo_" + cursoID);
-            
             try {
                 const snap = await getDoc(docRef);
                 if(snap.exists()) {
-                    let nuevaReserva = snap.data().reserva + cantidad;
-                    await updateDoc(docRef, { reserva: nuevaReserva });
-                    
-                    // Actualizar memoria en vivo
-                    let circulante = estudiantes.reduce((total, est) => { return (est.id !== 'profe') ? total + (est.saldo || 0) : total; }, 0);
-                    if (circulante <= 0) circulante = 1;
-                    let nuevoPrecioCalculado = Math.floor(nuevaReserva / circulante);
-                    
-                    let hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    let vSnap = await getDoc(vivoRef);
-                    let arrayVivo = vSnap.exists() ? vSnap.data().puntos : [];
-                    arrayVivo.push({t: hora, p: nuevoPrecioCalculado});
-                    if(arrayVivo.length > 40) arrayVivo.shift(); // Mantiene los últimos 40 movimientos
-                    
-                    await setDoc(vivoRef, { puntos: arrayVivo });
+                    await updateDoc(docRef, { reserva: snap.data().reserva + cantidad });
                 }
             } catch(e) { alert("Error: " + e); }
         };
 
-        // --- SISTEMA DE ALUMNOS ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
@@ -671,9 +707,6 @@
                     const dDoc = await getDoc(destinoRef);
                     await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
                     alert(`✅ Operación de ${monto} VodCoins realizada.`);
-                    
-                    // Si el profe emite/destruye dinero directo a un alumno, altera el circulante y por ende el gráfico.
-                    // (Opcional: registrar este evento visualmente igual que en el Banco Central)
                 } else {
                     const origenRef = doc(db, cursoID, usuarioLogueado.id.toString());
                     await runTransaction(db, async (t) => {
@@ -699,31 +732,15 @@
             if(!confirm(`¿Comprar ${nombreItem}?`)) return;
 
             const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
-            const vivoRef = doc(db, "banco_central", "memoria_vivo_" + cursoID);
-            
             try {
-                // 1. Quitar saldo al alumno
                 await updateDoc(miRef, { saldo: miSaldo - precio });
                 
-                // 2. Avisar al profe
                 await addDoc(collection(db, "compras_" + cursoID), {
                     alumno: usuarioLogueado.nombre,
                     item: nombreItem,
                     precio: precio,
                     timestamp: new Date()
                 });
-
-                // 3. Como el dinero desaparece, el circulante baja y el precio sube. Actualizar gráfico:
-                let nuevoCirculante = (estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + e.saldo : t), 0)) - precio;
-                if(nuevoCirculante <= 0) nuevoCirculante = 1;
-                let nuevoPrecioCalculado = Math.floor(reservaMundial / nuevoCirculante);
-                
-                let hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                let vSnap = await getDoc(vivoRef);
-                let arrayVivo = vSnap.exists() ? vSnap.data().puntos : [];
-                arrayVivo.push({t: hora, p: nuevoPrecioCalculado});
-                if(arrayVivo.length > 40) arrayVivo.shift(); 
-                await setDoc(vivoRef, { puntos: arrayVivo });
 
                 alert("✅ Compra exitosa. ¡El profesor ha sido notificado!");
                 navegar('inicio');
@@ -751,7 +768,6 @@
             }
         };
 
-        // --- MAGIA FINTUAL: GENERADOR DE HISTORIAL REALISTA AL RESETEAR ---
         window.inicializarBaseDatosNube = async () => {
             const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos de este curso y reiniciará la economía a $11.000.\n\nEscribe CONFIRMAR para proceder:");
             
@@ -763,48 +779,18 @@
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
 
-            // 1. Crear a los estudiantes
             for(let est of lista) {
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
                 const ref = doc(db, cursoID, est.id.toString());
                 tareasDeSubida.push(setDoc(ref, est)); 
             }
 
-            // 2. Setear la reserva real
             const reservaRef = doc(db, "banco_central", "config_" + cursoID);
             tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
 
-            // 3. Crear Memoria En Vivo (Plana para hoy, porque acaba de resetear)
-            const horaActual = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const vivoRef = doc(db, "banco_central", "memoria_vivo_" + cursoID);
-            tareasDeSubida.push(setDoc(vivoRef, { puntos: [{t: horaActual, p: 11000}] }));
-
-            // 4. GENERADOR FINTUAL: Crear 300 días de historial falso hacia atrás
-            let historialFalso = [];
-            let precioSimulado = 11000;
-            
-            // Vamos 300 días al pasado y venimos dibujando hacia hoy
-            for(let i = 300; i >= 0; i--) {
-                let fechaObj = new Date();
-                fechaObj.setDate(fechaObj.getDate() - i);
-                let fechaFormato = `${fechaObj.getDate()}/${fechaObj.getMonth()+1}`;
-                
-                // Variación aleatoria entre -3% y +3% diaria
-                let variacion = 1 + ((Math.random() * 0.06) - 0.03); 
-                precioSimulado = Math.floor(precioSimulado * variacion);
-                
-                // Forzamos a que el ÚLTIMO día termine exactamente en 11000
-                if(i === 0) precioSimulado = 11000; 
-
-                historialFalso.push({t: fechaFormato, p: precioSimulado});
-            }
-
-            const largaRef = doc(db, "banco_central", "memoria_larga_" + cursoID);
-            tareasDeSubida.push(setDoc(largaRef, { puntos: historialFalso }));
-
             try {
                 await Promise.all(tareasDeSubida);
-                alert(`✅ ¡Éxito Fintual! Economía iniciada a $11.000 con historial de proyecciones cargado.`);
+                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000 y limpia de historiales falsos.`);
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
             }
