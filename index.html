@@ -1,59 +1,56 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V18.0 (Estable)</title>
+    <title>VodCoins V2.4 - Economía Completa</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        /* --- ESTILOS (Diseño V17 - Funcionalidad V15) --- */
-        :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg-gradient); background-attachment: fixed; color: #333; padding-bottom: 90px; min-height: 100vh; }
+        /* --- ESTILOS GENERALES --- */
+        :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); --primary: #4a90e2; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg-gradient); background-attachment: fixed; color: #333; padding-bottom: 90px; min-height: 100vh; user-select: none; }
         
         /* PANTALLAS */
         .full-screen-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; }
         .caja-central { background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         
-        /* BOTONES Y INPUTS */
-        .btn-grande { background: #4a90e2; color: white; padding: 14px; width: 100%; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 15px; }
+        /* BOTONES E INPUTS */
+        .btn-grande { background: var(--primary); color: white; padding: 14px; width: 100%; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: transform 0.1s; }
+        .btn-grande:active { transform: scale(0.98); }
         .btn-curso { width: 100%; padding: 18px; margin-bottom: 12px; background: white; border: none; border-radius: 15px; font-weight: 600; color: #444; cursor: pointer; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .btn-curso span { font-size: 20px; margin-right: 15px; }
-        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #f9f9f9; }
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #f9f9f9; text-align: center; }
 
         /* HEADER Y MENU */
         .container { padding: 20px; max-width: 600px; margin: 0 auto; display: none; }
         .seccion { display: none; animation: fadeIn 0.4s; }
         .seccion.activa { display: block; }
-        .user-header { background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
-        .saldo-badge { background: #d4fc79; color: #2e7d32; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
+        
+        .user-header { background: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+        .saldo-badge { background: #d4fc79; color: #2e7d32; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 1.2em; }
         
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .menu-card { background: white; padding: 25px 15px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; color: #555; }
+        .menu-card { background: white; padding: 25px 15px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; color: #555; transition: transform 0.2s; }
+        .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
-        /* LISTA Y TARJETAS */
-        .tarjeta-alumno { background: white; padding: 18px; margin-bottom: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        
-        /* TIENDA */
-        .producto-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); border-left: 5px solid #ff9f43; }
-        .btn-comprar { background: #ff9f43; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        /* ESTILOS NUEVOS: MERCADO / BOLSA */
+        .market-card { background: #1e1e1e; color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
+        .precio-gigante { font-size: 42px; font-weight: 800; margin: 10px 0; letter-spacing: -1px; }
+        .subida { color: #4cd137; text-shadow: 0 0 20px rgba(76, 209, 55, 0.3); }
+        .bajada { color: #e84118; text-shadow: 0 0 20px rgba(232, 65, 24, 0.3); }
+        .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-market { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin: 5px; }
 
-        /* ADMIN */
+        /* LISTA, ADMIN Y OTROS */
+        .tarjeta-alumno { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .panel-admin { background: white; padding: 20px; border-radius: 15px; border-left: 5px solid #ffc107; margin-top: 40px; display: none; box-shadow: var(--shadow); }
-        .sub-panel { background: #fffcf0; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ffeeba; }
-        .notificacion-item { background: #fff; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; display: flex; justify-content: space-between; }
-        .badge-compra { background: #ff9f43; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-
-        /* NAV */
+        
+        /* NAV INFERIOR */
         nav { background: white; position: fixed; bottom: 0; width: 100%; display: none; justify-content: space-around; padding: 15px 0; z-index: 500; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
-        nav button { background: none; border: none; color: #ccc; font-size: 26px; cursor: pointer; flex-grow: 1; }
-        nav button.active-nav { color: #4a90e2; transform: translateY(-3px); }
-
-        /* PERFIL */
-        .perfil-card { background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: var(--shadow); }
-        .emoji-perfil { font-size: 80px; margin-bottom: 10px; display: block; background: #f0f2f5; width: 120px; height: 120px; line-height: 120px; border-radius: 50%; margin: 0 auto 20px; }
+        nav button { background: none; border: none; color: #ccc; font-size: 24px; cursor: pointer; flex-grow: 1; }
+        nav button.active-nav { color: var(--primary); transform: translateY(-3px); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -74,10 +71,10 @@
 
     <div id="pantalla-login" class="full-screen-bg" style="display: none;">
         <div class="caja-central">
-            <button onclick="location.reload()" style="background:none; border:none; color:white; font-size:14px; cursor:pointer;">← Volver</button>
-            <h2 id="titulo-login" style="margin-top:10px;">Login</h2>
-            <select id="login-selector"><option>Conectando...</option></select>
-            <input type="password" id="login-pin" placeholder="CLAVE" style="text-align:center; font-size:20px; text-transform:uppercase;">
+            <button onclick="location.reload()" style="background:none; border:none; color:white; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver</button>
+            <h2 id="titulo-login">Login</h2>
+            <select id="login-selector"><option>Cargando...</option></select>
+            <input type="password" id="login-pin" placeholder="PIN" maxlength="6" style="font-size: 22px; letter-spacing: 5px;">
             <button class="btn-grande" onclick="intentarLogin()">Ingresar</button>
             <p id="error-login" style="color:#ff6b6b; font-weight:bold; margin-top:15px; font-size:13px;"></p>
         </div>
@@ -95,6 +92,7 @@
         <div id="inicio" class="seccion activa">
             <h2 style="margin-bottom:20px;">Panel de Control</h2>
             <div class="menu-grid">
+                <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Bolsa</div>
                 <div class="menu-card" onclick="navegar('tienda')"><span class="menu-icon">🛍️</span>Tienda</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
@@ -102,65 +100,66 @@
             <button class="btn-grande" style="background:#ff6b6b; margin-top:30px;" onclick="location.reload()">🔒 Salir</button>
 
             <div id="zona-profe" class="panel-admin">
-                <h3 style="margin-top:0; color:#d35400;">🔔 Buzón de Canjes</h3>
-                <div id="admin-notificaciones" style="max-height:200px; overflow-y:auto; background:#f9f9f9; border:1px solid #eee; border-radius:8px; margin-bottom:20px; padding:10px;">
-                    <div style="text-align:center; color:#999;">Cargando historial...</div>
+                <h3 style="color:#d35400;">🔧 Admin Zone</h3>
+                
+                <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:10px;">
+                    <strong>👶 Nuevo Alumno:</strong>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="nuevo-nombre" placeholder="Nombre" style="margin:5px 0;">
+                        <button onclick="agregarAlumnoNube()" style="background:#3498db; color:white; border:none; border-radius:8px;">+</button>
+                    </div>
                 </div>
 
-                <h3 style="margin-top:0; color:#2980b9;">🔧 Administración</h3>
-                <div class="sub-panel">
-                    <button onclick="inicializarBaseDatosNube()" style="background:#2ecc71; color:white; padding:10px; border:none; border-radius:8px; width:100%;">🚀 Resetear / Crear DB</button>
+                <button onclick="inicializarBaseDatosNube()" style="background:#2ecc71; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:10px;">🚀 Resetear DB del Curso</button>
+                <button onclick="mostrarClaves()" style="background:#95a5a6; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:5px;">🔑 Ver Claves</button>
+            </div>
+        </div>
+
+        <div id="mercado" class="seccion">
+            <h2 style="margin-bottom:10px;">Bolsa de Valores</h2>
+            
+            <div class="market-card">
+                <div style="font-size:12px; color:#888;">VALOR ACTUAL VODCOIN</div>
+                <div id="ticker-precio" class="precio-gigante">Cargando...</div>
+                
+                <div style="height: 200px; width: 100%;">
+                    <canvas id="graficoCanvas"></canvas>
                 </div>
-                <div class="sub-panel">
-                    <strong>👶 Nuevo Alumno:</strong>
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <input type="text" id="nuevo-nombre" placeholder="Nombre" style="margin:0">
-                        <button onclick="agregarAlumnoNube()" style="background:#3498db; color:white; border:none; border-radius:8px; width:50px;">+</button>
-                    </div>
+                
+                <div class="market-info">
+                    <span>🏦 RESERVA: <span id="lbl-reserva">0</span></span>
+                    <span>🔄 CIRCULANTE: <span id="lbl-circulante">0</span></span>
                 </div>
-                <div class="sub-panel">
-                    <strong>🚫 Eliminar:</strong>
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <select id="sel-eliminar" style="margin:0"></select>
-                        <button onclick="eliminarAlumnoNube()" style="background:#e74c3c; color:white; border:none; border-radius:8px; width:50px;">X</button>
-                    </div>
-                </div>
-                <div class="sub-panel">
-                    <button onclick="descargarExcelNube()" style="background:#00bcd4; color:white; padding:10px; border:none; border-radius:8px; width:100%;">📥 Descargar Excel</button>
-                </div>
-                <div class="sub-panel">
-                    <button onclick="mostrarClaves()" style="background:#95a5a6; color:white; padding:10px; border:none; border-radius:8px; width:100%;">🔑 Ver Claves</button>
+            </div>
+
+            <div id="controles-mercado-profe" style="display:none; background:white; padding:20px; border-radius:15px; box-shadow: var(--shadow);">
+                <h3 style="margin-top:0;">🏦 Banco Central</h3>
+                <p style="font-size:13px; color:#666; margin-bottom:15px;">Aumentar la Reserva sube el precio. Disminuirla lo baja.</p>
+                
+                <div style="display:flex; flex-wrap:wrap;">
+                    <button class="btn-market" onclick="cambiarReserva(10)" style="background:#4cd137;">+ 10</button>
+                    <button class="btn-market" onclick="cambiarReserva(5)" style="background:#4cd137; opacity:0.8;">+ 5</button>
+                    <button class="btn-market" onclick="cambiarReserva(-5)" style="background:#e84118; opacity:0.8;">- 5</button>
+                    <button class="btn-market" onclick="cambiarReserva(-10)" style="background:#e84118;">- 10</button>
                 </div>
             </div>
         </div>
 
         <div id="tienda" class="seccion">
-            <h2 style="margin-bottom:10px;">Canje de Décimas</h2>
-            <div class="producto-card">
-                <div><h3 style="margin:0;">1 Décima</h3><div style="color:#e67e22; font-weight:bold;">Precio: $10</div></div>
-                <button class="btn-comprar" onclick="comprarItem('1 Décima', 10)">COMPRAR</button>
+            <h2>Canje de Décimas</h2>
+            <div class="tarjeta-alumno" style="border-left: 5px solid #ff9f43;">
+                <div><h3>1 Décima</h3><div style="color:#e67e22; font-weight:bold;">Precio: 10 VC</div></div>
+                <button onclick="comprarItem('1 Décima', 10)" style="background:#ff9f43; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">COMPRAR</button>
             </div>
-            <div class="producto-card" style="border-left-color: #9b59b6;">
-                <div><h3 style="margin:0;">2 Décimas</h3><div style="color:#9b59b6; font-weight:bold;">Precio: $18</div></div>
-                <button class="btn-comprar" style="background:#9b59b6;" onclick="comprarItem('2 Décimas', 18)">COMPRAR</button>
+            <div class="tarjeta-alumno" style="border-left: 5px solid #9b59b6;">
+                <div><h3>2 Décimas</h3><div style="color:#9b59b6; font-weight:bold;">Precio: 18 VC</div></div>
+                <button onclick="comprarItem('2 Décimas', 18)" style="background:#9b59b6; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">COMPRAR</button>
             </div>
         </div>
 
         <div id="lista" class="seccion">
-            <h2 style="margin-bottom:10px;">Listado del Curso</h2>
+            <h2>Listado del Curso</h2>
             <div id="contenedor-lista">Cargando...</div>
-        </div>
-
-        <div id="perfil" class="seccion">
-            <button style="background:none; border:none; color:#666;" onclick="navegar('lista')">← Volver</button>
-            <div class="perfil-card">
-                <span class="emoji-perfil">🎓</span>
-                <h2 id="p-nombre" style="margin:0; color:#1e3c72;">Nombre</h2>
-                <div style="margin: 30px 0;">
-                    <span style="font-size:14px; color:#aaa;">Saldo Disponible</span>
-                    <div id="p-saldo" style="color:#2ecc71; font-size:42px; font-weight:800;">$0</div>
-                </div>
-            </div>
         </div>
 
         <div id="transferencias" class="seccion">
@@ -169,25 +168,26 @@
                 <label>¿A quién?</label>
                 <select id="select-destino"></select>
                 <label>¿Cuánto?</label>
-                <input type="number" id="monto" placeholder="Ej: 5">
-                <button type="button" class="btn-grande" onclick="realizarTransferencia()">Enviar</button>
+                <input type="number" id="monto" placeholder="Ej: 5 o -5">
+                <button type="button" class="btn-grande" onclick="realizarTransferencia()">Procesar Transacción</button>
             </div>
         </div>
+
     </div>
 
     <nav id="menu-inferior">
         <button onclick="navegar('inicio')" id="nav-inicio" class="active-nav">🏠</button>
-        <button onclick="navegar('tienda')" id="nav-tienda">🛍️</button>
+        <button onclick="navegar('mercado')" id="nav-mercado">📉</button>
         <button onclick="navegar('lista')" id="nav-lista">👥</button>
         <button onclick="navegar('transferencias')" id="nav-transf">💸</button>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, addDoc, runTransaction, query, orderBy, limit } 
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, runTransaction, query, orderBy, limit } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIG
+        // --- 1. CONFIGURACIÓN FIREBASE (TUYA) ---
         const firebaseConfig = {
           apiKey: "AIzaSyB-WmhXSQWbDz8CoRI4LJ7RtFGOeOz_ZQU",
           authDomain: "vodcoins-clase.firebaseapp.com",
@@ -200,68 +200,138 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- 2. VARIABLES GLOBALES ---
         let cursoID = null;
-        let nombreCursoDisplay = "";
-        let historialID = null;
         let estudiantes = [];
         let usuarioLogueado = null;
+        let reservaMundial = 1; 
+        let chartInstance = null; 
 
-        // DATOS INICIALES (TU LISTA DE LÍMITES)
+        // DATOS INICIALES PARA RESETEAR (SALDO INICIAL 1 PARA TODOS)
         const DATA_BASE = {
-            "curso_1mb": [ { id: 1, nombre: "Alumno Ejemplo 1M", saldo: 0, cumpleanos: "-" } ],
-            "curso_limites": [
-                { id: 1, nombre: "Vicente San Martin", saldo: 0, cumpleanos: "-" },
-                { id: 2, nombre: "Javiera Lillo", saldo: 0, cumpleanos: "-" },
-                { id: 3, nombre: "Ignacio Torres", saldo: 0, cumpleanos: "-" },
-                { id: 4, nombre: "Marco Rios", saldo: 0, cumpleanos: "-" },
-                { id: 5, nombre: "Gabriela Lillo", saldo: 0, cumpleanos: "-" },
-                { id: 6, nombre: "Daniel Lavandero", saldo: 0, cumpleanos: "-" },
-                { id: 7, nombre: "Darynka Gómez", saldo: 0, cumpleanos: "-" },
-                { id: 8, nombre: "Agustín Salgado", saldo: 0, cumpleanos: "-" },
-                { id: 9, nombre: "Maximiliano Fuentealba", saldo: 0, cumpleanos: "-" },
-                { id: 10, nombre: "Martina Silva", saldo: 0, cumpleanos: "-" },
-                { id: 11, nombre: "Leyan Alonso", saldo: 0, cumpleanos: "-" },
-                { id: 12, nombre: "Magdalena Aranda", saldo: 0, cumpleanos: "-" },
-                { id: 13, nombre: "Alonso Vargas", saldo: 0, cumpleanos: "-" },
-                { id: 14, nombre: "Mariapaz Bascour", saldo: 0, cumpleanos: "-" },
-                { id: 15, nombre: "Felipe Uribe", saldo: 0, cumpleanos: "-" },
-                { id: 16, nombre: "Santiago López", saldo: 0, cumpleanos: "-" },
-                { id: 17, nombre: "Vicente Fernández", saldo: 0, cumpleanos: "-" },
-                { id: 18, nombre: "Antonella Figueroa", saldo: 0, cumpleanos: "-" },
-                { id: 19, nombre: "Lucas Cortés", saldo: 0, cumpleanos: "-" },
-                { id: 20, nombre: "Samuel Campos", saldo: 0, cumpleanos: "-" },
-                { id: 21, nombre: "Nicolas Castro", saldo: 0, cumpleanos: "-" },
-                { id: 22, nombre: "Tomás Ramírez", saldo: 0, cumpleanos: "-" },
-                { id: 23, nombre: "Josefa Muñoz", saldo: 0, cumpleanos: "-" },
-                { id: 24, nombre: "Tomás Arias", saldo: 0, cumpleanos: "-" },
-                { id: 25, nombre: "Ricardo Contreras", saldo: 0, cumpleanos: "-" },
-                { id: 26, nombre: "Martín Horn", saldo: 0, cumpleanos: "-" },
-                { id: 27, nombre: "Vicente Muñoz", saldo: 0, cumpleanos: "-" },
-                { id: 28, nombre: "Agustin Gonzalez", saldo: 0, cumpleanos: "-" },
-                { id: 29, nombre: "Ian Aguilera", saldo: 0, cumpleanos: "-" },
-                { id: 30, nombre: "Pía Olave", saldo: 0, cumpleanos: "-" },
-                { id: 31, nombre: "Giuliana Anselmi", saldo: 0, cumpleanos: "-" },
-                { id: 32, nombre: "Joaquin Navarro", saldo: 0, cumpleanos: "-" },
-                { id: 33, nombre: "Juan Vidal", saldo: 0, cumpleanos: "-" },
-                { id: 34, nombre: "Vicente Vera", saldo: 0, cumpleanos: "-" },
-                { id: 35, nombre: "Amanda Valeria", saldo: 0, cumpleanos: "-" },
-                { id: 36, nombre: "Joaquín Verdugo", saldo: 0, cumpleanos: "-" },
-                { id: 37, nombre: "Emilia Silva", saldo: 0, cumpleanos: "-" },
-                { id: 38, nombre: "Jose Arriagada", saldo: 0, cumpleanos: "-" }
+            "curso_1mb": [
+                { id: 1, nombre: "Abarca Pérez Maximiliano Alonso", saldo: 1 },
+                { id: 2, nombre: "Acosta Verdugo Emilia Paz", saldo: 1 },
+                { id: 3, nombre: "Aliaga Hidalgo Gabriel Esteban", saldo: 1 },
+                { id: 4, nombre: "Anderson Troncoso Camila Olivia", saldo: 1 },
+                { id: 5, nombre: "Antillanca Mella Trinidad Elizabeth", saldo: 1 },
+                { id: 6, nombre: "Barahona Moya Santiago", saldo: 1 },
+                { id: 7, nombre: "Blanco Colmenares Santiago Josué", saldo: 1 },
+                { id: 8, nombre: "Cabezas Zuñiga Ignacio Abraham", saldo: 1 },
+                { id: 9, nombre: "Camus Guerra Lucas Gabriel", saldo: 1 },
+                { id: 10, nombre: "Custodio Urdaneta Rocio de los Ángeles", saldo: 1 },
+                { id: 11, nombre: "D´amico Acuña Sofia Jesus", saldo: 1 },
+                { id: 12, nombre: "Diaz Alvarez Dante Emiliano", saldo: 1 },
+                { id: 13, nombre: "Donoso Vargas Karina Belén", saldo: 1 },
+                { id: 14, nombre: "Elgueta Ocariz Rafaela", saldo: 1 },
+                { id: 15, nombre: "Escobar Castillo Oliver Danilo", saldo: 1 },
+                { id: 16, nombre: "Espinoza Bravo Alanis Aurora Jovita", saldo: 1 },
+                { id: 17, nombre: "Figueroa Campos Javiera Ignacia", saldo: 1 },
+                { id: 18, nombre: "Fuentes Vidal Joaquín Emilio", saldo: 1 },
+                { id: 19, nombre: "García Salazar Agustina Paz", saldo: 1 },
+                { id: 20, nombre: "Gatica Bravo Javiera Ignacia", saldo: 1 },
+                { id: 21, nombre: "Gonzalez Zapata Benjamín Alejandro", saldo: 1 },
+                { id: 22, nombre: "Gostling Loyola Santiago", saldo: 1 },
+                { id: 23, nombre: "Gray Ramos Emma", saldo: 1 },
+                { id: 24, nombre: "Horta Núñez Jaime Abel", saldo: 1 },
+                { id: 25, nombre: "Huenuqueo Aros Verena Simmoné", saldo: 1 },
+                { id: 26, nombre: "Mallea Araya Vicente Salvador", saldo: 1 },
+                { id: 27, nombre: "Mendoza Ortega Camila Valentina", saldo: 1 },
+                { id: 28, nombre: "Morales Caticura Trinidad Isidora", saldo: 1 },
+                { id: 29, nombre: "Olivera Larraín Vicente Daniel", saldo: 1 },
+                { id: 30, nombre: "Ossandón Castillo Isidora Fernanda", saldo: 1 },
+                { id: 31, nombre: "Peralta Cuevas Catalina Antonieta", saldo: 1 },
+                { id: 32, nombre: "Perez Arismendi Nicolas Javier", saldo: 1 },
+                { id: 33, nombre: "Perez Díaz Amanda Ines", saldo: 1 },
+                { id: 34, nombre: "Ponce Moreno Maximiliano Karim", saldo: 1 },
+                { id: 35, nombre: "Quiroz Cuevas Francisca Isidora", saldo: 1 },
+                { id: 36, nombre: "Reyes Jimenez Simon", saldo: 1 },
+                { id: 37, nombre: "Rodriguez Durán Gabriel Emilio", saldo: 1 },
+                { id: 38, nombre: "Rodríguez Godoy Alexander Fabian Ismael", saldo: 1 },
+                { id: 39, nombre: "Rodríguez Sepúlveda Emilia Trinidad", saldo: 1 },
+                { id: 40, nombre: "Sepulveda Jiménez Javiera Paz", saldo: 1 },
+                { id: 41, nombre: "Torres Bravo Valentín", saldo: 1 },
+                { id: 42, nombre: "Valderrama Arenas Sofía Emilia", saldo: 1 },
+                { id: 43, nombre: "Vera Andersen Francisca Leonor", saldo: 1 },
+                { id: 44, nombre: "Villouta García Dominique Pascale", saldo: 1 },
+                { id: 45, nombre: "Zuñiga Torres Vicente Francisco", saldo: 1 }
             ],
-            "curso_4m": [ { id: 1, nombre: "Alumno Ejemplo 4M", saldo: 0, cumpleanos: "-" } ]
+            "curso_limites": [
+                { id: 1, nombre: "Aguilera Oyarce Ian", saldo: 1 },
+                { id: 2, nombre: "Alonso Bell Leyan", saldo: 1 },
+                { id: 3, nombre: "Anselmi Angulo Giuliana", saldo: 1 },
+                { id: 4, nombre: "Aranda Marín Magdalena", saldo: 1 },
+                { id: 5, nombre: "Arias Tomás", saldo: 1 },
+                { id: 6, nombre: "Arriagada Aliaga Jose", saldo: 1 },
+                { id: 7, nombre: "Bascour Godoy Mariapaz", saldo: 1 },
+                { id: 8, nombre: "Campos Smith Samuel", saldo: 1 },
+                { id: 9, nombre: "Castro Cadiz Nicolas", saldo: 1 },
+                { id: 10, nombre: "Contreras Meza Ricardo", saldo: 1 },
+                { id: 11, nombre: "Cortés Garrido Lucas", saldo: 1 },
+                { id: 12, nombre: "Fernández Gálvez Vicente", saldo: 1 },
+                { id: 13, nombre: "Figueroa Aichele Antonella", saldo: 1 },
+                { id: 14, nombre: "Fuentealba Cabello Maximiliano", saldo: 1 },
+                { id: 15, nombre: "Gómez Rojas Darynka", saldo: 1 },
+                { id: 16, nombre: "Gonzalez Sanche Agustin", saldo: 1 },
+                { id: 17, nombre: "Horn Garrido Martín", saldo: 1 },
+                { id: 18, nombre: "Lavandero Corrotea Daniel", saldo: 1 },
+                { id: 19, nombre: "Lillo Vega Javiera", saldo: 1 },
+                { id: 20, nombre: "Lillo Vega Gabriela", saldo: 1 },
+                { id: 21, nombre: "López Arenas Santiago", saldo: 1 },
+                { id: 22, nombre: "Muñoz Orias Vicente", saldo: 1 },
+                { id: 23, nombre: "Muñoz Reyes Josefa", saldo: 1 },
+                { id: 24, nombre: "Navarro Hernandez Joaquin", saldo: 1 },
+                { id: 25, nombre: "Olave Gallardo Pía", saldo: 1 },
+                { id: 26, nombre: "Ramírez Fuentes Tomás", saldo: 1 },
+                { id: 27, nombre: "Rios Mattei Marco", saldo: 1 },
+                { id: 28, nombre: "Salgado Carvallo Agustín", saldo: 1 },
+                { id: 29, nombre: "San Martin Iglesias Vicente", saldo: 1 },
+                { id: 30, nombre: "Silva Aguilera Emilia", saldo: 1 },
+                { id: 31, nombre: "Silva Diaz Martina", saldo: 1 },
+                { id: 32, nombre: "Torres Salomon Ignacio", saldo: 1 },
+                { id: 33, nombre: "Uribe Pavez Felipe", saldo: 1 },
+                { id: 34, nombre: "Valeria Basaez Amanda", saldo: 1 },
+                { id: 35, nombre: "Vargas Poblete Alonso", saldo: 1 },
+                { id: 36, nombre: "Vera Zúñiga Vicente", saldo: 1 },
+                { id: 37, nombre: "Verdugo Leiva Joaquín", saldo: 1 },
+                { id: 38, nombre: "Vidal Orellana Juan", saldo: 1 }
+            ],
+            "curso_4m": [
+                { id: 1, nombre: "Allancán Javiera", saldo: 1 },
+                { id: 2, nombre: "Alonso Leyan", saldo: 1 },
+                { id: 3, nombre: "Andrade Darling", saldo: 1 },
+                { id: 4, nombre: "Andrews Trinidad", saldo: 1 },
+                { id: 5, nombre: "Avila Alonso", saldo: 1 },
+                { id: 6, nombre: "Bravo Daniel", saldo: 1 },
+                { id: 7, nombre: "Briones Cristóbal", saldo: 1 },
+                { id: 8, nombre: "Budaleo Francisca", saldo: 1 },
+                { id: 9, nombre: "Cases Benjamín", saldo: 1 },
+                { id: 10, nombre: "Cisternas Sofía", saldo: 1 },
+                { id: 11, nombre: "Cuevas Magdalena", saldo: 1 },
+                { id: 12, nombre: "González Emilie", saldo: 1 },
+                { id: 13, nombre: "Huillipán Lucas", saldo: 1 },
+                { id: 14, nombre: "López Santiago", saldo: 1 },
+                { id: 15, nombre: "Núñez Juan Pablo", saldo: 1 },
+                { id: 16, nombre: "Quevedo Fernando", saldo: 1 },
+                { id: 17, nombre: "Salgado Agustín", saldo: 1 },
+                { id: 18, nombre: "Sanchez José Arturo", saldo: 1 },
+                { id: 19, nombre: "Sancy Zaid", saldo: 1 },
+                { id: 20, nombre: "Sepúlveda Sophia", saldo: 1 },
+                { id: 21, nombre: "Sepúlveda Isidora", saldo: 1 },
+                { id: 22, nombre: "Silva Emilia", saldo: 1 },
+                { id: 23, nombre: "Silva Carlos", saldo: 1 },
+                { id: 24, nombre: "Silva Martina", saldo: 1 },
+                { id: 25, nombre: "Valeria Paulo", saldo: 1 },
+                { id: 26, nombre: "Vera Martina", saldo: 1 },
+                { id: 27, nombre: "Villagran Agustina", saldo: 1 }
+            ]
         };
 
-        const NOMBRES_BONITOS = { "curso_1mb": "Iº Medio B", "curso_limites": "Límites y derivadas", "curso_4m": "IVº Matemática (S.V.)" };
-
-        // --- GLOBAL FUNCTIONS ---
+        // --- 3. FUNCIONES DE NAVEGACIÓN Y LOGIN ---
         window.seleccionarCurso = (id) => {
             cursoID = id;
-            nombreCursoDisplay = NOMBRES_BONITOS[id];
-            historialID = "historial_" + id; 
             document.getElementById('pantalla-cursos').style.display = 'none';
             document.getElementById('pantalla-login').style.display = 'flex';
-            document.getElementById('titulo-login').textContent = nombreCursoDisplay;
             conectarBaseDatos(id);
         };
 
@@ -272,16 +342,16 @@
 
             if(!idUser) return alert("Selecciona usuario");
 
-            // LOGICA ANTIGUA PROFE (ESTABLE)
+            // PROFE
             if(idUser === 'profe') {
                 if (pin === 'ADMIN1') {
                     usuarioLogueado = { id: 'profe', nombre: 'Profesor', saldo: 999999, esProfe: true };
                     entrar();
-                    cargarNotificacionesAdmin();
                 } else { document.getElementById('error-login').textContent = "❌ Clave incorrecta"; }
                 return;
             }
 
+            // ALUMNO
             const alumno = estudiantes.find(e => e.id == idUser);
             if(alumno && alumno.pin === pin) {
                 usuarioLogueado = { ...alumno, esProfe: false };
@@ -293,11 +363,13 @@
             document.getElementById('pantalla-login').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             document.getElementById('menu-inferior').style.display = 'flex';
+            
             if(usuarioLogueado.esProfe) {
                 document.getElementById('zona-profe').style.display = 'block';
-                cargarSelectorEliminar();
+                document.getElementById('controles-mercado-profe').style.display = 'block';
             }
             actualizarUI();
+            iniciarMercado(); 
         }
 
         window.navegar = (seccion) => {
@@ -305,80 +377,122 @@
             document.getElementById(seccion).classList.add('activa');
             
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
-            if(seccion == 'inicio') document.getElementById('nav-inicio').classList.add('active-nav');
-            if(seccion == 'tienda') document.getElementById('nav-tienda').classList.add('active-nav');
-            if(seccion == 'lista') document.getElementById('nav-lista').classList.add('active-nav');
-            if(seccion == 'transferencias') document.getElementById('nav-transf').classList.add('active-nav');
+            document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
         }
 
-        window.comprarItem = async (nombreItem, precio) => {
-            if(usuarioLogueado.esProfe) return alert("El profe no compra, solo administra.");
-            
-            const miSaldo = estudiantes.find(e => e.id == usuarioLogueado.id).saldo;
-            if(miSaldo < precio) return alert("❌ Saldo insuficiente");
+        // --- 4. LÓGICA DE MERCADO ---
+        function iniciarMercado() {
+            const ctx = document.getElementById('graficoCanvas').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
 
-            if(!confirm(`¿Comprar ${nombreItem}?`)) return;
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], 
+                    datasets: [{
+                        label: 'Valor ($)',
+                        data: [],
+                        borderColor: '#4cd137',
+                        backgroundColor: 'rgba(76, 209, 55, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                    },
+                    animation: false
+                }
+            });
 
-            const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
-            try {
-                await runTransaction(db, async (t) => {
-                    const oDoc = await t.get(miRef);
-                    if(oDoc.data().saldo < precio) throw "Falta saldo";
-                    t.update(miRef, { saldo: oDoc.data().saldo - precio });
-                });
-                await addDoc(collection(db, historialID), {
-                    fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(),
-                    origen: usuarioLogueado.nombre, item: nombreItem, monto: precio, tipo: "compra", timestamp: new Date()
-                });
-                alert("✅ Compra exitosa");
-                navegar('inicio');
-            } catch (e) { alert("Error: " + e); }
-        };
-
-        function conectarBaseDatos(colName) {
-            const selector = document.getElementById('login-selector');
-            selector.innerHTML = '<option>Cargando...</option>';
-            const q = query(collection(db, colName));
-            onSnapshot(q, (snapshot) => {
-                estudiantes = [];
-                snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
-                llenarSelectores();
-                if(usuarioLogueado) actualizarUI();
+            const docReserva = doc(db, "banco_central", "config_" + cursoID);
+            onSnapshot(docReserva, (snap) => {
+                if(snap.exists()) {
+                    reservaMundial = snap.data().reserva;
+                    calcularPrecio();
+                } else {
+                    const cantidadAlumnos = DATA_BASE[cursoID].length;
+                    setDoc(docReserva, { reserva: cantidadAlumnos }); 
+                    reservaMundial = cantidadAlumnos;
+                    calcularPrecio();
+                }
             });
         }
 
-        function cargarNotificacionesAdmin() {
-            if(!historialID) return;
-            const q = query(collection(db, historialID), orderBy("timestamp", "desc"), limit(20));
-            onSnapshot(q, (snapshot) => {
-                const div = document.getElementById('admin-notificaciones');
-                div.innerHTML = '';
-                let hay = false;
-                snapshot.forEach((doc) => {
-                    const d = doc.data();
-                    if(d.tipo === "compra") {
-                        hay = true;
-                        div.innerHTML += `<div class="notificacion-item"><div><b>${d.origen}</b> compró <span class="badge-compra">${d.item}</span></div><div style="font-size:10px;">${d.hora}</div></div>`;
-                    }
-                });
-                if(!hay) div.innerHTML = '<div style="padding:10px; text-align:center; color:#ccc;">Sin canjes recientes</div>';
+        function calcularPrecio() {
+            let circulante = estudiantes.reduce((total, est) => {
+                return (est.id !== 'profe') ? total + (est.saldo || 0) : total;
+            }, 0);
+
+            if (circulante <= 0) circulante = 1;
+
+            const precio = reservaMundial / circulante;
+
+            const lblPrecio = document.getElementById('ticker-precio');
+            if(lblPrecio) {
+                lblPrecio.innerText = "$ " + precio.toFixed(2); 
+                document.getElementById('lbl-reserva').innerText = reservaMundial;
+                document.getElementById('lbl-circulante').innerText = circulante;
+
+                if(precio >= 1.00) {
+                    lblPrecio.className = "precio-gigante subida";
+                    if(chartInstance) chartInstance.data.datasets[0].borderColor = '#4cd137';
+                } else {
+                    lblPrecio.className = "precio-gigante bajada";
+                    if(chartInstance) chartInstance.data.datasets[0].borderColor = '#e84118';
+                }
+            }
+
+            if(chartInstance) {
+                const hora = new Date().toLocaleTimeString();
+                chartInstance.data.labels.push(hora);
+                chartInstance.data.datasets[0].data.push(precio);
+                if(chartInstance.data.labels.length > 20) { 
+                    chartInstance.data.labels.shift();
+                    chartInstance.data.datasets[0].data.shift();
+                }
+                chartInstance.update();
+            }
+        }
+
+        window.cambiarReserva = async (cantidad) => {
+            const docRef = doc(db, "banco_central", "config_" + cursoID);
+            try {
+                const snap = await getDoc(docRef);
+                if(snap.exists()) {
+                    await updateDoc(docRef, { reserva: snap.data().reserva + cantidad });
+                }
+            } catch(e) { alert("Error: " + e); }
+        };
+
+        // --- 5. FUNCIONES CORE ---
+        function conectarBaseDatos(colName) {
+            const selector = document.getElementById('login-selector');
+            selector.innerHTML = '<option>Cargando...</option>';
+            
+            onSnapshot(collection(db, colName), (snapshot) => {
+                estudiantes = [];
+                snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
+                
+                llenarSelectores();
+                if(usuarioLogueado) {
+                    actualizarUI(); 
+                    calcularPrecio(); 
+                }
             });
         }
 
         function llenarSelectores() {
             const sel = document.getElementById('login-selector');
-            sel.innerHTML = '<option value="">-- Selecciona --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
+            sel.innerHTML = '<option value="">-- Selecciona tu nombre --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
             estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
-            estudiantes.forEach(est => {
-                let op = document.createElement('option');
-                op.value = est.id; op.text = est.nombre; sel.add(op);
-            });
-            if(usuarioLogueado && usuarioLogueado.esProfe) cargarSelectorEliminar();
-        }
-
-        function cargarSelectorEliminar() {
-            const sel = document.getElementById('sel-eliminar');
-            sel.innerHTML = '<option value="">...</option>';
             estudiantes.forEach(est => {
                 let op = document.createElement('option');
                 op.value = est.id; op.text = est.nombre; sel.add(op);
@@ -388,11 +502,9 @@
         function actualizarUI() {
             if(!usuarioLogueado) return;
 
-            // LÓGICA DE UI DE PROFE (SEPARADA Y BLINDADA)
             if(usuarioLogueado.esProfe) {
-                document.getElementById('lbl-nombre').textContent = "Profesor";
+                document.getElementById('lbl-nombre').textContent = "Profesor (Banco Central)";
                 document.getElementById('lbl-saldo').textContent = "∞";
-                // El profe necesita ver la lista, así que seguimos abajo
             } else {
                 const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
                 if(yo) {
@@ -401,19 +513,15 @@
                 }
             }
 
-            // CARGA DE LISTA VISUAL (Para Profe y Alumno)
             const divLista = document.getElementById('contenedor-lista');
             divLista.innerHTML = '';
             const selDest = document.getElementById('select-destino');
-            selDest.innerHTML = '';
+            selDest.innerHTML = '<option value="">Seleccionar compañero</option>';
 
             estudiantes.forEach(est => {
                 divLista.innerHTML += `
-                <div class="tarjeta-alumno" onclick="verPerfil('${est.id}')">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="background:#eef; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center;">👤</div>
-                        <b>${est.nombre}</b> 
-                    </div>
+                <div class="tarjeta-alumno">
+                    <div><b>${est.nombre}</b></div>
                     <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">$${est.saldo}</span>
                 </div>`;
 
@@ -424,104 +532,92 @@
             });
         }
 
-        window.verPerfil = (id) => {
-            const alumno = estudiantes.find(e => e.id == id);
-            if(!alumno) return;
-            document.getElementById('p-nombre').textContent = alumno.nombre;
-            document.getElementById('p-saldo').textContent = "$" + alumno.saldo;
-            navegar('perfil');
-        };
-
         window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
-            const monto = parseInt(document.getElementById('monto').value);
+            const monto = parseFloat(document.getElementById('monto').value);
 
-            if(!destinoId || isNaN(monto)) return alert("Faltan datos");
-            if(!usuarioLogueado.esProfe && monto <= 0) return alert("⛔ Solo el Profesor puede restar.");
-            if(monto === 0) return alert("Monto 0 no permitido");
-
+            if(!destinoId || isNaN(monto)) return alert("Datos inválidos");
+            
+            if(!usuarioLogueado.esProfe && monto <= 0) return alert("⛔ Solo el Profesor puede enviar valores negativos (multar).");
+            if(monto === 0) return alert("El monto no puede ser cero.");
+            
             const destinoRef = doc(db, cursoID, destinoId.toString());
+
             try {
-                let nombreDestino = "";
                 if(usuarioLogueado.esProfe) {
-                    // Lógica Profe (Directa)
                     const dDoc = await getDoc(destinoRef);
-                    nombreDestino = dDoc.data().nombre;
                     await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
+                    alert(`✅ Operación de ${monto} VodCoins realizada.`);
                 } else {
-                    // Lógica Alumno (Transaccional)
                     const origenRef = doc(db, cursoID, usuarioLogueado.id.toString());
                     await runTransaction(db, async (t) => {
                         const oDoc = await t.get(origenRef);
                         const dDoc = await t.get(destinoRef);
                         if(oDoc.data().saldo < monto) throw "Saldo insuficiente";
-                        nombreDestino = dDoc.data().nombre;
                         t.update(origenRef, { saldo: oDoc.data().saldo - monto });
                         t.update(destinoRef, { saldo: dDoc.data().saldo + monto });
                     });
+                    alert("✅ Transferencia realizada");
                 }
-                await addDoc(collection(db, historialID), {
-                    fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(),
-                    origen: usuarioLogueado.nombre, destino: nombreDestino, monto: monto, tipo: "transferencia", timestamp: new Date()
-                });
-                alert("✅ Transferencia realizada");
                 document.getElementById('monto').value = '';
-            } catch (e) { alert("❌ Error: " + e); }
+                navegar('inicio');
+            } catch (e) { alert("Error: " + e); }
         };
 
+        window.comprarItem = async (nombreItem, precio) => {
+            if(usuarioLogueado.esProfe) return alert("El profe no compra.");
+            
+            const miSaldo = estudiantes.find(e => e.id == usuarioLogueado.id).saldo;
+            if(miSaldo < precio) return alert("❌ Saldo insuficiente");
+
+            if(!confirm(`¿Comprar ${nombreItem}?`)) return;
+
+            const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
+            try {
+                await updateDoc(miRef, { saldo: miSaldo - precio });
+                alert("✅ Compra exitosa. ¡Avisa al profe!");
+                navegar('inicio');
+            } catch (e) { alert("Error: " + e); }
+        };
+
+        // --- ADMIN TOOLS ---
         window.agregarAlumnoNube = async () => {
             const nombre = document.getElementById('nuevo-nombre').value;
             if(!nombre) return;
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
+            // NUEVO ALUMNO EMPIEZA CON SALDO 1
             await setDoc(doc(db, cursoID, nuevoID.toString()), {
-                id: nuevoID, nombre: nombre, saldo: 0, cumpleanos: "-", pin: Math.random().toString(36).substring(2,8).toUpperCase()
+                id: nuevoID, nombre: nombre, saldo: 1, pin: Math.random().toString(36).substring(2,8).toUpperCase()
             });
-            alert("✅ Alumno creado");
+            alert("✅ Alumno creado con 1 VodCoin inicial.");
             document.getElementById('nuevo-nombre').value = '';
         };
 
-        window.eliminarAlumnoNube = async () => {
-            const id = document.getElementById('sel-eliminar').value;
-            if(!id) return;
-            if(confirm("¿Eliminar alumno?")) {
-                await deleteDoc(doc(db, cursoID, id.toString()));
-                alert("🗑️ Eliminado");
-            }
-        };
-
-        window.descargarExcelNube = async () => {
-            const q = query(collection(db, historialID), orderBy("timestamp", "desc"));
-            const querySnapshot = await getDocs(q);
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += `REPORTE: ${nombreCursoDisplay}\nID,Nombre,Saldo\n`;
-            estudiantes.forEach(e => { csvContent += `${e.id},${e.nombre},${e.saldo}\n`; });
-            csvContent += "\n--- HISTORIAL ---\nFecha,Hora,Origen,Destino,Monto,Item\n";
-            querySnapshot.forEach((doc) => {
-                const h = doc.data();
-                csvContent += `${h.fecha},${h.hora},${h.origen},${h.destino || '-'},${h.monto},${h.item || '-'}\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Reporte_${cursoID}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-
+        // --- CORRECCIÓN CLAVE: SUBIDA EN PAQUETE CON PROMISE.ALL ---
         window.inicializarBaseDatosNube = async () => {
-            if(!confirm("⚠️ ¿Resetear Base de Datos?")) return;
+            if(!confirm("⚠️ ¿Resetear Base de Datos del curso actual? Se borrarán los saldos y se usarán los estudiantes base.")) return;
+            
             const lista = DATA_BASE[cursoID];
+            const tareasDeSubida = []; 
+
             for(let est of lista) {
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
-                await setDoc(doc(db, cursoID, est.id.toString()), est);
+                const ref = doc(db, cursoID, est.id.toString());
+                tareasDeSubida.push(setDoc(ref, est)); 
             }
-            alert("✅ Base creada");
+
+            try {
+                // Subimos todo el paquete de golpe
+                await Promise.all(tareasDeSubida);
+                alert(`✅ ¡Éxito! Los ${lista.length} alumnos fueron cargados correctamente.`);
+            } catch (error) {
+                alert("❌ Hubo un problema de conexión: " + error);
+            }
         };
 
         window.mostrarClaves = () => {
-            let txt = `CLAVES: ${nombreCursoDisplay}\n----------------\n`;
+            let txt = "CLAVES:\n";
             estudiantes.forEach(e => txt += `${e.nombre}: ${e.pin}\n`);
             alert(txt);
         };
