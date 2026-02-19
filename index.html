@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V3.0 - Economía a 11k</title>
+    <title>VodCoins V3.1 - Interfaz Mejorada</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -64,8 +64,8 @@
 
     <div id="pantalla-login" class="full-screen-bg" style="display: none;">
         <div class="caja-central">
-            <button onclick="location.reload()" style="background:none; border:none; color:white; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver</button>
-            <h2 id="titulo-login">Login</h2>
+            <button onclick="location.reload()" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver al inicio</button>
+            <h2 id="titulo-login" style="color:#333; margin-top:0;">Login</h2>
             <select id="login-selector"><option>Cargando...</option></select>
             <input type="password" id="login-pin" placeholder="PIN" maxlength="6" style="font-size: 22px; letter-spacing: 5px;">
             <button class="btn-grande" onclick="intentarLogin()">Ingresar</button>
@@ -99,11 +99,19 @@
                     <strong>👶 Nuevo Alumno:</strong>
                     <div style="display:flex; gap:5px;">
                         <input type="text" id="nuevo-nombre" placeholder="Nombre" style="margin:5px 0;">
-                        <button onclick="agregarAlumnoNube()" style="background:#3498db; color:white; border:none; border-radius:8px;">+</button>
+                        <button onclick="agregarAlumnoNube()" style="background:#3498db; color:white; border:none; border-radius:8px; padding:0 15px;">+</button>
                     </div>
                 </div>
 
-                <button onclick="inicializarBaseDatosNube()" style="background:#2ecc71; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:10px;">🚀 Resetear DB del Curso</button>
+                <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:10px;">
+                    <strong>🚫 Eliminar Alumno:</strong>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <select id="sel-eliminar" style="margin:0; padding:10px;"></select>
+                        <button onclick="eliminarAlumnoNube()" style="background:#e74c3c; color:white; border:none; border-radius:8px; padding:0 15px;">X</button>
+                    </div>
+                </div>
+
+                <button onclick="inicializarBaseDatosNube()" style="background:#2ecc71; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:15px;">🚀 Resetear DB del Curso</button>
                 <button onclick="mostrarClaves()" style="background:#95a5a6; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:5px;">🔑 Ver Claves</button>
             </div>
         </div>
@@ -467,6 +475,9 @@
                 estudiantes = [];
                 snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
                 
+                // ORDENAR ALFABÉTICAMENTE PARA LA LISTA VISUAL
+                estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
+                
                 llenarSelectores();
                 if(usuarioLogueado) {
                     actualizarUI(); 
@@ -478,7 +489,6 @@
         function llenarSelectores() {
             const sel = document.getElementById('login-selector');
             sel.innerHTML = '<option value="">-- Selecciona tu nombre --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
-            estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
             estudiantes.forEach(est => {
                 let op = document.createElement('option');
                 op.value = est.id; op.text = est.nombre; sel.add(op);
@@ -491,6 +501,16 @@
             if(usuarioLogueado.esProfe) {
                 document.getElementById('lbl-nombre').textContent = "Profesor (Banco Central)";
                 document.getElementById('lbl-saldo').textContent = "∞";
+                
+                // Cargar Selector para Eliminar
+                const selEliminar = document.getElementById('sel-eliminar');
+                if(selEliminar) {
+                    selEliminar.innerHTML = '<option value="">-- Seleccionar --</option>';
+                    estudiantes.forEach(est => {
+                        let op = document.createElement('option');
+                        op.value = est.id; op.text = est.nombre; selEliminar.add(op);
+                    });
+                }
             } else {
                 const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
                 if(yo) {
@@ -504,10 +524,11 @@
             const selDest = document.getElementById('select-destino');
             selDest.innerHTML = '<option value="">Seleccionar compañero</option>';
 
-            estudiantes.forEach(est => {
+            estudiantes.forEach((est, index) => {
+                // SE AGREGA NUMERACIÓN (index + 1)
                 divLista.innerHTML += `
                 <div class="tarjeta-alumno">
-                    <div><b>${est.nombre}</b></div>
+                    <div><b>${index + 1}. ${est.nombre}</b></div>
                     <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">${est.saldo} VOD</span>
                 </div>`;
 
@@ -578,8 +599,24 @@
             document.getElementById('nuevo-nombre').value = '';
         };
 
+        // NUEVA FUNCIÓN PARA ELIMINAR
+        window.eliminarAlumnoNube = async () => {
+            const id = document.getElementById('sel-eliminar').value;
+            if(!id) return;
+            if(confirm("⚠️ ¿Estás seguro de ELIMINAR a este alumno de forma permanente?")) {
+                await deleteDoc(doc(db, cursoID, id.toString()));
+                alert("🗑️ Alumno eliminado correctamente.");
+            }
+        };
+
+        // RESET CON DOBLE CONFIRMACIÓN Y REINICIO DE GRÁFICO
         window.inicializarBaseDatosNube = async () => {
-            if(!confirm("⚠️ ¿Resetear Base de Datos del curso actual? Se borrarán los saldos y se usarán los estudiantes base a 11.000.")) return;
+            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos actuales de TODOS LOS ALUMNOS de este curso y reiniciará la economía.\n\nEscribe la palabra CONFIRMAR para proceder:");
+            
+            if (confirmacion !== "CONFIRMAR") {
+                alert("Operación cancelada. Tus datos están a salvo.");
+                return;
+            }
             
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
@@ -595,6 +632,14 @@
 
             try {
                 await Promise.all(tareasDeSubida);
+                
+                // Reiniciar el gráfico
+                if(chartInstance) {
+                    chartInstance.data.labels = [];
+                    chartInstance.data.datasets[0].data = [];
+                    chartInstance.update();
+                }
+
                 alert(`✅ ¡Éxito! Los ${lista.length} alumnos fueron cargados correctamente y la reserva se ajustó a $11.000.`);
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
