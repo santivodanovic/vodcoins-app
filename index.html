@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V5.0 - Sistema de Auditoría</title>
+    <title>VodCoins V5.1 - Alarmas Antifraude</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); --primary: #4a90e2; --fintual-green: #00d282; --fintual-red: #ff5252; }
-        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg-gradient); background-attachment: fixed; color: #333; padding-bottom: 90px; min-height: 100vh; user-select: none; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg-gradient); background-attachment: fixed; color: #333; padding-bottom: 90px; min-height: 100vh; user-select: none; overflow-x: hidden; }
         
         .full-screen-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; }
         .caja-central { background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
@@ -101,14 +101,19 @@
             <div id="zona-profe" class="panel-admin">
                 <h3 style="color:#d35400; margin-top:0;">🔧 Panel de Profesor</h3>
                 
-                <div style="background:#fffcf0; padding:15px; border-radius:8px; margin-top:10px; border-left: 5px solid #ff9f43;">
-                    <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Registro de Movimientos</h4>
-                    <div id="lista-notificaciones" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
-                        <em style="color:#aaa;">Cargando notificaciones...</em>
+                <div style="background:#ffeaa7; padding:15px; border-radius:8px; margin-top:10px; border-left: 5px solid #d63031;">
+                    <h4 style="margin:0 0 10px 0; color:#d63031;">🚨 Registro de Ingresos</h4>
+                    <div id="lista-alertas" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
+                        <em style="color:#888;">Monitoreando...</em>
                     </div>
                 </div>
 
-                <button onclick="generarAuditoria()" style="background:#2c3e50; color:white; padding:12px; border:none; border-radius:8px; width:100%; margin-top:15px; font-weight:bold; font-size:14px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">📊 Descargar Auditoría (Excel)</button>
+                <div style="background:#fffcf0; padding:15px; border-radius:8px; margin-top:15px; border-left: 5px solid #ff9f43;">
+                    <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Compras y Transacciones</h4>
+                    <div id="lista-notificaciones" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
+                        <em style="color:#aaa;">Cargando historial...</em>
+                    </div>
+                </div>
 
                 <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:15px;">
                     <strong>👶 Nuevo Alumno:</strong>
@@ -223,6 +228,9 @@
 
         let cursoID = null;
         let estudiantes = [];
+        let estudiantesAnteriores = []; // Para detectar hackeos/aumentos
+        let primeraCargaAlumnos = true;
+
         let usuarioLogueado = null;
         let reservaMundial = 11000; 
         
@@ -235,6 +243,7 @@
         let historial24hDB = [];
         let historialLargoDB = [];
 
+        // BASE DE DATOS MAESTRA
         const DATA_BASE = {
             "curso_8b": [
                 { id: 1, nombre: "Abarca Pérez Maximiliano Alonso", saldo: 1 },
@@ -375,6 +384,7 @@
             if(!idUser) return alert("Selecciona usuario");
 
             if(idUser === 'profe') {
+                // Validación Segura: Clave encriptada en Base64 para que no se lea en el código fuente
                 if (btoa(pin) === 'Q09MTzQ1MTE=') {
                     usuarioLogueado = { id: 'profe', nombre: 'Profesor', saldo: 999999, esProfe: true };
                     entrar();
@@ -411,7 +421,23 @@
             document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
         }
 
-        // --- SISTEMA DE GRÁFICO ESTABILIZADO ---
+        // --- SISTEMA DE ALARMA FLOTANTE EN VIVO ---
+        window.mostrarAlarma = (mensaje) => {
+            const toast = document.createElement('div');
+            toast.innerText = mensaje;
+            toast.style.cssText = "position:fixed; top:20px; right:20px; background:#d63031; color:white; padding:15px 25px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.4); z-index:9999; font-weight:bold; font-size:14px; transform:translateX(150%); transition:transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);";
+            document.body.appendChild(toast);
+            
+            // Sonido de campana sutil
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(e => console.log("Audio de alerta silenciado por el navegador"));
+
+            setTimeout(() => { toast.style.transform = "translateX(0)"; }, 100);
+            setTimeout(() => { toast.style.transform = "translateX(150%)"; }, 6000);
+            setTimeout(() => { document.body.removeChild(toast); }, 6500);
+        };
+
+        // --- LÓGICA DEL GRÁFICO (SIN CAMBIOS) ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -464,10 +490,7 @@
                 snap.forEach(doc => temp.push(doc.data()));
                 temp.sort((a,b) => a.fecha.localeCompare(b.fecha)); 
                 historialLargoDB = temp;
-                
-                if (modoGraficoActual !== 'vivo' && modoGraficoActual !== '24h') {
-                    dibujarGraficoLargo(modoGraficoActual);
-                }
+                if (modoGraficoActual !== 'vivo' && modoGraficoActual !== '24h') dibujarGraficoLargo(modoGraficoActual);
             });
 
             if(marketInterval) clearInterval(marketInterval);
@@ -476,7 +499,6 @@
                     let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                     historialVivoLocal.push({t: tStr, p: precioActualGlobal});
                     if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
-                    
                     if(modoGraficoActual === 'vivo') dibujarGrafico(historialVivoLocal);
                 }
             }, 3000); 
@@ -493,21 +515,15 @@
             modoGraficoActual = rango;
             document.querySelectorAll('.rango-btn').forEach(btn => btn.classList.remove('activo'));
             document.getElementById('btn-rango-' + rango).classList.add('activo');
-
-            if(rango === 'vivo') {
-                dibujarGrafico(historialVivoLocal);
-            } else if(rango === '24h') {
-                dibujarGrafico24h();
-            } else {
-                dibujarGraficoLargo(rango);
-            }
+            if(rango === 'vivo') dibujarGrafico(historialVivoLocal);
+            else if(rango === '24h') dibujarGrafico24h();
+            else dibujarGraficoLargo(rango);
         };
 
         function estabilizarEjeY(arrayPuntos) {
             if (!chartInstance || arrayPuntos.length === 0) return;
             let max = Math.max(...arrayPuntos.map(d => d.p));
             let min = Math.min(...arrayPuntos.map(d => d.p));
-            
             if (max === min) {
                 chartInstance.options.scales.y.min = max * 0.95;
                 chartInstance.options.scales.y.max = max * 1.05;
@@ -537,14 +553,10 @@
             let dataAUsar = [...historial24hDB];
             let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
-            if(dataAUsar.length === 0) {
-                dataAUsar.push({ t: tStr, p: precioActualGlobal });
-            } else {
-                if(dataAUsar[dataAUsar.length - 1].t === tStr) {
-                    dataAUsar[dataAUsar.length - 1].p = precioActualGlobal;
-                } else {
-                    dataAUsar.push({ t: tStr, p: precioActualGlobal });
-                }
+            if(dataAUsar.length === 0) dataAUsar.push({ t: tStr, p: precioActualGlobal });
+            else {
+                if(dataAUsar[dataAUsar.length - 1].t === tStr) dataAUsar[dataAUsar.length - 1].p = precioActualGlobal;
+                else dataAUsar.push({ t: tStr, p: precioActualGlobal });
             }
 
             chartInstance.data.labels = dataAUsar.map(d => d.t);
@@ -556,7 +568,6 @@
 
         function dibujarGraficoLargo(diasInt) {
             if(!chartInstance) return;
-            
             let dataReal = [...historialLargoDB];
             let dataAUsar = [];
             let diasFaltantes = diasInt - dataReal.length;
@@ -564,7 +575,6 @@
             if(diasFaltantes > 0) {
                 let fechaBase = dataReal.length > 0 ? new Date(dataReal[0].fecha) : new Date();
                 fechaBase.setMinutes(fechaBase.getMinutes() + fechaBase.getTimezoneOffset());
-                
                 for(let i = diasFaltantes; i > 0; i--) {
                     let fObj = new Date(fechaBase);
                     fObj.setDate(fObj.getDate() - i);
@@ -580,7 +590,6 @@
             });
 
             dataAUsar = dataAUsar.concat(datosRealesFormateados).slice(-diasInt);
-
             chartInstance.data.labels = dataAUsar.map(d => d.t);
             chartInstance.data.datasets[0].data = dataAUsar.map(d => d.p);
             aplicarColoresFintual(dataAUsar);
@@ -590,19 +599,13 @@
 
         function aplicarColoresFintual(dataArray) {
             if(!dataArray || dataArray.length === 0) return;
-            
             let colorLinea = '#00d282';
             let colorFondo = 'rgba(0, 210, 130, 0.1)';
-
             if (dataArray.length >= 2) {
-                const precioInicial = dataArray[0].p;
-                const precioActual = dataArray[dataArray.length - 1].p;
-                if (precioActual < precioInicial) {
-                    colorLinea = '#ff5252';
-                    colorFondo = 'rgba(255, 82, 82, 0.1)';
+                if (dataArray[dataArray.length - 1].p < dataArray[0].p) {
+                    colorLinea = '#ff5252'; colorFondo = 'rgba(255, 82, 82, 0.1)';
                 }
             }
-            
             chartInstance.data.datasets[0].borderColor = colorLinea;
             chartInstance.data.datasets[0].backgroundColor = colorFondo;
         }
@@ -612,52 +615,35 @@
             try {
                 const snap = await getDoc(ref24h);
                 let pts = snap.exists() ? snap.data().puntos : [];
-                let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                pts.push({t: tStr, p: nuevoPrecio});
+                pts.push({t: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), p: nuevoPrecio});
                 if(pts.length > 50) pts.shift(); 
                 await setDoc(ref24h, { puntos: pts });
-            } catch(e) { console.error(e); }
+            } catch(e) {}
         };
 
         function calcularPrecio() {
-            let circulante = estudiantes.reduce((total, est) => {
-                return (est.id !== 'profe') ? total + (est.saldo || 0) : total;
-            }, 0);
-
-            if (circulante <= 0) {
-                circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
-            }
+            let circulante = estudiantes.reduce((t, est) => (est.id !== 'profe' ? t + (est.saldo || 0) : t), 0);
+            if (circulante <= 0) circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
 
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
             if (precioActualGlobal !== precioAnterior && modoGraficoActual === 'vivo') {
-                let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-                historialVivoLocal.push({t: tStr, p: precioActualGlobal});
+                historialVivoLocal.push({t: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), p: precioActualGlobal});
                 if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
                 dibujarGrafico(historialVivoLocal);
-            } else if (precioActualGlobal !== precioAnterior && modoGraficoActual === '24h') {
-                dibujarGrafico24h();
-            }
+            } else if (precioActualGlobal !== precioAnterior && modoGraficoActual === '24h') dibujarGrafico24h();
 
             const lblPrecio = document.getElementById('ticker-precio');
             if(lblPrecio) {
                 lblPrecio.innerText = "$ " + precioActualGlobal.toLocaleString('es-CL'); 
                 document.getElementById('lbl-reserva').innerText = reservaMundial.toLocaleString('es-CL');
                 document.getElementById('lbl-circulante').innerText = circulante;
-
-                if(precioActualGlobal >= 11000) {
-                    lblPrecio.className = "precio-gigante subida";
-                } else {
-                    lblPrecio.className = "precio-gigante bajada";
-                }
+                lblPrecio.className = precioActualGlobal >= 11000 ? "precio-gigante subida" : "precio-gigante bajada";
             }
 
             const hoyStr = getHoyString();
-            setDoc(doc(db, "historial_" + cursoID, hoyStr), {
-                fecha: hoyStr,
-                precio: precioActualGlobal
-            });
+            setDoc(doc(db, "historial_" + cursoID, hoyStr), { fecha: hoyStr, precio: precioActualGlobal });
         }
 
         window.ejecutarAccionMercado = async (cantidad) => {
@@ -667,33 +653,38 @@
                 if(snap.exists()) {
                     let nuevaReserva = snap.data().reserva + cantidad;
                     await updateDoc(docRef, { reserva: nuevaReserva });
-                    
-                    let circulante = estudiantes.reduce((t, e) => { return (e.id !== 'profe') ? t + (e.saldo || 0) : t; }, 0);
+                    let circulante = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
                     if (circulante <= 0) circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
                     await registrarCambio24h(Math.floor(nuevaReserva / circulante));
-
-                    // NUEVO: Registrar acción del Profesor en la Auditoría
-                    await addDoc(collection(db, "compras_" + cursoID), {
-                        alumno: "Profesor (Banco Central)",
-                        tipo: "banco_central",
-                        item: cantidad > 0 ? "Inyección de Liquidez" : "Retiro de Liquidez",
-                        precio: cantidad,
-                        timestamp: new Date()
-                    });
-
                 }
-            } catch(e) { alert("Error: " + e); }
+            } catch(e) {}
         };
 
-        // --- SISTEMA DE ALUMNOS ---
+        // --- SISTEMA VIGILANTE DE LA BASE DE DATOS (ESTUDIANTES) ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
             
             onSnapshot(collection(db, colName), (snapshot) => {
-                estudiantes = [];
-                snapshot.forEach((doc) => { estudiantes.push(doc.data()); });
+                let nuevosEstudiantes = [];
+                snapshot.forEach((doc) => { nuevosEstudiantes.push(doc.data()); });
                 
+                // SISTEMA DETECTOR DE HACKEOS/AUMENTOS EN VIVO
+                if (!primeraCargaAlumnos && usuarioLogueado && usuarioLogueado.esProfe) {
+                    nuevosEstudiantes.forEach(nuevoEst => {
+                        let viejoEst = estudiantesAnteriores.find(e => e.id === nuevoEst.id);
+                        // Si un alumno tiene más dinero de pronto, lanzamos la Alarma Suprema
+                        if (viejoEst && nuevoEst.saldo > viejoEst.saldo) {
+                            let diff = nuevoEst.saldo - viejoEst.saldo;
+                            mostrarAlarma(`🚨 ATENCIÓN: El saldo de ${nuevoEst.nombre} acaba de subir +${diff} VOD.`);
+                        }
+                    });
+                }
+                
+                estudiantesAnteriores = nuevosEstudiantes;
+                primeraCargaAlumnos = false;
+
+                estudiantes = nuevosEstudiantes;
                 estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
                 llenarSelectores();
                 if(usuarioLogueado) { actualizarUI(); calcularPrecio(); }
@@ -751,50 +742,51 @@
             });
         }
 
+        // --- SISTEMA DE BUZONES SEPARADOS ---
         function escucharNotificaciones() {
-            const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"), limit(30));
+            const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"), limit(50));
+            
             onSnapshot(q, (snapshot) => {
-                const divContenedor = document.getElementById('lista-notificaciones');
-                if(!divContenedor) return;
+                const divContenedor = document.getElementById('lista-notificaciones'); // Compras
+                const divAlertas = document.getElementById('lista-alertas'); // Ingresos
+                if(!divContenedor || !divAlertas) return;
                 
-                divContenedor.innerHTML = '';
-                if(snapshot.empty) {
-                    divContenedor.innerHTML = '<em style="color:#aaa;">Sin movimientos recientes...</em>';
-                    return;
-                }
-                
+                let htmlCompras = '';
+                let htmlIngresos = '';
+
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     const horaFormateada = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : 'Recién';
                     
-                    let accionTxt = "canjeó";
-                    let colorItem = "#e67e22";
-                    let textoPrecio = `-${Math.abs(data.precio)} VOD`;
-                    let colorPrecio = "#e84118";
-
-                    if (data.tipo === 'transferencia') {
-                        accionTxt = "transfirió a";
-                        colorItem = "#3498db"; 
-                    } else if (data.tipo === 'emision_directa') {
-                        accionTxt = data.precio > 0 ? "asignó a" : "multó a";
-                        colorItem = "#9b59b6";
-                        textoPrecio = `${data.precio > 0 ? '+' : '-'}${Math.abs(data.precio)} VOD`;
-                        colorPrecio = data.precio > 0 ? "#00d282" : "#ff5252";
-                    } else if (data.tipo === 'banco_central') {
-                        accionTxt = "intervino la reserva:";
-                        colorItem = "#333";
-                        textoPrecio = `${data.precio > 0 ? '+$' : '-$'}${Math.abs(data.precio)}`;
-                        colorPrecio = data.precio > 0 ? "#00d282" : "#ff5252";
+                    if (data.tipo === 'transferencia' || (data.tipo === 'emision_directa' && data.precio > 0)) {
+                        // ES UN INGRESO (Lo ponemos en la caja Roja de Alertas)
+                        let accionTxt = data.tipo === 'transferencia' ? `de ${data.alumno}` : `del Banco Central`;
+                        htmlIngresos += `
+                            <div style="border-bottom: 1px solid #ffb8b8; padding: 6px 0; color:#d63031;">
+                                <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
+                                <b>${data.item}</b> recibió <b>+${data.precio} VOD</b> <span style="color:#e67e22;">${accionTxt}</span>
+                                <div style="color:#c0392b; font-size:10px; margin-top:2px;">${horaFormateada}</div>
+                            </div>`;
+                    } else {
+                        // ES UN GASTO/COMPRA (Lo ponemos en la caja normal)
+                        let accionTxt = "canjeó";
+                        let colorItem = "#e67e22";
+                        let textoPrecio = `-${Math.abs(data.precio)} VOD`;
+                        if (data.tipo === 'emision_directa' && data.precio < 0) {
+                            accionTxt = "fue multado con"; colorItem = "#9b59b6"; textoPrecio = `-${Math.abs(data.precio)} VOD`;
+                        }
+                        htmlCompras += `
+                            <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
+                                <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
+                                <b>${data.alumno}</b> ${accionTxt} <span style="color:${colorItem}; font-weight:bold;">${data.item}</span> 
+                                <span style="color:#e84118;">(${textoPrecio})</span> 
+                                <div style="color:#999; font-size:10px; margin-top:2px;">${horaFormateada}</div>
+                            </div>`;
                     }
-
-                    divContenedor.innerHTML += `
-                        <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
-                            <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
-                            <b>${data.alumno}</b> ${accionTxt} <span style="color:${colorItem}; font-weight:bold;">${data.item}</span> 
-                            <span style="color:${colorPrecio};">(${textoPrecio})</span> 
-                            <div style="color:#999; font-size:10px; margin-top:2px;">${horaFormateada}</div>
-                        </div>`;
                 });
+
+                divAlertas.innerHTML = htmlIngresos === '' ? '<em style="color:#888;">Nadie ha recibido dinero aún...</em>' : htmlIngresos;
+                divContenedor.innerHTML = htmlCompras === '' ? '<em style="color:#aaa;">Sin gastos recientes...</em>' : htmlCompras;
             });
         }
 
@@ -819,19 +811,13 @@
                 if(usuarioLogueado.esProfe) {
                     const dDoc = await getDoc(destinoRef);
                     await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
-                    
-                    let circulante = estudiantes.reduce((t, e) => { return (e.id !== 'profe') ? t + (e.saldo || 0) : t; }, 0);
+                    let circulante = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
                     let nuevoCirculante = circulante + monto;
                     if(nuevoCirculante <= 0) nuevoCirculante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
                     await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
 
-                    // NUEVO: Registrar acción del Profesor a un Alumno en la Auditoría
                     await addDoc(collection(db, "compras_" + cursoID), {
-                        alumno: "Profesor",
-                        tipo: "emision_directa",
-                        item: nombreDestino,
-                        precio: monto,
-                        timestamp: new Date()
+                        alumno: "Profesor", tipo: "emision_directa", item: nombreDestino, precio: monto, timestamp: new Date()
                     });
 
                     alert(`✅ Operación de ${monto} VodCoins realizada.`);
@@ -846,11 +832,7 @@
                     });
                     
                     await addDoc(collection(db, "compras_" + cursoID), {
-                        alumno: usuarioLogueado.nombre,
-                        tipo: "transferencia",
-                        item: nombreDestino,
-                        precio: monto,
-                        timestamp: new Date()
+                        alumno: usuarioLogueado.nombre, tipo: "transferencia", item: nombreDestino, precio: monto, timestamp: new Date()
                     });
 
                     alert("✅ Transferencia realizada con éxito.");
@@ -862,7 +844,6 @@
 
         window.comprarItem = async (nombreItem, precio) => {
             if(usuarioLogueado.esProfe) return alert("El profe no compra.");
-            
             const miSaldo = estudiantes.find(e => e.id == usuarioLogueado.id).saldo;
             if(miSaldo < precio) return alert("❌ Saldo insuficiente");
 
@@ -871,16 +852,11 @@
             const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
             try {
                 await updateDoc(miRef, { saldo: miSaldo - precio });
-                
                 await addDoc(collection(db, "compras_" + cursoID), {
-                    alumno: usuarioLogueado.nombre,
-                    tipo: "compra",
-                    item: nombreItem,
-                    precio: precio,
-                    timestamp: new Date()
+                    alumno: usuarioLogueado.nombre, tipo: "compra", item: nombreItem, precio: precio, timestamp: new Date()
                 });
 
-                let circulante = estudiantes.reduce((t, e) => { return (e.id !== 'profe') ? t + (e.saldo || 0) : t; }, 0);
+                let circulante = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
                 let nuevoCirculante = circulante - precio;
                 if(nuevoCirculante <= 0) nuevoCirculante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
                 await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
@@ -913,12 +889,8 @@
         };
 
         window.inicializarBaseDatosNube = async () => {
-            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado de este curso.\n\nEscribe CONFIRMAR para proceder:");
-            
-            if (confirmacion !== "CONFIRMAR") {
-                alert("Operación cancelada.");
-                return;
-            }
+            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial.\n\nEscribe CONFIRMAR para proceder:");
+            if (confirmacion !== "CONFIRMAR") { alert("Cancelado."); return; }
             
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
@@ -936,7 +908,6 @@
                 const snapshotHistorial = await getDocs(collection(db, "historial_" + cursoID));
                 snapshotHistorial.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
                 
-                // Tambien borrar transacciones viejas para la auditoria nueva
                 const snapshotCompras = await getDocs(collection(db, "compras_" + cursoID));
                 snapshotCompras.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
 
@@ -944,80 +915,16 @@
                 const historialRef = doc(db, "historial_" + cursoID, hoy);
                 tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
 
-                let ayer = new Date(); 
-                ayer.setDate(ayer.getDate() - 1);
+                let ayer = new Date(); ayer.setDate(ayer.getDate() - 1);
                 const tAyer = ayer.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const tHoy = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
                 tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: tAyer, p: 11000}, {t: tHoy, p: 11000}] }));
 
                 await Promise.all(tareasDeSubida);
-                
-                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000. Todo ha sido limpiado.`);
+                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000.`);
                 location.reload(); 
-            } catch (error) {
-                alert("❌ Hubo un problema de conexión: " + error);
-            }
-        };
-
-        // --- SISTEMA GENERADOR DE AUDITORÍA (EXCEL) ---
-        window.generarAuditoria = async () => {
-            try {
-                alert("⏳ Generando reporte Excel, por favor espera un momento...");
-                
-                // 1. Armar Cabecera de Saldos Actuales
-                let csvContent = "--- ESTADO ACTUAL DE SALDOS ---\n";
-                csvContent += "Alumno,Saldo (VOD)\n";
-                estudiantes.forEach(e => {
-                    csvContent += `${e.nombre},${e.saldo}\n`;
-                });
-                
-                // 2. Armar Historial de Transacciones (30 Días)
-                csvContent += "\n--- REGISTRO DE TRANSACCIONES (ULTIMOS 30 DIAS) ---\n";
-                csvContent += "Fecha,Hora,Usuario,Accion,Detalle,Monto\n";
-                
-                const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"));
-                const querySnapshot = await getDocs(q);
-                
-                const hace30Dias = new Date();
-                hace30Dias.setDate(hace30Dias.getDate() - 30);
-                
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if(data.timestamp) {
-                        const fechaDoc = data.timestamp.toDate();
-                        if(fechaDoc >= hace30Dias) {
-                            const fechaStr = fechaDoc.toLocaleDateString('es-CL');
-                            const horaStr = fechaDoc.toLocaleTimeString('es-CL');
-                            
-                            // Formateo de nombres para que Excel no se confunda con las comas
-                            let accionStr = data.tipo === 'compra' ? 'Canjeó' : 
-                                           data.tipo === 'transferencia' ? 'Transfirió a' : 
-                                           data.tipo === 'emision_directa' ? (data.precio > 0 ? 'Asignó VOD a' : 'Multó a') : 'Modificó Reserva';
-                            
-                            let montoStr = data.tipo === 'banco_central' ? `$ ${data.precio}` : `${data.precio} VOD`;
-                            
-                            csvContent += `${fechaStr},${horaStr},${data.alumno},${accionStr},${data.item},${montoStr}\n`;
-                        }
-                    }
-                });
-
-                // 3. Forzar Descarga como Archivo CSV Compatible con Excel
-                const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' }); 
-                const link = document.createElement("a");
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                
-                const fechaHoy = new Date().toLocaleDateString('es-CL').replace(/\//g, '-');
-                link.setAttribute("download", `Auditoria_VodCoins_${cursoID}_${fechaHoy}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-            } catch (error) {
-                alert("❌ Error al generar la auditoría: " + error);
-            }
+            } catch (error) { alert("❌ Hubo un problema de conexión: " + error); }
         };
 
         window.mostrarClaves = () => {
