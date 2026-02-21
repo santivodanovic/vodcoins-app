@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V4.2 - Motor Estabilizado</title>
+    <title>VodCoins V4.3 - Limpieza Profunda</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,14 +31,12 @@
         .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
-        /* Estilo Gráfico Fintual */
         .market-card { background: #ffffff; color: #333; padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
         .precio-gigante { font-size: 48px; font-weight: 800; margin: 5px 0 15px 0; letter-spacing: -2px; }
         .subida { color: var(--fintual-green); }
         .bajada { color: var(--fintual-red); }
         .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight:600; }
         
-        /* Botones de Rango Ajustados (Corrección de superposición) */
         .rango-container { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; background:#f5f7fa; border-radius:12px; padding:6px; margin-top:20px; }
         .rango-btn { flex:1 1 18%; min-width: 45px; background: transparent; color: #888; border: none; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.3s; }
         .rango-btn.activo { background: white; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
@@ -206,7 +204,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, runTransaction, query, orderBy, limit, addDoc } 
+        // AGREGADO getDocs PARA PODER BORRAR EL HISTORIAL VIEJO
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, runTransaction, query, orderBy, limit, addDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -374,8 +373,8 @@
 
             if(!idUser) return alert("Selecciona usuario");
 
-            // CLAVE MAESTRA ACTUALIZADA
             if(idUser === 'profe') {
+                // NUEVA CLAVE MAESTRA
                 if (pin === 'COLO4511') {
                     usuarioLogueado = { id: 'profe', nombre: 'Profesor', saldo: 999999, esProfe: true };
                     entrar();
@@ -453,7 +452,7 @@
                 historialVivoLocal.push({t: tStr, p: precioActualGlobal});
             }
 
-            // Escuchar el Historial 24H
+            // Escuchar el Historial 24H de la nube
             onSnapshot(doc(db, "banco_central", "memoria_24h_" + cursoID), (snap) => {
                 if(snap.exists() && snap.data().puntos) {
                     historial24hDB = snap.data().puntos;
@@ -511,12 +510,21 @@
             if (!chartInstance || arrayPuntos.length === 0) return;
             let max = Math.max(...arrayPuntos.map(d => d.p));
             let min = Math.min(...arrayPuntos.map(d => d.p));
+            
             if (max === min) {
+                // Si la línea es perfectamente recta, forzamos un +/- 5% de margen
                 chartInstance.options.scales.y.min = max * 0.95;
                 chartInstance.options.scales.y.max = max * 1.05;
             } else {
-                delete chartInstance.options.scales.y.min;
-                delete chartInstance.options.scales.y.max;
+                // Si hay variaciones pero son milimétricas, forzamos un +/- 1% mínimo
+                let diff = max - min;
+                if(diff < (max * 0.01)) {
+                    chartInstance.options.scales.y.min = min * 0.99;
+                    chartInstance.options.scales.y.max = max * 1.01;
+                } else {
+                    delete chartInstance.options.scales.y.min;
+                    delete chartInstance.options.scales.y.max;
+                }
             }
         }
 
@@ -564,12 +572,20 @@
         }
 
         function aplicarColoresFintual(dataArray) {
-            if(dataArray.length < 2) return;
-            const precioInicial = dataArray[0].p;
-            const precioActual = dataArray[dataArray.length - 1].p;
+            if(!dataArray || dataArray.length === 0) return;
             
-            const colorLinea = precioActual >= precioInicial ? '#00d282' : '#ff5252';
-            const colorFondo = precioActual >= precioInicial ? 'rgba(0, 210, 130, 0.1)' : 'rgba(255, 82, 82, 0.1)';
+            // Si solo hay un punto o la variación es nula o subió, se pinta verde
+            let colorLinea = '#00d282';
+            let colorFondo = 'rgba(0, 210, 130, 0.1)';
+
+            if (dataArray.length >= 2) {
+                const precioInicial = dataArray[0].p;
+                const precioActual = dataArray[dataArray.length - 1].p;
+                if (precioActual < precioInicial) {
+                    colorLinea = '#ff5252';
+                    colorFondo = 'rgba(255, 82, 82, 0.1)';
+                }
+            }
             
             chartInstance.data.datasets[0].borderColor = colorLinea;
             chartInstance.data.datasets[0].backgroundColor = colorFondo;
@@ -583,7 +599,7 @@
                 let pts = snap.exists() ? snap.data().puntos : [];
                 let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 pts.push({t: tStr, p: nuevoPrecio});
-                if(pts.length > 30) pts.shift(); 
+                if(pts.length > 50) pts.shift(); // Mantiene 50 transacciones en las 24h
                 await setDoc(ref24h, { puntos: pts });
             } catch(e) { console.error(e); }
         };
@@ -593,7 +609,7 @@
                 return (est.id !== 'profe') ? total + (est.saldo || 0) : total;
             }, 0);
 
-            // CORRECCIÓN DEL SALTO INICIAL: Asume la cantidad real de alumnos si el snap no ha cargado
+            // CORRECCIÓN DEL SALTO INICIAL: Asume la cantidad real de alumnos si la nube aún no termina de cargar la lista
             if (circulante <= 0) {
                 circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
             }
@@ -834,7 +850,6 @@
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
             
-            // GENERADOR DE PIN ALFANUMERICO 8 CARACTERES
             await setDoc(doc(db, cursoID, nuevoID.toString()), {
                 id: nuevoID, nombre: nombre, saldo: 1, pin: Math.random().toString(36).substring(2,10).toUpperCase()
             });
@@ -851,8 +866,9 @@
             }
         };
 
+        // --- DESTRUCTOR Y CONSTRUCTOR DE HISTORIALES (LIMPIEZA PROFUNDA) ---
         window.inicializarBaseDatosNube = async () => {
-            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos de este curso y reiniciará la economía a $11.000.\n\nEscribe CONFIRMAR para proceder:");
+            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado de este curso, reiniciando la economía a $11.000.\n\nEscribe CONFIRMAR para proceder:");
             
             if (confirmacion !== "CONFIRMAR") {
                 alert("Operación cancelada.");
@@ -862,28 +878,42 @@
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
 
+            // 1. Nuevos Alumnos con Claves de 8 Dígitos
             for(let est of lista) {
-                // GENERADOR DE PIN ALFANUMERICO 8 CARACTERES
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,10).toUpperCase();
                 const ref = doc(db, cursoID, est.id.toString());
                 tareasDeSubida.push(setDoc(ref, est)); 
             }
 
+            // 2. Restaurar Reserva a $11.000 por alumno
             const reservaRef = doc(db, "banco_central", "config_" + cursoID);
             tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
 
-            const hoy = getHoyString();
-            const historialRef = doc(db, "historial_" + cursoID, hoy);
-            tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
-
-            // Resetear DB 24h
-            const horaActual = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
-            tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: horaActual, p: 11000}] }));
-
             try {
+                // 3. Destruir TODO el historial corrupto del pasado
+                const snapshotHistorial = await getDocs(collection(db, "historial_" + cursoID));
+                snapshotHistorial.forEach(docSnap => {
+                    tareasDeSubida.push(deleteDoc(docSnap.ref));
+                });
+
+                // 4. Plantar la nueva semilla sana de $11.000
+                const hoy = getHoyString();
+                const historialRef = doc(db, "historial_" + cursoID, hoy);
+                tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
+
+                // 5. Configurar el gráfico de 24 horas inicial con línea recta
+                let ayer = new Date(); 
+                ayer.setDate(ayer.getDate() - 1);
+                const tAyer = ayer.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const tHoy = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
+                tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: tAyer, p: 11000}, {t: tHoy, p: 11000}] }));
+
+                // Subir todo de golpe
                 await Promise.all(tareasDeSubida);
-                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000 y nuevos Pines generados.`);
+                
+                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000. Todo el historial corrupto ha sido eliminado.`);
+                location.reload(); // Recargar para mostrar los gráficos limpios
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
             }
