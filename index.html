@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V4.1 - Gráficos Realistas</title>
+    <title>VodCoins V4.2 - Motor Estabilizado</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,14 +31,14 @@
         .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
-        /* Estilo Gráfico Fintual */
+        /* Estilo Gráfico */
         .market-card { background: #ffffff; color: #333; padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
         .precio-gigante { font-size: 48px; font-weight: 800; margin: 5px 0 15px 0; letter-spacing: -2px; }
         .subida { color: var(--fintual-green); }
         .bajada { color: var(--fintual-red); }
         .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight:600; }
         
-        /* Botones de Rango Fintual */
+        /* Botones de Rango */
         .rango-container { display:flex; justify-content:space-between; background:#f5f7fa; border-radius:12px; padding:5px; margin-top:20px; }
         .rango-btn { flex:1; background: transparent; color: #888; border: none; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.3s; }
         .rango-btn.activo { background: white; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
@@ -104,7 +104,7 @@
                 <h3 style="color:#d35400; margin-top:0;">🔧 Panel de Profesor</h3>
                 
                 <div style="background:#fffcf0; padding:15px; border-radius:8px; margin-top:10px; border-left: 5px solid #ff9f43;">
-                    <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Registro de Compras</h4>
+                    <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Registro de Movimientos</h4>
                     <div id="lista-notificaciones" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
                         <em style="color:#aaa;">Cargando notificaciones...</em>
                     </div>
@@ -352,6 +352,13 @@
             ]
         };
 
+        // Utilidad: Unificar la fecha real local para todos los cursos (Evita bugs de zona horaria)
+        function getHoyString() {
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            return d.toISOString().split('T')[0];
+        }
+
         window.seleccionarCurso = (id) => {
             cursoID = id;
             document.getElementById('pantalla-cursos').style.display = 'none';
@@ -403,6 +410,7 @@
             document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
         }
 
+        // --- SISTEMA DE GRÁFICO ESTABILIZADO ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -426,17 +434,17 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 10, bottom: 10 } }, // Protege líneas planas
+                    layout: { padding: { top: 10, bottom: 10 } },
                     plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
                     scales: {
                         x: { display: false },
-                        y: { display: false, grace: '5%' } // Fintual style, sin lineas de fondo y con margen
+                        y: { display: false } 
                     },
                     animation: { duration: 400 }
                 }
             });
 
-            // Generar un historial en vivo inicial para que se vea una línea al entrar
+            // Precargar RAM visual En Vivo
             historialVivoLocal = [];
             let tActual = new Date();
             for(let i = 25; i >= 0; i--) {
@@ -444,7 +452,7 @@
                 historialVivoLocal.push({t: tStr, p: precioActualGlobal});
             }
 
-            // Escuchar el Historial Diario de la Nube
+            // Historial Larga Duración
             onSnapshot(collection(db, "historial_" + cursoID), (snap) => {
                 let temp = [];
                 snap.forEach(doc => temp.push(doc.data()));
@@ -456,7 +464,7 @@
                 }
             });
 
-            // Motor de Latido En Vivo (RAM Local)
+            // Latido constante
             if(marketInterval) clearInterval(marketInterval);
             marketInterval = setInterval(() => {
                 if(precioActualGlobal > 0) {
@@ -470,7 +478,7 @@
                 }
             }, 3000); 
 
-            // Escuchar cambios del precio maestro
+            // Escuchar cambios de la Base de Datos Maestra
             onSnapshot(doc(db, "banco_central", "config_" + cursoID), (snap) => {
                 if(snap.exists()) {
                     reservaMundial = snap.data().reserva;
@@ -491,11 +499,26 @@
             }
         };
 
+        // ESTABILIZADOR: Si la línea es recta, forzamos un margen para que quede al centro
+        function estabilizarEjeY(arrayPuntos) {
+            if (!chartInstance || arrayPuntos.length === 0) return;
+            let max = Math.max(...arrayPuntos.map(d => d.p));
+            let min = Math.min(...arrayPuntos.map(d => d.p));
+            if (max === min) {
+                chartInstance.options.scales.y.min = max * 0.95;
+                chartInstance.options.scales.y.max = max * 1.05;
+            } else {
+                delete chartInstance.options.scales.y.min;
+                delete chartInstance.options.scales.y.max;
+            }
+        }
+
         function dibujarGrafico(arrayPuntos) {
             if(!chartInstance || arrayPuntos.length === 0) return;
             chartInstance.data.labels = arrayPuntos.map(d => d.t);
             chartInstance.data.datasets[0].data = arrayPuntos.map(d => d.p);
             aplicarColoresFintual(arrayPuntos);
+            estabilizarEjeY(arrayPuntos);
             chartInstance.update();
         }
 
@@ -506,10 +529,8 @@
             let dataAUsar = [];
             let diasFaltantes = diasInt - dataReal.length;
 
-            // MAGIA: Rellenar el pasado con línea plana de 11.000 si faltan días.
             if(diasFaltantes > 0) {
                 let fechaBase = dataReal.length > 0 ? new Date(dataReal[0].fecha) : new Date();
-                // Ajuste de zona horaria para que no se corra el día
                 fechaBase.setMinutes(fechaBase.getMinutes() + fechaBase.getTimezoneOffset());
                 
                 for(let i = diasFaltantes; i > 0; i--) {
@@ -521,7 +542,6 @@
                 }
             }
 
-            // Convertir las fechas reales al formato visual (DD/MM)
             let datosRealesFormateados = dataReal.map(d => {
                 let partes = d.fecha.split('-');
                 return { t: `${partes[2]}/${partes[1]}`, p: d.precio };
@@ -532,6 +552,7 @@
             chartInstance.data.labels = dataAUsar.map(d => d.t);
             chartInstance.data.datasets[0].data = dataAUsar.map(d => d.p);
             aplicarColoresFintual(dataAUsar);
+            estabilizarEjeY(dataAUsar);
             chartInstance.update();
         }
 
@@ -554,11 +575,15 @@
 
             if (circulante <= 0) circulante = 1;
 
+            let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
-            // Para la primera vez que se carga el vivo
-            if(historialVivoLocal.length > 0 && historialVivoLocal[0].p !== precioActualGlobal) {
-                historialVivoLocal.forEach(h => { if(h.p === 11000) h.p = precioActualGlobal; });
+            // INYECCIÓN VISUAL INMEDIATA
+            if (precioActualGlobal !== precioAnterior && modoGraficoActual === 'vivo') {
+                let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                historialVivoLocal.push({t: tStr, p: precioActualGlobal});
+                if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
+                dibujarGrafico(historialVivoLocal);
             }
 
             const lblPrecio = document.getElementById('ticker-precio');
@@ -574,17 +599,14 @@
                 }
             }
 
-            // GUARDAR HISTORIAL DIARIO REAL EN LA NUBE (Sobrescribe con el precio final de hoy)
-            const hoyObj = new Date();
-            hoyObj.setMinutes(hoyObj.getMinutes() - hoyObj.getTimezoneOffset());
-            const hoyStr = hoyObj.toISOString().split('T')[0];
-            
+            const hoyStr = getHoyString();
             setDoc(doc(db, "historial_" + cursoID, hoyStr), {
                 fecha: hoyStr,
                 precio: precioActualGlobal
             });
         }
 
+        // El Banco Central ya no necesita tocar el gráfico, solo la base de datos.
         window.ejecutarAccionMercado = async (cantidad) => {
             const docRef = doc(db, "banco_central", "config_" + cursoID);
             try {
@@ -595,6 +617,7 @@
             } catch(e) { alert("Error: " + e); }
         };
 
+        // --- SISTEMA DE ALUMNOS ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
@@ -668,17 +691,26 @@
                 
                 divContenedor.innerHTML = '';
                 if(snapshot.empty) {
-                    divContenedor.innerHTML = '<em style="color:#aaa;">Sin compras recientes...</em>';
+                    divContenedor.innerHTML = '<em style="color:#aaa;">Sin movimientos recientes...</em>';
                     return;
                 }
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     const horaFormateada = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : 'Recién';
+                    
+                    // Diferenciar estilo según si es transferencia o canje
+                    let accionTxt = "canjeó";
+                    let colorItem = "#e67e22";
+                    if (data.tipo === 'transferencia') {
+                        accionTxt = "transfirió a";
+                        colorItem = "#3498db"; // Azul para transferencias
+                    }
+
                     divContenedor.innerHTML += `
                         <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
                             <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
-                            <b>${data.alumno}</b> canjeó <span style="color:#e67e22; font-weight:bold;">${data.item}</span> 
+                            <b>${data.alumno}</b> ${accionTxt} <span style="color:${colorItem}; font-weight:bold;">${data.item}</span> 
                             <span style="color:#e84118;">(-${data.precio} VOD)</span> 
                             <div style="color:#999; font-size:10px; margin-top:2px;">${horaFormateada}</div>
                         </div>`;
@@ -692,6 +724,7 @@
             }
         };
 
+        // --- FUNCIONES COMERCIALES MEJORADAS ---
         window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
             const monto = parseFloat(document.getElementById('monto').value);
@@ -701,6 +734,7 @@
             if(monto === 0) return alert("El monto no puede ser cero.");
             
             const destinoRef = doc(db, cursoID, destinoId.toString());
+            const nombreDestino = estudiantes.find(e => e.id == destinoId).nombre;
 
             try {
                 if(usuarioLogueado.esProfe) {
@@ -716,7 +750,17 @@
                         t.update(origenRef, { saldo: oDoc.data().saldo - monto });
                         t.update(destinoRef, { saldo: dDoc.data().saldo + monto });
                     });
-                    alert("✅ Transferencia realizada");
+                    
+                    // NOTIFICACIÓN DE TRANSFERENCIA AL PROFESOR
+                    await addDoc(collection(db, "compras_" + cursoID), {
+                        alumno: usuarioLogueado.nombre,
+                        tipo: "transferencia",
+                        item: nombreDestino,
+                        precio: monto,
+                        timestamp: new Date()
+                    });
+
+                    alert("✅ Transferencia realizada con éxito.");
                 }
                 document.getElementById('monto').value = '';
                 navegar('inicio');
@@ -737,6 +781,7 @@
                 
                 await addDoc(collection(db, "compras_" + cursoID), {
                     alumno: usuarioLogueado.nombre,
+                    tipo: "compra",
                     item: nombreItem,
                     precio: precio,
                     timestamp: new Date()
@@ -787,6 +832,10 @@
 
             const reservaRef = doc(db, "banco_central", "config_" + cursoID);
             tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
+
+            const hoy = getHoyString();
+            const historialRef = doc(db, "historial_" + cursoID, hoy);
+            tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
 
             try {
                 await Promise.all(tareasDeSubida);
