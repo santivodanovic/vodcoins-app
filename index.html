@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V5.2 - Expediente de Alumnos</title>
+    <title>VodCoins V5.3 - Expedientes Inmutables</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -91,7 +91,7 @@
             <h3 style="margin: 0; color: #333;" id="historial-nombre">Nombre Alumno</h3>
             <div style="font-size: 24px; font-weight: 800; color: var(--primary); margin: 10px 0;">💰 <span id="historial-saldo">0</span> VOD</div>
             
-            <h4 style="text-align: left; margin-bottom: 5px; color: #666; border-bottom: 2px solid #eee; padding-bottom: 5px;">Historial de Movimientos</h4>
+            <h4 style="text-align: left; margin-bottom: 5px; color: #666; border-bottom: 2px solid #eee; padding-bottom: 5px;">Expediente Completo</h4>
             <div id="historial-lista" style="overflow-y: auto; flex-grow: 1; background: #f9f9f9; border-radius: 10px; padding: 10px; border: 1px solid #eee;">
                 Cargando...
             </div>
@@ -121,7 +121,8 @@
                 <h3 style="color:#d35400; margin-top:0;">🔧 Panel de Profesor</h3>
                 
                 <div style="background:#fffcf0; padding:15px; border-radius:8px; margin-top:10px; border-left: 5px solid #ff9f43;">
-                    <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Registro General de la Red</h4>
+                    <h4 style="margin:0 0 10px 0; color:#d35400;">🔔 Registro de Movimientos</h4>
+                    <p style="font-size: 11px; color:#666; margin-top:-5px;">(Eliminar aquí solo oculta el mensaje, pero se guarda en el expediente del alumno)</p>
                     <div id="lista-notificaciones" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
                         <em style="color:#aaa;">Cargando notificaciones...</em>
                     </div>
@@ -199,7 +200,7 @@
 
         <div id="lista" class="seccion">
             <h2 style="color:#333;">Listado del Curso</h2>
-            <p id="msg-profe-lista" style="display:none; font-size:12px; color:#4a90e2; font-weight:bold;">💡 Haz clic en un alumno para ver su expediente.</p>
+            <p id="msg-profe-lista" style="display:none; font-size:12px; color:#4a90e2; font-weight:bold;">💡 Haz clic en un alumno para ver su expediente de auditoría.</p>
             <div id="contenedor-lista">Cargando...</div>
         </div>
 
@@ -567,7 +568,7 @@
 
             if(diasFaltantes > 0) {
                 let fechaBase = dataReal.length > 0 ? new Date(dataReal[0].fecha) : new Date();
-                fechaBase.setMinutes(fechaBase.getMinutes() + fechaBase.getTimezoneOffset());
+                fechaBase.setMinutes(fechaBase.getMinutes() + Math.abs(fechaBase.getTimezoneOffset()));
                 for(let i = diasFaltantes; i > 0; i--) {
                     let fObj = new Date(fechaBase);
                     fObj.setDate(fObj.getDate() - i);
@@ -707,7 +708,6 @@
             selDest.innerHTML = '<option value="">Seleccionar compañero</option>';
 
             estudiantes.forEach((est, index) => {
-                // Si es el profesor, la tarjeta se vuelve "Clickeable" para abrir el expediente
                 let onclickAttr = usuarioLogueado.esProfe ? `onclick="abrirHistorialAlumno('${est.nombre}', ${est.saldo})"` : '';
                 let extraClass = usuarioLogueado.esProfe ? 'clickeable' : '';
                 let extraStyle = usuarioLogueado.esProfe ? 'cursor: pointer; border-left: 4px solid #4a90e2;' : '';
@@ -725,7 +725,7 @@
             });
         }
 
-        // --- SISTEMA DE EXPEDIENTE INDIVIDUAL (SOLO PROFESOR) ---
+        // --- SISTEMA DE EXPEDIENTE INDIVIDUAL (LEEE TODO, OCULTO O NO) ---
         window.abrirHistorialAlumno = async (nombreAlumno, saldoActual) => {
             document.getElementById('modal-historial').style.display = 'flex';
             document.getElementById('historial-nombre').innerText = nombreAlumno;
@@ -735,7 +735,6 @@
             contenedor.innerHTML = '<em style="color:#888;">Buscando en los registros...</em>';
 
             try {
-                // Traemos todas las compras ordenadas de la más nueva a la más antigua
                 const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"));
                 const snapshot = await getDocs(q);
                 
@@ -744,7 +743,6 @@
                     const data = doc.data();
                     const time = data.timestamp ? data.timestamp.toDate().toLocaleDateString() + ' ' + data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Recién';
                     
-                    // Condición 1: El alumno GASTÓ o ENVIÓ dinero (Salida)
                     if (data.alumno === nombreAlumno) {
                         let textoAccion = data.tipo === 'compra' ? `Canjeó <b>${data.item}</b>` : `Transfirió a <b>${data.item}</b>`;
                         html += `
@@ -753,7 +751,6 @@
                                 <div style="color: #e74c3c; font-weight: bold;">-${data.precio} VOD</div>
                             </div>`;
                     } 
-                    // Condición 2: El alumno RECIBIÓ dinero (Ingreso)
                     else if (data.item === nombreAlumno && (data.tipo === 'transferencia' || data.tipo === 'emision_directa')) {
                         let textoAccion = data.tipo === 'transferencia' ? `Recibió de <b>${data.alumno}</b>` : (data.precio > 0 ? `Profesor le inyectó` : `Profesor le multó`);
                         let colorIndicador = data.precio > 0 ? '🟢' : '🔴';
@@ -778,22 +775,23 @@
             document.getElementById('modal-historial').style.display = 'none';
         };
 
-        // --- BUZÓN GENERAL DEL PROFESOR (LIMPIO) ---
+        // --- BUZÓN GENERAL (FILTRA LOS OCULTOS) ---
         function escucharNotificaciones() {
-            const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"), limit(50));
+            // Aumentamos el límite de lectura a 100 para asegurarnos de que cargue mensajes aunque haya muchos ocultos
+            const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"), limit(100));
             
             onSnapshot(q, (snapshot) => {
                 const divContenedor = document.getElementById('lista-notificaciones');
                 if(!divContenedor) return;
                 
-                divContenedor.innerHTML = '';
-                if(snapshot.empty) {
-                    divContenedor.innerHTML = '<em style="color:#aaa;">Sin movimientos en la red...</em>';
-                    return;
-                }
-                
+                let htmlCompras = '';
+
                 snapshot.forEach((doc) => {
                     const data = doc.data();
+                    
+                    // AQUI ESTÁ LA MAGIA: Si el mensaje está marcado como "oculto", nos lo saltamos en este panel
+                    if(data.oculto) return; 
+
                     const horaFormateada = data.timestamp ? data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Recién';
                     
                     let accionTxt = "canjeó";
@@ -815,7 +813,7 @@
                         colorPrecio = data.precio > 0 ? "#00d282" : "#ff5252";
                     }
 
-                    divContenedor.innerHTML += `
+                    htmlCompras += `
                         <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
                             <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
                             <b>${data.alumno}</b> ${accionTxt} <span style="color:${colorItem}; font-weight:bold;">${data.item}</span> 
@@ -823,12 +821,17 @@
                             <div style="color:#999; font-size:10px; margin-top:2px;">${horaFormateada}</div>
                         </div>`;
                 });
+
+                divContenedor.innerHTML = htmlCompras === '' ? '<em style="color:#aaa;">Sin movimientos pendientes de revisión...</em>' : htmlCompras;
             });
         }
 
+        // AHORA LA "X" SOLO ACTUALIZA EL ESTADO, NO BORRA EL DOCUMENTO
         window.eliminarNotificacion = async (idDocumento) => {
-            if(confirm("¿Borrar este mensaje del registro?")) {
-                await deleteDoc(doc(db, "compras_" + cursoID, idDocumento));
+            if(confirm("¿Ocultar este mensaje del panel principal? (Seguirá visible en el expediente del alumno)")) {
+                await updateDoc(doc(db, "compras_" + cursoID, idDocumento), {
+                    oculto: true
+                });
             }
         };
 
@@ -853,7 +856,7 @@
                     await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
 
                     await addDoc(collection(db, "compras_" + cursoID), {
-                        alumno: "Profesor", tipo: "emision_directa", item: nombreDestino, precio: monto, timestamp: new Date()
+                        alumno: "Profesor", tipo: "emision_directa", item: nombreDestino, precio: monto, timestamp: new Date(), oculto: false
                     });
 
                     alert(`✅ Operación de ${monto} VodCoins realizada.`);
@@ -868,7 +871,7 @@
                     });
                     
                     await addDoc(collection(db, "compras_" + cursoID), {
-                        alumno: usuarioLogueado.nombre, tipo: "transferencia", item: nombreDestino, precio: monto, timestamp: new Date()
+                        alumno: usuarioLogueado.nombre, tipo: "transferencia", item: nombreDestino, precio: monto, timestamp: new Date(), oculto: false
                     });
 
                     alert("✅ Transferencia realizada con éxito.");
@@ -889,7 +892,7 @@
             try {
                 await updateDoc(miRef, { saldo: miSaldo - precio });
                 await addDoc(collection(db, "compras_" + cursoID), {
-                    alumno: usuarioLogueado.nombre, tipo: "compra", item: nombreItem, precio: precio, timestamp: new Date()
+                    alumno: usuarioLogueado.nombre, tipo: "compra", item: nombreItem, precio: precio, timestamp: new Date(), oculto: false
                 });
 
                 let circulante = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
