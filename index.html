@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V5.3 - Expedientes Inmutables</title>
+    <title>VodCoins</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
         :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); --primary: #4a90e2; --fintual-green: #00d282; --fintual-red: #ff5252; }
@@ -17,7 +19,7 @@
         .btn-grande { background: var(--primary); color: white; padding: 14px; width: 100%; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: transform 0.1s; }
         .btn-grande:active { transform: scale(0.98); }
         .btn-curso { width: 100%; padding: 18px; margin-bottom: 12px; background: white; border: none; border-radius: 15px; font-weight: 600; color: #444; cursor: pointer; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #f9f9f9; text-align: center; }
+        input, select, textarea { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #f9f9f9; text-align: center; font-family: 'Poppins', sans-serif; }
 
         .container { padding: 20px; max-width: 600px; margin: 0 auto; display: none; }
         .seccion { display: none; animation: fadeIn 0.4s; }
@@ -26,10 +28,10 @@
         .user-header { background: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
         .saldo-badge { background: #d4fc79; color: #2e7d32; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 1.2em; }
         
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .menu-card { background: white; padding: 25px 15px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; color: #555; transition: transform 0.2s; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .menu-card { background: white; padding: 15px 10px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; font-size: 13px; color: #555; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .menu-card:active { transform: scale(0.95); }
-        .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+        .menu-icon { font-size: 26px; display: block; margin-bottom: 5px; }
 
         .market-card { background: #ffffff; color: #333; padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
         .precio-gigante { font-size: 48px; font-weight: 800; margin: 5px 0 15px 0; letter-spacing: -2px; }
@@ -49,10 +51,9 @@
         .panel-admin { background: white; padding: 20px; border-radius: 15px; border-left: 5px solid #ffc107; margin-top: 40px; display: none; box-shadow: var(--shadow); }
         
         nav { background: white; position: fixed; bottom: 0; width: 100%; display: none; justify-content: space-around; padding: 15px 0; z-index: 500; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
-        nav button { background: none; border: none; color: #ccc; font-size: 24px; cursor: pointer; flex-grow: 1; }
+        nav button { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; flex-grow: 1; padding: 5px 0; }
         nav button.active-nav { color: var(--primary); transform: translateY(-3px); }
 
-        /* Estilos Expediente Alumno */
         .movimiento-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; text-align: left;}
         .movimiento-item:last-child { border-bottom: none; }
         .movimiento-fecha { font-size: 10px; color: #999; display: block; margin-top: 3px; }
@@ -98,6 +99,18 @@
         </div>
     </div>
 
+    <div id="modal-inversiones" class="full-screen-bg" style="display: none; z-index: 2000;">
+        <div class="caja-central">
+            <button onclick="document.getElementById('modal-inversiones').style.display='none'" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px; text-align: left;">← Volver</button>
+            <h3 style="margin: 0; color: #333;">🏦 Depósitos a Plazo</h3>
+            <p style="font-size:12px; color:#666;">Invierte tus VOD en el Banco Central. El dinero saldrá de circulación durante <strong>7 días</strong>, pero recibirás un <strong>10% de retorno</strong> al madurar.</p>
+            
+            <div id="estado-inversion" style="background:#f5f7fa; padding:15px; border-radius:10px; margin:15px 0;">
+                Cargando...
+            </div>
+        </div>
+    </div>
+
     <div class="container" id="app-container">
         <div class="user-header">
             <div>
@@ -110,8 +123,10 @@
         <div id="inicio" class="seccion activa">
             <h2 style="margin-bottom:20px; color:#333;">Mi Panel</h2>
             <div class="menu-grid">
-                <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Acción VOD</div>
+                <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Bolsa VOD</div>
+                <div class="menu-card" onclick="document.getElementById('modal-inversiones').style.display='flex'; renderizarInversion();"><span class="menu-icon">🏦</span>Banco</div>
                 <div class="menu-card" onclick="navegar('tienda')"><span class="menu-icon">🛍️</span>Tienda</div>
+                <div class="menu-card" onclick="navegar('misiones')"><span class="menu-icon">🎯</span>Misiones</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
             </div>
@@ -187,14 +202,41 @@
         </div>
 
         <div id="tienda" class="seccion">
-            <h2 style="color:#333;">Canje de Décimas</h2>
-            <div class="tarjeta-alumno" style="border-left: 5px solid #ff9f43;">
-                <div><h3 style="margin:0; color:#333;">1 Décima</h3><div style="color:#e67e22; font-weight:bold;">Precio: 10 VOD</div></div>
-                <button onclick="comprarItem('1 Décima', 10)" style="background:#ff9f43; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">COMPRAR</button>
+            <h2 style="color:#333;">Tienda Dinámica (Inflación)</h2>
+            <p style="font-size:13px; color:#666; margin-bottom: 20px;">Si el VOD pierde valor, los precios aquí suben para ajustarse a la realidad económica.</p>
+            
+            <div class="tarjeta-alumno" style="border-left: 5px solid #ff9f43; display: flex; flex-direction: column; align-items: stretch;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <h3 style="margin:0; color:#333;">1 Décima</h3>
+                    <div style="color:#e67e22; font-weight:bold; font-size: 18px;"><span id="lbl-precio-1">10</span> VOD</div>
+                </div>
+                <button id="btn-comprar-1" style="background:#ff9f43; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer; margin-top: 10px;">COMPRAR</button>
             </div>
-            <div class="tarjeta-alumno" style="border-left: 5px solid #9b59b6;">
-                <div><h3 style="margin:0; color:#333;">2 Décimas</h3><div style="color:#9b59b6; font-weight:bold;">Precio: 18 VOD</div></div>
-                <button onclick="comprarItem('2 Décimas', 18)" style="background:#9b59b6; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">COMPRAR</button>
+            
+            <div class="tarjeta-alumno" style="border-left: 5px solid #9b59b6; display: flex; flex-direction: column; align-items: stretch;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <h3 style="margin:0; color:#333;">2 Décimas</h3>
+                    <div style="color:#9b59b6; font-weight:bold; font-size: 18px;"><span id="lbl-precio-2">18</span> VOD</div>
+                </div>
+                <button id="btn-comprar-2" style="background:#9b59b6; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer; margin-top: 10px;">COMPRAR</button>
+            </div>
+        </div>
+
+        <div id="misiones" class="seccion">
+            <h2 style="color:#333;">🎯 Tablón de Misiones</h2>
+            <p style="font-size:13px; color:#666;">Resuelve los desafíos propuestos por el Banco Central para inyectar liquidez a tu cuenta personal.</p>
+            
+            <div id="mision-container" style="background:white; padding:25px 20px; border-radius:15px; box-shadow:var(--shadow);">
+                <em style="color:#888;">Cargando misión...</em>
+            </div>
+
+            <div id="panel-mision-profe" style="display:none; background:#fffcf0; padding:15px; border-radius:10px; margin-top:20px; border-left:5px solid #3498db;">
+                <h4 style="margin-top: 0;">👨‍🏫 Publicar Nueva Misión</h4>
+                <p style="font-size: 11px; color: #555; margin-top: -10px;">(Usa los símbolos <strong>$</strong> o <strong>$$</strong> para escribir fórmulas en LaTeX)</p>
+                <textarea id="txt-mision" placeholder="Escribe el problema aquí..." style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #ccc; font-family: sans-serif;"></textarea>
+                <input type="number" id="recompensa-mision" placeholder="Recompensa en VOD" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc;">
+                <button onclick="publicarMision()" style="background:#3498db; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; margin-top:10px;">Publicar Misión</button>
+                <button onclick="borrarMision()" style="background:#e74c3c; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; margin-top:10px;">Eliminar Misión Actual</button>
             </div>
         </div>
 
@@ -219,6 +261,7 @@
     <nav id="menu-inferior">
         <button onclick="navegar('inicio')" id="nav-inicio" class="active-nav">🏠</button>
         <button onclick="navegar('mercado')" id="nav-mercado">📉</button>
+        <button onclick="navegar('misiones')" id="nav-misiones">🎯</button>
         <button onclick="navegar('lista')" id="nav-lista">👥</button>
         <button onclick="navegar('transferencias')" id="nav-transf">💸</button>
     </nav>
@@ -253,6 +296,10 @@
         let historialVivoLocal = []; 
         let historial24hDB = [];
         let historialLargoDB = [];
+
+        // Precios Dinámicos Globales
+        window.costoItem1 = 10;
+        window.costoItem2 = 18;
 
         const DATA_BASE = {
             "curso_8b": [
@@ -417,10 +464,12 @@
                 document.getElementById('zona-profe').style.display = 'block';
                 document.getElementById('controles-mercado-profe').style.display = 'block';
                 document.getElementById('msg-profe-lista').style.display = 'block';
+                document.getElementById('panel-mision-profe').style.display = 'block';
                 escucharNotificaciones(); 
             }
             actualizarUI();
             iniciarMercado(); 
+            iniciarMisiones(); // Cargar tablón
         }
 
         window.navegar = (seccion) => {
@@ -428,7 +477,126 @@
             document.getElementById(seccion).classList.add('activa');
             
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
-            document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion)).classList.add('active-nav');
+            let navBtn = document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion));
+            if(navBtn) navBtn.classList.add('active-nav');
+        }
+
+        // --- SISTEMA DE TABLÓN DE MISIONES ---
+        function iniciarMisiones() {
+            onSnapshot(doc(db, "banco_central", "misiones_" + cursoID), (snap) => {
+                const panel = document.getElementById('mision-container');
+                if(snap.exists() && snap.data().activa) {
+                    let data = snap.data();
+                    panel.innerHTML = `
+                        <h3 style="color:#e67e22; margin-top:0;">🏆 Recompensa: ${data.recompensa} VOD</h3>
+                        <div style="font-size:15px; text-align:left; line-height: 1.5;">${data.texto}</div>
+                        <div style="font-size:11px; color:#888; margin-top:15px; border-top:1px solid #eee; padding-top:10px;">* Muestra el desarrollo correcto al profesor para reclamar tu liquidez.</div>
+                    `;
+                    if(window.MathJax) MathJax.typesetPromise();
+                } else {
+                    panel.innerHTML = '<em style="color:#aaa;">No hay misiones activas en este momento.</em>';
+                }
+            });
+        }
+
+        window.publicarMision = async () => {
+            let txt = document.getElementById('txt-mision').value;
+            let rec = parseInt(document.getElementById('recompensa-mision').value);
+            if(!txt || isNaN(rec)) return alert("Llena todos los campos.");
+            
+            await setDoc(doc(db, "banco_central", "misiones_" + cursoID), {
+                texto: txt, recompensa: rec, activa: true
+            });
+            alert("Misión publicada!");
+        }
+
+        window.borrarMision = async () => {
+            if(confirm("¿Seguro que deseas eliminar la misión del tablón?")) {
+                await setDoc(doc(db, "banco_central", "misiones_" + cursoID), { activa: false });
+                alert("Misión eliminada.");
+            }
+        }
+
+        // --- SISTEMA DE INVERSIONES (BANCO) ---
+        window.renderizarInversion = () => {
+            const div = document.getElementById('estado-inversion');
+            if(!usuarioLogueado || usuarioLogueado.esProfe) {
+                div.innerHTML = "<p>El profesor no puede invertir.</p>";
+                return;
+            }
+            
+            const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+            if(yo.inversion && yo.inversion.activa) {
+                let ahora = new Date().getTime();
+                let fin = yo.inversion.fecha_fin;
+                let faltanMilis = fin - ahora;
+                
+                if(faltanMilis <= 0) {
+                    div.innerHTML = `
+                        <div style="color:#00d282; font-weight:bold; font-size:18px;">¡Inversión Lista!</div>
+                        <p style="margin: 5px 0;">Ganaste: +${yo.inversion.retorno} VOD</p>
+                        <button onclick="cobrarInversion()" class="btn-grande" style="background:#00d282;">💰 Cobrar Ahora</button>
+                    `;
+                } else {
+                    let diasFaltan = Math.ceil(faltanMilis / (1000*60*60*24));
+                    div.innerHTML = `
+                        <div style="color:#e67e22; font-weight:bold;">Inversión en curso...</div>
+                        <p style="margin: 5px 0; font-size: 14px;">Depositado: ${yo.inversion.monto} VOD<br>Retorno esperado: <span style="color:#e67e22; font-weight:bold;">${yo.inversion.retorno} VOD</span></p>
+                        <p style="font-size:11px; color:#888; margin-bottom: 0;">Faltan ${diasFaltan} día(s) para madurar.</p>
+                    `;
+                }
+            } else {
+                div.innerHTML = `
+                    <input type="number" id="monto-inversion" placeholder="Monto a invertir (Max ${yo.saldo})" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <button onclick="iniciarInversion()" class="btn-grande" style="margin-top:5px;">Depositar a 7 Días (+10%)</button>
+                `;
+            }
+        };
+
+        window.iniciarInversion = async () => {
+            let monto = parseInt(document.getElementById('monto-inversion').value);
+            const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+            if(isNaN(monto) || monto <= 0 || monto > yo.saldo) return alert("Monto inválido o saldo insuficiente.");
+            
+            if(!confirm(`Tu dinero saldrá de circulación durante 7 días. Obtendrás un 10% de ganancia. ¿Proceder?`)) return;
+
+            let retorno = Math.ceil(monto * 1.10); 
+            let fechaFin = new Date().getTime() + (7 * 24 * 60 * 60 * 1000); // 7 Días reales
+            
+            try {
+                await updateDoc(doc(db, cursoID, yo.id.toString()), {
+                    saldo: yo.saldo - monto,
+                    inversion: { activa: true, monto: monto, retorno: retorno, fecha_fin: fechaFin }
+                });
+                
+                // Actualizar Circulante en la gráfica de inmediato
+                let circulanteBase = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
+                let nuevoCirculante = circulanteBase - monto;
+                if(nuevoCirculante <= 0) nuevoCirculante = 1;
+                await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
+
+                alert(`✅ Depositaste ${monto} VOD en el Banco Central.`);
+                renderizarInversion();
+            } catch(e) { alert("Error"); }
+        }
+
+        window.cobrarInversion = async () => {
+            const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+            if(!yo.inversion || !yo.inversion.activa) return;
+            try {
+                await updateDoc(doc(db, cursoID, yo.id.toString()), {
+                    saldo: yo.saldo + yo.inversion.retorno,
+                    inversion: { activa: false }
+                });
+
+                // Devolver dinero al mercado
+                let circulanteBase = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
+                let nuevoCirculante = circulanteBase + yo.inversion.retorno;
+                await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
+
+                alert(`¡Cobraste ${yo.inversion.retorno} VOD exitosamente!`);
+                document.getElementById('modal-inversiones').style.display='none';
+            } catch(e) { alert("Error"); }
         }
 
         // --- SISTEMA DE GRÁFICO ESTABILIZADO ---
@@ -438,29 +606,11 @@
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: [], 
-                    datasets: [{
-                        label: 'Valor ($)',
-                        data: [],
-                        borderColor: '#00d282',
-                        backgroundColor: 'rgba(0, 210, 130, 0.1)',
-                        borderWidth: 3,
-                        pointRadius: 0,
-                        pointHitRadius: 10,
-                        fill: true,
-                        tension: 0.4 
-                    }]
-                },
+                data: { labels: [], datasets: [{ label: 'Valor ($)', data: [], borderColor: '#00d282', backgroundColor: 'rgba(0, 210, 130, 0.1)', borderWidth: 3, pointRadius: 0, pointHitRadius: 10, fill: true, tension: 0.4 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: { padding: { top: 10, bottom: 10 } },
+                    responsive: true, maintainAspectRatio: false, layout: { padding: { top: 10, bottom: 10 } },
                     plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-                    scales: {
-                        x: { display: false },
-                        y: { display: false } 
-                    },
+                    scales: { x: { display: false }, y: { display: false } },
                     animation: { duration: 400 }
                 }
             });
@@ -622,6 +772,15 @@
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
+            // CÁLCULO TIENDA DINÁMICA
+            window.costoItem1 = Math.max(1, Math.round((10 * 11000) / precioActualGlobal));
+            window.costoItem2 = Math.max(1, Math.round((18 * 11000) / precioActualGlobal));
+            if(document.getElementById('lbl-precio-1')) document.getElementById('lbl-precio-1').innerText = window.costoItem1;
+            if(document.getElementById('lbl-precio-2')) document.getElementById('lbl-precio-2').innerText = window.costoItem2;
+            
+            document.getElementById('btn-comprar-1').onclick = () => comprarItem('1 Décima', window.costoItem1);
+            document.getElementById('btn-comprar-2').onclick = () => comprarItem('2 Décimas', window.costoItem2);
+
             if (precioActualGlobal !== precioAnterior && modoGraficoActual === 'vivo') {
                 historialVivoLocal.push({t: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), p: precioActualGlobal});
                 if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
@@ -777,7 +936,6 @@
 
         // --- BUZÓN GENERAL (FILTRA LOS OCULTOS) ---
         function escucharNotificaciones() {
-            // Aumentamos el límite de lectura a 100 para asegurarnos de que cargue mensajes aunque haya muchos ocultos
             const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"), limit(100));
             
             onSnapshot(q, (snapshot) => {
@@ -788,8 +946,6 @@
 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    
-                    // AQUI ESTÁ LA MAGIA: Si el mensaje está marcado como "oculto", nos lo saltamos en este panel
                     if(data.oculto) return; 
 
                     const horaFormateada = data.timestamp ? data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Recién';
@@ -826,7 +982,6 @@
             });
         }
 
-        // AHORA LA "X" SOLO ACTUALIZA EL ESTADO, NO BORRA EL DOCUMENTO
         window.eliminarNotificacion = async (idDocumento) => {
             if(confirm("¿Ocultar este mensaje del panel principal? (Seguirá visible en el expediente del alumno)")) {
                 await updateDoc(doc(db, "compras_" + cursoID, idDocumento), {
@@ -881,22 +1036,22 @@
             } catch (e) { alert("Error: " + e); }
         };
 
-        window.comprarItem = async (nombreItem, precio) => {
+        window.comprarItem = async (nombreItem, precioBaseModificado) => {
             if(usuarioLogueado.esProfe) return alert("El profe no compra.");
             const miSaldo = estudiantes.find(e => e.id == usuarioLogueado.id).saldo;
-            if(miSaldo < precio) return alert("❌ Saldo insuficiente");
+            if(miSaldo < precioBaseModificado) return alert("❌ Saldo insuficiente");
 
-            if(!confirm(`¿Comprar ${nombreItem}?`)) return;
+            if(!confirm(`¿Comprar ${nombreItem} por ${precioBaseModificado} VOD?`)) return;
 
             const miRef = doc(db, cursoID, usuarioLogueado.id.toString());
             try {
-                await updateDoc(miRef, { saldo: miSaldo - precio });
+                await updateDoc(miRef, { saldo: miSaldo - precioBaseModificado });
                 await addDoc(collection(db, "compras_" + cursoID), {
-                    alumno: usuarioLogueado.nombre, tipo: "compra", item: nombreItem, precio: precio, timestamp: new Date(), oculto: false
+                    alumno: usuarioLogueado.nombre, tipo: "compra", item: nombreItem, precio: precioBaseModificado, timestamp: new Date(), oculto: false
                 });
 
                 let circulante = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
-                let nuevoCirculante = circulante - precio;
+                let nuevoCirculante = circulante - precioBaseModificado;
                 if(nuevoCirculante <= 0) nuevoCirculante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
                 await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
 
@@ -928,7 +1083,7 @@
         };
 
         window.inicializarBaseDatosNube = async () => {
-            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial.\n\nEscribe CONFIRMAR para proceder:");
+            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado.\n\nEscribe CONFIRMAR para proceder:");
             if (confirmacion !== "CONFIRMAR") { alert("Cancelado."); return; }
             
             const lista = DATA_BASE[cursoID];
