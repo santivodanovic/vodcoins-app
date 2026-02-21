@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V4.3 - Limpieza Profunda</title>
+    <title>VodCoins V4.4 - Sincronía Absoluta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -204,7 +204,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        // AGREGADO getDocs PARA PODER BORRAR EL HISTORIAL VIEJO
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, runTransaction, query, orderBy, limit, addDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -374,7 +373,6 @@
             if(!idUser) return alert("Selecciona usuario");
 
             if(idUser === 'profe') {
-                // NUEVA CLAVE MAESTRA
                 if (pin === 'COLO4511') {
                     usuarioLogueado = { id: 'profe', nombre: 'Profesor', saldo: 999999, esProfe: true };
                     entrar();
@@ -456,7 +454,7 @@
             onSnapshot(doc(db, "banco_central", "memoria_24h_" + cursoID), (snap) => {
                 if(snap.exists() && snap.data().puntos) {
                     historial24hDB = snap.data().puntos;
-                    if(modoGraficoActual === '24h') dibujarGrafico(historial24hDB);
+                    if(modoGraficoActual === '24h') dibujarGrafico24h();
                 }
             });
 
@@ -499,7 +497,7 @@
             if(rango === 'vivo') {
                 dibujarGrafico(historialVivoLocal);
             } else if(rango === '24h') {
-                dibujarGrafico(historial24hDB);
+                dibujarGrafico24h();
             } else {
                 dibujarGraficoLargo(rango);
             }
@@ -512,11 +510,9 @@
             let min = Math.min(...arrayPuntos.map(d => d.p));
             
             if (max === min) {
-                // Si la línea es perfectamente recta, forzamos un +/- 5% de margen
                 chartInstance.options.scales.y.min = max * 0.95;
                 chartInstance.options.scales.y.max = max * 1.05;
             } else {
-                // Si hay variaciones pero son milimétricas, forzamos un +/- 1% mínimo
                 let diff = max - min;
                 if(diff < (max * 0.01)) {
                     chartInstance.options.scales.y.min = min * 0.99;
@@ -534,6 +530,30 @@
             chartInstance.data.datasets[0].data = arrayPuntos.map(d => d.p);
             aplicarColoresFintual(arrayPuntos);
             estabilizarEjeY(arrayPuntos);
+            chartInstance.update();
+        }
+
+        // CORRECCIÓN MAGNA: DIBUJADOR DE 24 HORAS CON ANCLA AL PRECIO ACTUAL
+        function dibujarGrafico24h() {
+            if(!chartInstance) return;
+            let dataAUsar = [...historial24hDB];
+            let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Anclamos artificialmente el precio EXACTO que se muestra en pantalla para que la línea jamás quede desfasada
+            if(dataAUsar.length === 0) {
+                dataAUsar.push({ t: tStr, p: precioActualGlobal });
+            } else {
+                if(dataAUsar[dataAUsar.length - 1].t === tStr) {
+                    dataAUsar[dataAUsar.length - 1].p = precioActualGlobal;
+                } else {
+                    dataAUsar.push({ t: tStr, p: precioActualGlobal });
+                }
+            }
+
+            chartInstance.data.labels = dataAUsar.map(d => d.t);
+            chartInstance.data.datasets[0].data = dataAUsar.map(d => d.p);
+            aplicarColoresFintual(dataAUsar);
+            estabilizarEjeY(dataAUsar);
             chartInstance.update();
         }
 
@@ -574,7 +594,6 @@
         function aplicarColoresFintual(dataArray) {
             if(!dataArray || dataArray.length === 0) return;
             
-            // Si solo hay un punto o la variación es nula o subió, se pinta verde
             let colorLinea = '#00d282';
             let colorFondo = 'rgba(0, 210, 130, 0.1)';
 
@@ -591,7 +610,6 @@
             chartInstance.data.datasets[0].backgroundColor = colorFondo;
         }
 
-        // REGISTRO INSTANTÁNEO EN 24 HORAS
         window.registrarCambio24h = async (nuevoPrecio) => {
             const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
             try {
@@ -599,7 +617,7 @@
                 let pts = snap.exists() ? snap.data().puntos : [];
                 let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 pts.push({t: tStr, p: nuevoPrecio});
-                if(pts.length > 50) pts.shift(); // Mantiene 50 transacciones en las 24h
+                if(pts.length > 50) pts.shift(); 
                 await setDoc(ref24h, { puntos: pts });
             } catch(e) { console.error(e); }
         };
@@ -609,7 +627,6 @@
                 return (est.id !== 'profe') ? total + (est.saldo || 0) : total;
             }, 0);
 
-            // CORRECCIÓN DEL SALTO INICIAL: Asume la cantidad real de alumnos si la nube aún no termina de cargar la lista
             if (circulante <= 0) {
                 circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
             }
@@ -617,12 +634,15 @@
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
-            // Actualización Inmediata en Vivo
+            // Notifica en vivo el salto
             if (precioActualGlobal !== precioAnterior && modoGraficoActual === 'vivo') {
                 let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 historialVivoLocal.push({t: tStr, p: precioActualGlobal});
                 if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
                 dibujarGrafico(historialVivoLocal);
+            } else if (precioActualGlobal !== precioAnterior && modoGraficoActual === '24h') {
+                // Notifica en 24h el salto
+                dibujarGrafico24h();
             }
 
             const lblPrecio = document.getElementById('ticker-precio');
@@ -866,7 +886,6 @@
             }
         };
 
-        // --- DESTRUCTOR Y CONSTRUCTOR DE HISTORIALES (LIMPIEZA PROFUNDA) ---
         window.inicializarBaseDatosNube = async () => {
             const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado de este curso, reiniciando la economía a $11.000.\n\nEscribe CONFIRMAR para proceder:");
             
@@ -878,30 +897,25 @@
             const lista = DATA_BASE[cursoID];
             const tareasDeSubida = []; 
 
-            // 1. Nuevos Alumnos con Claves de 8 Dígitos
             for(let est of lista) {
                 if(!est.pin) est.pin = Math.random().toString(36).substring(2,10).toUpperCase();
                 const ref = doc(db, cursoID, est.id.toString());
                 tareasDeSubida.push(setDoc(ref, est)); 
             }
 
-            // 2. Restaurar Reserva a $11.000 por alumno
             const reservaRef = doc(db, "banco_central", "config_" + cursoID);
             tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
 
             try {
-                // 3. Destruir TODO el historial corrupto del pasado
                 const snapshotHistorial = await getDocs(collection(db, "historial_" + cursoID));
                 snapshotHistorial.forEach(docSnap => {
                     tareasDeSubida.push(deleteDoc(docSnap.ref));
                 });
 
-                // 4. Plantar la nueva semilla sana de $11.000
                 const hoy = getHoyString();
                 const historialRef = doc(db, "historial_" + cursoID, hoy);
                 tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
 
-                // 5. Configurar el gráfico de 24 horas inicial con línea recta
                 let ayer = new Date(); 
                 ayer.setDate(ayer.getDate() - 1);
                 const tAyer = ayer.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -909,11 +923,10 @@
                 const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
                 tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: tAyer, p: 11000}, {t: tHoy, p: 11000}] }));
 
-                // Subir todo de golpe
                 await Promise.all(tareasDeSubida);
                 
                 alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000. Todo el historial corrupto ha sido eliminado.`);
-                location.reload(); // Recargar para mostrar los gráficos limpios
+                location.reload(); 
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
             }
