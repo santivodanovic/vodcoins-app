@@ -103,7 +103,7 @@
         <div class="caja-central">
             <button onclick="document.getElementById('modal-inversiones').style.display='none'" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px; text-align: left;">← Volver</button>
             <h3 style="margin: 0; color: #333;">🏦 Depósitos a Plazo</h3>
-            <p style="font-size:12px; color:#666;">Invierte tus VOD en el Banco Central. El dinero saldrá de circulación durante <strong>7 días</strong>, pero recibirás un <strong>10% de retorno</strong> al madurar.</p>
+            <p style="font-size:12px; color:#666;">Invierte tus VOD en el Banco Central. El dinero saldrá de circulación durante <strong>7 días</strong>, pero recibirás un <strong>10% de retorno exacto</strong>.</p>
             
             <div id="estado-inversion" style="background:#f5f7fa; padding:15px; border-radius:10px; margin:15px 0;">
                 Cargando...
@@ -297,7 +297,6 @@
         let historial24hDB = [];
         let historialLargoDB = [];
 
-        // Precios Dinámicos Globales
         window.costoItem1 = 10;
         window.costoItem2 = 18;
 
@@ -469,7 +468,7 @@
             }
             actualizarUI();
             iniciarMercado(); 
-            iniciarMisiones(); // Cargar tablón
+            iniciarMisiones(); 
         }
 
         window.navegar = (seccion) => {
@@ -547,7 +546,7 @@
                 }
             } else {
                 div.innerHTML = `
-                    <input type="number" id="monto-inversion" placeholder="Monto a invertir (Max ${yo.saldo})" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <input type="number" id="monto-inversion" placeholder="Monto múltiplo de 10 (Max ${yo.saldo})" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
                     <button onclick="iniciarInversion()" class="btn-grande" style="margin-top:5px;">Depositar a 7 Días (+10%)</button>
                 `;
             }
@@ -558,18 +557,30 @@
             const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
             if(isNaN(monto) || monto <= 0 || monto > yo.saldo) return alert("Monto inválido o saldo insuficiente.");
             
+            // REGLA: MÚLTIPLOS DE 10 SOLAMENTE
+            if (monto % 10 !== 0) return alert("❌ Solo puedes invertir en múltiplos de 10 (ej: 10, 20, 30...).");
+
             if(!confirm(`Tu dinero saldrá de circulación durante 7 días. Obtendrás un 10% de ganancia. ¿Proceder?`)) return;
 
-            let retorno = Math.ceil(monto * 1.10); 
-            let fechaFin = new Date().getTime() + (7 * 24 * 60 * 60 * 1000); // 7 Días reales
+            let retorno = Math.floor(monto * 1.10); 
+            let fechaFin = new Date().getTime() + (7 * 24 * 60 * 60 * 1000); 
             
             try {
                 await updateDoc(doc(db, cursoID, yo.id.toString()), {
                     saldo: yo.saldo - monto,
                     inversion: { activa: true, monto: monto, retorno: retorno, fecha_fin: fechaFin }
                 });
+
+                // NOTIFICAR INVERSIÓN
+                await addDoc(collection(db, "compras_" + cursoID), {
+                    alumno: usuarioLogueado.nombre,
+                    tipo: "inversion",
+                    item: "Depósito a Plazo",
+                    precio: monto,
+                    timestamp: new Date(),
+                    oculto: false
+                });
                 
-                // Actualizar Circulante en la gráfica de inmediato
                 let circulanteBase = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
                 let nuevoCirculante = circulanteBase - monto;
                 if(nuevoCirculante <= 0) nuevoCirculante = 1;
@@ -589,7 +600,16 @@
                     inversion: { activa: false }
                 });
 
-                // Devolver dinero al mercado
+                // NOTIFICAR COBRO
+                await addDoc(collection(db, "compras_" + cursoID), {
+                    alumno: usuarioLogueado.nombre,
+                    tipo: "cobro_inversion",
+                    item: "Retorno de Inversión",
+                    precio: yo.inversion.retorno,
+                    timestamp: new Date(),
+                    oculto: false
+                });
+
                 let circulanteBase = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
                 let nuevoCirculante = circulanteBase + yo.inversion.retorno;
                 await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
@@ -772,14 +792,15 @@
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
-            // CÁLCULO TIENDA DINÁMICA
             window.costoItem1 = Math.max(1, Math.round((10 * 11000) / precioActualGlobal));
             window.costoItem2 = Math.max(1, Math.round((18 * 11000) / precioActualGlobal));
             if(document.getElementById('lbl-precio-1')) document.getElementById('lbl-precio-1').innerText = window.costoItem1;
             if(document.getElementById('lbl-precio-2')) document.getElementById('lbl-precio-2').innerText = window.costoItem2;
             
-            document.getElementById('btn-comprar-1').onclick = () => comprarItem('1 Décima', window.costoItem1);
-            document.getElementById('btn-comprar-2').onclick = () => comprarItem('2 Décimas', window.costoItem2);
+            let b1 = document.getElementById('btn-comprar-1');
+            if(b1) b1.onclick = () => comprarItem('1 Décima', window.costoItem1);
+            let b2 = document.getElementById('btn-comprar-2');
+            if(b2) b2.onclick = () => comprarItem('2 Décimas', window.costoItem2);
 
             if (precioActualGlobal !== precioAnterior && modoGraficoActual === 'vivo') {
                 historialVivoLocal.push({t: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), p: precioActualGlobal});
@@ -813,7 +834,6 @@
             } catch(e) {}
         };
 
-        // --- GESTIÓN DE BASE DE DATOS Y RENDERIZADO ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
@@ -884,7 +904,7 @@
             });
         }
 
-        // --- SISTEMA DE EXPEDIENTE INDIVIDUAL (LEEE TODO, OCULTO O NO) ---
+        // --- SISTEMA DE EXPEDIENTE ---
         window.abrirHistorialAlumno = async (nombreAlumno, saldoActual) => {
             document.getElementById('modal-historial').style.display = 'flex';
             document.getElementById('historial-nombre').innerText = nombreAlumno;
@@ -903,12 +923,22 @@
                     const time = data.timestamp ? data.timestamp.toDate().toLocaleDateString() + ' ' + data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Recién';
                     
                     if (data.alumno === nombreAlumno) {
-                        let textoAccion = data.tipo === 'compra' ? `Canjeó <b>${data.item}</b>` : `Transfirió a <b>${data.item}</b>`;
-                        html += `
-                            <div class="movimiento-item">
-                                <div><span style="color: #e74c3c;">🔴</span> ${textoAccion}<span class="movimiento-fecha">${time}</span></div>
-                                <div style="color: #e74c3c; font-weight: bold;">-${data.precio} VOD</div>
-                            </div>`;
+                        if (data.tipo === 'compra' || data.tipo === 'transferencia' || data.tipo === 'inversion') {
+                            let textoAccion = data.tipo === 'compra' ? `Canjeó <b>${data.item}</b>` : 
+                                              data.tipo === 'inversion' ? `Inició <b>${data.item}</b>` :
+                                              `Transfirió a <b>${data.item}</b>`;
+                            html += `
+                                <div class="movimiento-item">
+                                    <div><span style="color: #e74c3c;">🔴</span> ${textoAccion}<span class="movimiento-fecha">${time}</span></div>
+                                    <div style="color: #e74c3c; font-weight: bold;">-${data.precio} VOD</div>
+                                </div>`;
+                        } else if (data.tipo === 'cobro_inversion') {
+                            html += `
+                                <div class="movimiento-item">
+                                    <div><span>🟢</span> Cobró <b>${data.item}</b><span class="movimiento-fecha">${time}</span></div>
+                                    <div style="color: #2ecc71; font-weight: bold;">+${data.precio} VOD</div>
+                                </div>`;
+                        }
                     } 
                     else if (data.item === nombreAlumno && (data.tipo === 'transferencia' || data.tipo === 'emision_directa')) {
                         let textoAccion = data.tipo === 'transferencia' ? `Recibió de <b>${data.alumno}</b>` : (data.precio > 0 ? `Profesor le inyectó` : `Profesor le multó`);
@@ -967,6 +997,10 @@
                         colorItem = "#333";
                         textoPrecio = `${data.precio > 0 ? '+$' : '-$'}${Math.abs(data.precio)}`;
                         colorPrecio = data.precio > 0 ? "#00d282" : "#ff5252";
+                    } else if (data.tipo === 'inversion') {
+                        accionTxt = "invirtió en"; colorItem = "#3498db";
+                    } else if (data.tipo === 'cobro_inversion') {
+                        accionTxt = "cobró su"; colorItem = "#00d282"; textoPrecio = `+${Math.abs(data.precio)} VOD`; colorPrecio = "#00d282";
                     }
 
                     htmlCompras += `
@@ -984,9 +1018,7 @@
 
         window.eliminarNotificacion = async (idDocumento) => {
             if(confirm("¿Ocultar este mensaje del panel principal? (Seguirá visible en el expediente del alumno)")) {
-                await updateDoc(doc(db, "compras_" + cursoID, idDocumento), {
-                    oculto: true
-                });
+                await updateDoc(doc(db, "compras_" + cursoID, idDocumento), { oculto: true });
             }
         };
 
