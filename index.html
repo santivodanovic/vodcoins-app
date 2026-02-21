@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VodCoins V4.4 - Sincronía Absoluta</title>
+    <title>VodCoins V5.0 - Sistema de Auditoría</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -107,6 +107,8 @@
                         <em style="color:#aaa;">Cargando notificaciones...</em>
                     </div>
                 </div>
+
+                <button onclick="generarAuditoria()" style="background:#2c3e50; color:white; padding:12px; border:none; border-radius:8px; width:100%; margin-top:15px; font-weight:bold; font-size:14px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">📊 Descargar Auditoría (Excel)</button>
 
                 <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:15px;">
                     <strong>👶 Nuevo Alumno:</strong>
@@ -373,7 +375,7 @@
             if(!idUser) return alert("Selecciona usuario");
 
             if(idUser === 'profe') {
-                if (pin === 'COLO4511') {
+                if (btoa(pin) === 'Q09MTzQ1MTE=') {
                     usuarioLogueado = { id: 'profe', nombre: 'Profesor', saldo: 999999, esProfe: true };
                     entrar();
                 } else { document.getElementById('error-login').textContent = "❌ Clave incorrecta"; }
@@ -450,7 +452,6 @@
                 historialVivoLocal.push({t: tStr, p: precioActualGlobal});
             }
 
-            // Escuchar el Historial 24H de la nube
             onSnapshot(doc(db, "banco_central", "memoria_24h_" + cursoID), (snap) => {
                 if(snap.exists() && snap.data().puntos) {
                     historial24hDB = snap.data().puntos;
@@ -458,7 +459,6 @@
                 }
             });
 
-            // Escuchar Historial Largo
             onSnapshot(collection(db, "historial_" + cursoID), (snap) => {
                 let temp = [];
                 snap.forEach(doc => temp.push(doc.data()));
@@ -503,7 +503,6 @@
             }
         };
 
-        // ESTABILIZADOR MAGICO PARA LÍNEAS RECTAS
         function estabilizarEjeY(arrayPuntos) {
             if (!chartInstance || arrayPuntos.length === 0) return;
             let max = Math.max(...arrayPuntos.map(d => d.p));
@@ -533,13 +532,11 @@
             chartInstance.update();
         }
 
-        // CORRECCIÓN MAGNA: DIBUJADOR DE 24 HORAS CON ANCLA AL PRECIO ACTUAL
         function dibujarGrafico24h() {
             if(!chartInstance) return;
             let dataAUsar = [...historial24hDB];
             let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
-            // Anclamos artificialmente el precio EXACTO que se muestra en pantalla para que la línea jamás quede desfasada
             if(dataAUsar.length === 0) {
                 dataAUsar.push({ t: tStr, p: precioActualGlobal });
             } else {
@@ -634,14 +631,12 @@
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
-            // Notifica en vivo el salto
             if (precioActualGlobal !== precioAnterior && modoGraficoActual === 'vivo') {
                 let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 historialVivoLocal.push({t: tStr, p: precioActualGlobal});
                 if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
                 dibujarGrafico(historialVivoLocal);
             } else if (precioActualGlobal !== precioAnterior && modoGraficoActual === '24h') {
-                // Notifica en 24h el salto
                 dibujarGrafico24h();
             }
 
@@ -675,8 +670,17 @@
                     
                     let circulante = estudiantes.reduce((t, e) => { return (e.id !== 'profe') ? t + (e.saldo || 0) : t; }, 0);
                     if (circulante <= 0) circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
-                    
                     await registrarCambio24h(Math.floor(nuevaReserva / circulante));
+
+                    // NUEVO: Registrar acción del Profesor en la Auditoría
+                    await addDoc(collection(db, "compras_" + cursoID), {
+                        alumno: "Profesor (Banco Central)",
+                        tipo: "banco_central",
+                        item: cantidad > 0 ? "Inyección de Liquidez" : "Retiro de Liquidez",
+                        precio: cantidad,
+                        timestamp: new Date()
+                    });
+
                 }
             } catch(e) { alert("Error: " + e); }
         };
@@ -765,16 +769,29 @@
                     
                     let accionTxt = "canjeó";
                     let colorItem = "#e67e22";
+                    let textoPrecio = `-${Math.abs(data.precio)} VOD`;
+                    let colorPrecio = "#e84118";
+
                     if (data.tipo === 'transferencia') {
                         accionTxt = "transfirió a";
                         colorItem = "#3498db"; 
+                    } else if (data.tipo === 'emision_directa') {
+                        accionTxt = data.precio > 0 ? "asignó a" : "multó a";
+                        colorItem = "#9b59b6";
+                        textoPrecio = `${data.precio > 0 ? '+' : '-'}${Math.abs(data.precio)} VOD`;
+                        colorPrecio = data.precio > 0 ? "#00d282" : "#ff5252";
+                    } else if (data.tipo === 'banco_central') {
+                        accionTxt = "intervino la reserva:";
+                        colorItem = "#333";
+                        textoPrecio = `${data.precio > 0 ? '+$' : '-$'}${Math.abs(data.precio)}`;
+                        colorPrecio = data.precio > 0 ? "#00d282" : "#ff5252";
                     }
 
                     divContenedor.innerHTML += `
                         <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
                             <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
                             <b>${data.alumno}</b> ${accionTxt} <span style="color:${colorItem}; font-weight:bold;">${data.item}</span> 
-                            <span style="color:#e84118;">(-${data.precio} VOD)</span> 
+                            <span style="color:${colorPrecio};">(${textoPrecio})</span> 
                             <div style="color:#999; font-size:10px; margin-top:2px;">${horaFormateada}</div>
                         </div>`;
                 });
@@ -807,6 +824,15 @@
                     let nuevoCirculante = circulante + monto;
                     if(nuevoCirculante <= 0) nuevoCirculante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
                     await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
+
+                    // NUEVO: Registrar acción del Profesor a un Alumno en la Auditoría
+                    await addDoc(collection(db, "compras_" + cursoID), {
+                        alumno: "Profesor",
+                        tipo: "emision_directa",
+                        item: nombreDestino,
+                        precio: monto,
+                        timestamp: new Date()
+                    });
 
                     alert(`✅ Operación de ${monto} VodCoins realizada.`);
                 } else {
@@ -887,7 +913,7 @@
         };
 
         window.inicializarBaseDatosNube = async () => {
-            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado de este curso, reiniciando la economía a $11.000.\n\nEscribe CONFIRMAR para proceder:");
+            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado de este curso.\n\nEscribe CONFIRMAR para proceder:");
             
             if (confirmacion !== "CONFIRMAR") {
                 alert("Operación cancelada.");
@@ -908,9 +934,11 @@
 
             try {
                 const snapshotHistorial = await getDocs(collection(db, "historial_" + cursoID));
-                snapshotHistorial.forEach(docSnap => {
-                    tareasDeSubida.push(deleteDoc(docSnap.ref));
-                });
+                snapshotHistorial.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
+                
+                // Tambien borrar transacciones viejas para la auditoria nueva
+                const snapshotCompras = await getDocs(collection(db, "compras_" + cursoID));
+                snapshotCompras.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
 
                 const hoy = getHoyString();
                 const historialRef = doc(db, "historial_" + cursoID, hoy);
@@ -925,10 +953,70 @@
 
                 await Promise.all(tareasDeSubida);
                 
-                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000. Todo el historial corrupto ha sido eliminado.`);
+                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000. Todo ha sido limpiado.`);
                 location.reload(); 
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
+            }
+        };
+
+        // --- SISTEMA GENERADOR DE AUDITORÍA (EXCEL) ---
+        window.generarAuditoria = async () => {
+            try {
+                alert("⏳ Generando reporte Excel, por favor espera un momento...");
+                
+                // 1. Armar Cabecera de Saldos Actuales
+                let csvContent = "--- ESTADO ACTUAL DE SALDOS ---\n";
+                csvContent += "Alumno,Saldo (VOD)\n";
+                estudiantes.forEach(e => {
+                    csvContent += `${e.nombre},${e.saldo}\n`;
+                });
+                
+                // 2. Armar Historial de Transacciones (30 Días)
+                csvContent += "\n--- REGISTRO DE TRANSACCIONES (ULTIMOS 30 DIAS) ---\n";
+                csvContent += "Fecha,Hora,Usuario,Accion,Detalle,Monto\n";
+                
+                const q = query(collection(db, "compras_" + cursoID), orderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                const hace30Dias = new Date();
+                hace30Dias.setDate(hace30Dias.getDate() - 30);
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if(data.timestamp) {
+                        const fechaDoc = data.timestamp.toDate();
+                        if(fechaDoc >= hace30Dias) {
+                            const fechaStr = fechaDoc.toLocaleDateString('es-CL');
+                            const horaStr = fechaDoc.toLocaleTimeString('es-CL');
+                            
+                            // Formateo de nombres para que Excel no se confunda con las comas
+                            let accionStr = data.tipo === 'compra' ? 'Canjeó' : 
+                                           data.tipo === 'transferencia' ? 'Transfirió a' : 
+                                           data.tipo === 'emision_directa' ? (data.precio > 0 ? 'Asignó VOD a' : 'Multó a') : 'Modificó Reserva';
+                            
+                            let montoStr = data.tipo === 'banco_central' ? `$ ${data.precio}` : `${data.precio} VOD`;
+                            
+                            csvContent += `${fechaStr},${horaStr},${data.alumno},${accionStr},${data.item},${montoStr}\n`;
+                        }
+                    }
+                });
+
+                // 3. Forzar Descarga como Archivo CSV Compatible con Excel
+                const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' }); 
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                
+                const fechaHoy = new Date().toLocaleDateString('es-CL').replace(/\//g, '-');
+                link.setAttribute("download", `Auditoria_VodCoins_${cursoID}_${fechaHoy}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            } catch (error) {
+                alert("❌ Error al generar la auditoría: " + error);
             }
         };
 
