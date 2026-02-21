@@ -31,16 +31,16 @@
         .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 30px; display: block; margin-bottom: 10px; }
 
-        /* Estilo Gráfico */
+        /* Estilo Gráfico Fintual */
         .market-card { background: #ffffff; color: #333; padding: 25px 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
         .precio-gigante { font-size: 48px; font-weight: 800; margin: 5px 0 15px 0; letter-spacing: -2px; }
         .subida { color: var(--fintual-green); }
         .bajada { color: var(--fintual-red); }
         .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight:600; }
         
-        /* Botones de Rango */
-        .rango-container { display:flex; justify-content:space-between; background:#f5f7fa; border-radius:12px; padding:5px; margin-top:20px; }
-        .rango-btn { flex:1; background: transparent; color: #888; border: none; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.3s; }
+        /* Botones de Rango Ajustados (Corrección de superposición) */
+        .rango-container { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; background:#f5f7fa; border-radius:12px; padding:6px; margin-top:20px; }
+        .rango-btn { flex:1 1 18%; min-width: 45px; background: transparent; color: #888; border: none; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.3s; }
         .rango-btn.activo { background: white; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 
         .btn-market { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin: 5px; }
@@ -75,7 +75,7 @@
             <button onclick="location.reload()" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver al inicio</button>
             <h2 id="titulo-login" style="color:#222; margin-top:0;">Login</h2>
             <select id="login-selector"><option>Cargando...</option></select>
-            <input type="password" id="login-pin" placeholder="PIN" maxlength="6" style="font-size: 22px; letter-spacing: 5px;">
+            <input type="password" id="login-pin" placeholder="PIN (8 Caracteres)" maxlength="8" style="font-size: 18px; letter-spacing: 3px;">
             <button class="btn-grande" onclick="intentarLogin()">Ingresar</button>
             <p id="error-login" style="color:#ff6b6b; font-weight:bold; margin-top:15px; font-size:13px;"></p>
         </div>
@@ -143,8 +143,9 @@
                 </div>
                 
                 <div class="rango-container">
-                    <button id="btn-rango-vivo" class="rango-btn activo" onclick="cambiarRangoGrafico('vivo')">1D (Vivo)</button>
-                    <button id="btn-rango-7" class="rango-btn" onclick="cambiarRangoGrafico(7)">1S</button>
+                    <button id="btn-rango-vivo" class="rango-btn activo" onclick="cambiarRangoGrafico('vivo')">Vivo</button>
+                    <button id="btn-rango-24h" class="rango-btn" onclick="cambiarRangoGrafico('24h')">24H</button>
+                    <button id="btn-rango-7" class="rango-btn" onclick="cambiarRangoGrafico(7)">7D</button>
                     <button id="btn-rango-30" class="rango-btn" onclick="cambiarRangoGrafico(30)">1M</button>
                     <button id="btn-rango-300" class="rango-btn" onclick="cambiarRangoGrafico(300)">1A</button>
                 </div>
@@ -231,6 +232,7 @@
         let modoGraficoActual = 'vivo';
         
         let historialVivoLocal = []; 
+        let historial24hDB = [];
         let historialLargoDB = [];
 
         const DATA_BASE = {
@@ -352,7 +354,6 @@
             ]
         };
 
-        // Utilidad: Unificar la fecha real local para todos los cursos (Evita bugs de zona horaria)
         function getHoyString() {
             const d = new Date();
             d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -373,8 +374,9 @@
 
             if(!idUser) return alert("Selecciona usuario");
 
+            // CLAVE MAESTRA ACTUALIZADA
             if(idUser === 'profe') {
-                if (pin === 'ADMIN1') {
+                if (pin === 'COLO4511') {
                     usuarioLogueado = { id: 'profe', nombre: 'Profesor', saldo: 999999, esProfe: true };
                     entrar();
                 } else { document.getElementById('error-login').textContent = "❌ Clave incorrecta"; }
@@ -444,7 +446,6 @@
                 }
             });
 
-            // Precargar RAM visual En Vivo
             historialVivoLocal = [];
             let tActual = new Date();
             for(let i = 25; i >= 0; i--) {
@@ -452,19 +453,26 @@
                 historialVivoLocal.push({t: tStr, p: precioActualGlobal});
             }
 
-            // Historial Larga Duración
+            // Escuchar el Historial 24H
+            onSnapshot(doc(db, "banco_central", "memoria_24h_" + cursoID), (snap) => {
+                if(snap.exists() && snap.data().puntos) {
+                    historial24hDB = snap.data().puntos;
+                    if(modoGraficoActual === '24h') dibujarGrafico(historial24hDB);
+                }
+            });
+
+            // Escuchar Historial Largo
             onSnapshot(collection(db, "historial_" + cursoID), (snap) => {
                 let temp = [];
                 snap.forEach(doc => temp.push(doc.data()));
                 temp.sort((a,b) => a.fecha.localeCompare(b.fecha)); 
                 historialLargoDB = temp;
                 
-                if (modoGraficoActual !== 'vivo') {
+                if (modoGraficoActual !== 'vivo' && modoGraficoActual !== '24h') {
                     dibujarGraficoLargo(modoGraficoActual);
                 }
             });
 
-            // Latido constante
             if(marketInterval) clearInterval(marketInterval);
             marketInterval = setInterval(() => {
                 if(precioActualGlobal > 0) {
@@ -472,13 +480,10 @@
                     historialVivoLocal.push({t: tStr, p: precioActualGlobal});
                     if(historialVivoLocal.length > 30) historialVivoLocal.shift(); 
                     
-                    if(modoGraficoActual === 'vivo') {
-                        dibujarGrafico(historialVivoLocal);
-                    }
+                    if(modoGraficoActual === 'vivo') dibujarGrafico(historialVivoLocal);
                 }
             }, 3000); 
 
-            // Escuchar cambios de la Base de Datos Maestra
             onSnapshot(doc(db, "banco_central", "config_" + cursoID), (snap) => {
                 if(snap.exists()) {
                     reservaMundial = snap.data().reserva;
@@ -494,12 +499,14 @@
 
             if(rango === 'vivo') {
                 dibujarGrafico(historialVivoLocal);
+            } else if(rango === '24h') {
+                dibujarGrafico(historial24hDB);
             } else {
                 dibujarGraficoLargo(rango);
             }
         };
 
-        // ESTABILIZADOR: Si la línea es recta, forzamos un margen para que quede al centro
+        // ESTABILIZADOR MAGICO PARA LÍNEAS RECTAS
         function estabilizarEjeY(arrayPuntos) {
             if (!chartInstance || arrayPuntos.length === 0) return;
             let max = Math.max(...arrayPuntos.map(d => d.p));
@@ -568,17 +575,33 @@
             chartInstance.data.datasets[0].backgroundColor = colorFondo;
         }
 
+        // REGISTRO INSTANTÁNEO EN 24 HORAS
+        window.registrarCambio24h = async (nuevoPrecio) => {
+            const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
+            try {
+                const snap = await getDoc(ref24h);
+                let pts = snap.exists() ? snap.data().puntos : [];
+                let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                pts.push({t: tStr, p: nuevoPrecio});
+                if(pts.length > 30) pts.shift(); 
+                await setDoc(ref24h, { puntos: pts });
+            } catch(e) { console.error(e); }
+        };
+
         function calcularPrecio() {
             let circulante = estudiantes.reduce((total, est) => {
                 return (est.id !== 'profe') ? total + (est.saldo || 0) : total;
             }, 0);
 
-            if (circulante <= 0) circulante = 1;
+            // CORRECCIÓN DEL SALTO INICIAL: Asume la cantidad real de alumnos si el snap no ha cargado
+            if (circulante <= 0) {
+                circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
+            }
 
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
-            // INYECCIÓN VISUAL INMEDIATA
+            // Actualización Inmediata en Vivo
             if (precioActualGlobal !== precioAnterior && modoGraficoActual === 'vivo') {
                 let tStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 historialVivoLocal.push({t: tStr, p: precioActualGlobal});
@@ -606,13 +629,18 @@
             });
         }
 
-        // El Banco Central ya no necesita tocar el gráfico, solo la base de datos.
         window.ejecutarAccionMercado = async (cantidad) => {
             const docRef = doc(db, "banco_central", "config_" + cursoID);
             try {
                 const snap = await getDoc(docRef);
                 if(snap.exists()) {
-                    await updateDoc(docRef, { reserva: snap.data().reserva + cantidad });
+                    let nuevaReserva = snap.data().reserva + cantidad;
+                    await updateDoc(docRef, { reserva: nuevaReserva });
+                    
+                    let circulante = estudiantes.reduce((t, e) => { return (e.id !== 'profe') ? t + (e.saldo || 0) : t; }, 0);
+                    if (circulante <= 0) circulante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
+                    
+                    await registrarCambio24h(Math.floor(nuevaReserva / circulante));
                 }
             } catch(e) { alert("Error: " + e); }
         };
@@ -699,12 +727,11 @@
                     const data = doc.data();
                     const horaFormateada = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : 'Recién';
                     
-                    // Diferenciar estilo según si es transferencia o canje
                     let accionTxt = "canjeó";
                     let colorItem = "#e67e22";
                     if (data.tipo === 'transferencia') {
                         accionTxt = "transfirió a";
-                        colorItem = "#3498db"; // Azul para transferencias
+                        colorItem = "#3498db"; 
                     }
 
                     divContenedor.innerHTML += `
@@ -724,7 +751,6 @@
             }
         };
 
-        // --- FUNCIONES COMERCIALES MEJORADAS ---
         window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
             const monto = parseFloat(document.getElementById('monto').value);
@@ -740,6 +766,12 @@
                 if(usuarioLogueado.esProfe) {
                     const dDoc = await getDoc(destinoRef);
                     await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
+                    
+                    let circulante = estudiantes.reduce((t, e) => { return (e.id !== 'profe') ? t + (e.saldo || 0) : t; }, 0);
+                    let nuevoCirculante = circulante + monto;
+                    if(nuevoCirculante <= 0) nuevoCirculante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
+                    await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
+
                     alert(`✅ Operación de ${monto} VodCoins realizada.`);
                 } else {
                     const origenRef = doc(db, cursoID, usuarioLogueado.id.toString());
@@ -751,7 +783,6 @@
                         t.update(destinoRef, { saldo: dDoc.data().saldo + monto });
                     });
                     
-                    // NOTIFICACIÓN DE TRANSFERENCIA AL PROFESOR
                     await addDoc(collection(db, "compras_" + cursoID), {
                         alumno: usuarioLogueado.nombre,
                         tipo: "transferencia",
@@ -787,6 +818,11 @@
                     timestamp: new Date()
                 });
 
+                let circulante = estudiantes.reduce((t, e) => { return (e.id !== 'profe') ? t + (e.saldo || 0) : t; }, 0);
+                let nuevoCirculante = circulante - precio;
+                if(nuevoCirculante <= 0) nuevoCirculante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
+                await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
+
                 alert("✅ Compra exitosa. ¡El profesor ha sido notificado!");
                 navegar('inicio');
             } catch (e) { alert("Error: " + e); }
@@ -797,8 +833,10 @@
             if(!nombre) return;
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
+            
+            // GENERADOR DE PIN ALFANUMERICO 8 CARACTERES
             await setDoc(doc(db, cursoID, nuevoID.toString()), {
-                id: nuevoID, nombre: nombre, saldo: 1, pin: Math.random().toString(36).substring(2,8).toUpperCase()
+                id: nuevoID, nombre: nombre, saldo: 1, pin: Math.random().toString(36).substring(2,10).toUpperCase()
             });
             alert("✅ Alumno creado con 1 VodCoin inicial.");
             document.getElementById('nuevo-nombre').value = '';
@@ -825,7 +863,8 @@
             const tareasDeSubida = []; 
 
             for(let est of lista) {
-                if(!est.pin) est.pin = Math.random().toString(36).substring(2,8).toUpperCase();
+                // GENERADOR DE PIN ALFANUMERICO 8 CARACTERES
+                if(!est.pin) est.pin = Math.random().toString(36).substring(2,10).toUpperCase();
                 const ref = doc(db, cursoID, est.id.toString());
                 tareasDeSubida.push(setDoc(ref, est)); 
             }
@@ -837,9 +876,14 @@
             const historialRef = doc(db, "historial_" + cursoID, hoy);
             tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
 
+            // Resetear DB 24h
+            const horaActual = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
+            tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: horaActual, p: 11000}] }));
+
             try {
                 await Promise.all(tareasDeSubida);
-                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000 y limpia de historiales falsos.`);
+                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000 y nuevos Pines generados.`);
             } catch (error) {
                 alert("❌ Hubo un problema de conexión: " + error);
             }
