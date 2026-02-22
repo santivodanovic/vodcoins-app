@@ -19,7 +19,7 @@
         .btn-grande { background: var(--primary); color: white; padding: 14px; width: 100%; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: transform 0.1s; }
         .btn-grande:active { transform: scale(0.98); }
         .btn-curso { width: 100%; padding: 18px; margin-bottom: 12px; background: white; border: none; border-radius: 15px; font-weight: 600; color: #444; cursor: pointer; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        input, select, textarea { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #f9f9f9; text-align: center; font-family: 'Poppins', sans-serif; }
+        input, select, textarea { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #f9f9f9; text-align: center; font-family: 'Poppins', sans-serif; color: #333; }
 
         .container { padding: 20px; max-width: 600px; margin: 0 auto; display: none; }
         .seccion { display: none; animation: fadeIn 0.4s; }
@@ -37,11 +37,11 @@
         .precio-gigante { font-size: 48px; font-weight: 800; margin: 5px 0 15px 0; letter-spacing: -2px; }
         .subida { color: var(--fintual-green); }
         .bajada { color: var(--fintual-red); }
-        .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight:600; }
+        .market-info { display: flex; justify-content: space-between; font-size: 11px; color: #555; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight:800; }
         
         .rango-container { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; background:#f5f7fa; border-radius:12px; padding:6px; margin-top:20px; }
-        .rango-btn { flex:1 1 18%; min-width: 45px; background: transparent; color: #888; border: none; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.3s; }
-        .rango-btn.activo { background: white; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .rango-btn { flex:1 1 18%; min-width: 45px; background: transparent; color: #666; border: none; padding: 8px 0; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.3s; }
+        .rango-btn.activo { background: white; color: #222; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
 
         .btn-market { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; margin: 5px; }
         .btn-del-notif { background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; float: right; margin-left: 10px; }
@@ -54,7 +54,7 @@
         nav button { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; flex-grow: 1; padding: 5px 0; }
         nav button.active-nav { color: var(--primary); transform: translateY(-3px); }
 
-        .movimiento-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; text-align: left;}
+        .movimiento-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 13px; text-align: left; color:#333;}
         .movimiento-item:last-child { border-bottom: none; }
         .movimiento-fecha { font-size: 10px; color: #999; display: block; margin-top: 3px; }
 
@@ -80,7 +80,7 @@
             <button onclick="location.reload()" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver al inicio</button>
             <h2 id="titulo-login" style="color:#222; margin-top:0;">Login</h2>
             <select id="login-selector"><option>Cargando...</option></select>
-            <input type="password" id="login-pin" placeholder="PIN (8 Caracteres)" maxlength="8" style="font-size: 18px; letter-spacing: 3px;">
+            <input type="password" id="login-pin" placeholder="PIN (8 Caracteres)" maxlength="8" style="font-size: 18px; letter-spacing: 3px; color:#333;">
             <button class="btn-grande" onclick="intentarLogin()">Ingresar</button>
             <p id="error-login" style="color:#ff6b6b; font-weight:bold; margin-top:15px; font-size:13px;"></p>
         </div>
@@ -100,13 +100,13 @@
     </div>
 
     <div id="modal-inversiones" class="full-screen-bg" style="display: none; z-index: 2000;">
-        <div class="caja-central">
+        <div class="caja-central" style="max-height: 90vh; overflow-y: auto;">
             <button onclick="document.getElementById('modal-inversiones').style.display='none'" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px; text-align: left;">← Volver</button>
-            <h3 style="margin: 0; color: #333;">🏦 Depósitos a Plazo</h3>
-            <p style="font-size:12px; color:#666;">Invierte tus VOD en el Banco Central. El dinero saldrá de circulación durante <strong>10 días</strong>, pero recibirás un <strong>10% de retorno exacto</strong>.</p>
+            <h3 style="margin: 0; color: #333;">🏦 Fondos de Inversión</h3>
+            <p style="font-size:12px; color:#555; line-height:1.4; margin-bottom:15px;">Tu dinero saldrá de circulación mientras esté invertido. Solo se aceptan múltiplos de 10.</p>
             
-            <div id="estado-inversion" style="background:#f5f7fa; padding:15px; border-radius:10px; margin:15px 0;">
-                Cargando...
+            <div id="estado-inversion" style="background:#f5f7fa; padding:15px; border-radius:10px; margin-bottom:15px;">
+                Cargando fondos...
             </div>
         </div>
     </div>
@@ -231,12 +231,12 @@
             </div>
 
             <div id="panel-mision-profe" style="display:none; background:#fffcf0; padding:15px; border-radius:10px; margin-top:20px; border-left:5px solid #3498db;">
-                <h4 style="margin-top: 0;">👨‍🏫 Publicar Nueva Misión</h4>
+                <h4 style="margin-top: 0; color:#333;">👨‍🏫 Publicar Nueva Misión</h4>
                 <p style="font-size: 11px; color: #555; margin-top: -10px;">Sube una foto o captura de pantalla de tu iPad con el problema.</p>
                 
-                <input type="file" id="img-mision" accept="image/*" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; background: white; font-size:13px;">
+                <input type="file" id="img-mision" accept="image/*" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; background: white; font-size:13px; color:#333;">
                 
-                <input type="number" id="recompensa-mision" placeholder="Recompensa en VOD" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc;">
+                <input type="number" id="recompensa-mision" placeholder="Recompensa en VOD" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc; color:#333;">
                 <button onclick="publicarMision()" style="background:#3498db; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; margin-top:10px;">Subir y Publicar</button>
                 <button onclick="borrarMision()" style="background:#e74c3c; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; margin-top:10px;">Eliminar Misión Actual</button>
             </div>
@@ -252,9 +252,9 @@
             <h2 style="color:#333;">Transferir Fondos</h2>
             <div style="background:white; padding:25px; border-radius:20px; box-shadow:var(--shadow);">
                 <label style="font-weight:bold; color:#555;">¿A quién?</label>
-                <select id="select-destino"></select>
+                <select id="select-destino" style="color:#333;"></select>
                 <label style="font-weight:bold; color:#555;">¿Cuánto?</label>
-                <input type="number" id="monto" placeholder="Ej: 5 o -5">
+                <input type="number" id="monto" placeholder="Ej: 5 o -5" style="color:#333;">
                 <button type="button" class="btn-grande" onclick="realizarTransferencia()">Confirmar Transacción</button>
             </div>
         </div>
@@ -553,64 +553,84 @@
             }
         }
 
-        // --- SISTEMA DE INVERSIONES (BANCO) - ACTUALIZADO A 10 DÍAS ---
+        // --- SISTEMA DE INVERSIONES DOBLES (10 DÍAS Y 30 DÍAS) ---
         window.renderizarInversion = () => {
             const div = document.getElementById('estado-inversion');
             if(!usuarioLogueado || usuarioLogueado.esProfe) {
-                div.innerHTML = "<p>El profesor no puede invertir.</p>";
+                div.innerHTML = "<p style='color:#333;'>El profesor no puede invertir.</p>";
                 return;
             }
             
             const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
-            if(yo.inversion && yo.inversion.activa) {
+            let html = '';
+
+            // Slot 1: Corto Plazo (10 Días, 10%)
+            html += generarHTMLInversion(yo, 'inv10', 10, 10, 'Fondo Corto Plazo');
+            
+            // Slot 2: Largo Plazo (30 Días, 30%)
+            html += generarHTMLInversion(yo, 'inv30', 30, 30, 'Fondo Largo Plazo');
+
+            div.innerHTML = html;
+        };
+
+        function generarHTMLInversion(yo, campo, dias, porcentaje, titulo) {
+            let inv = yo[campo];
+            let html = `<div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #00a86b;">`;
+            html += `<h4 style="margin:0 0 10px 0; color:#333;">${titulo} (${dias}D / +${porcentaje}%)</h4>`;
+            
+            if(inv && inv.activa) {
                 let ahora = new Date().getTime();
-                let fin = yo.inversion.fecha_fin;
+                let fin = inv.fecha_fin;
                 let faltanMilis = fin - ahora;
                 
                 if(faltanMilis <= 0) {
-                    div.innerHTML = `
-                        <div style="color:#00a86b; font-weight:bold; font-size:18px;">¡Inversión Lista!</div>
-                        <p style="margin: 5px 0;">Ganaste: +${yo.inversion.retorno} VOD</p>
-                        <button onclick="cobrarInversion()" class="btn-grande" style="background:#00a86b;">💰 Cobrar Ahora</button>
+                    html += `
+                        <div style="color:#00a86b; font-weight:bold; font-size:16px;">¡Fondo Listo!</div>
+                        <p style="margin: 5px 0; color:#555; font-size:13px;">Capital + Ganancia: <b>${inv.retorno} VOD</b></p>
+                        <button onclick="cobrarInversion('${campo}')" class="btn-grande" style="background:#00a86b; margin-top:10px; padding:10px; font-size:14px;">💰 Cobrar ${inv.retorno} VOD</button>
                     `;
                 } else {
                     let diasFaltan = Math.ceil(faltanMilis / (1000*60*60*24));
-                    div.innerHTML = `
-                        <div style="color:#e67e22; font-weight:bold;">Inversión en curso...</div>
-                        <p style="margin: 5px 0; font-size: 14px;">Depositado: ${yo.inversion.monto} VOD<br>Retorno esperado: <span style="color:#e67e22; font-weight:bold;">${yo.inversion.retorno} VOD</span></p>
-                        <p style="font-size:11px; color:#888; margin-bottom: 0;">Faltan ${diasFaltan} día(s) para madurar.</p>
+                    html += `
+                        <div style="color:#e67e22; font-weight:bold; font-size:14px;">⏳ En curso...</div>
+                        <p style="margin: 5px 0; font-size: 13px; color:#555;">Depositado: <b>${inv.monto} VOD</b><br>Retorno total: <span style="color:#e67e22; font-weight:bold;">${inv.retorno} VOD</span></p>
+                        <p style="font-size:11px; color:#888; margin-bottom: 0; font-weight:bold;">Faltan ${diasFaltan} día(s) para madurar.</p>
                     `;
                 }
             } else {
-                div.innerHTML = `
-                    <input type="number" id="monto-inversion" placeholder="Monto múltiplo de 10 (Max ${yo.saldo})" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
-                    <button onclick="iniciarInversion()" class="btn-grande" style="margin-top:5px;">Depositar a 10 Días (+10%)</button>
+                html += `
+                    <input type="number" id="monto-${campo}" placeholder="Ingresa múltiplos de 10" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; color:#333;">
+                    <button onclick="iniciarInversion('${campo}', ${dias}, ${porcentaje})" class="btn-grande" style="margin-top:10px; background:#4a90e2; padding:10px; font-size:14px;">Depositar a ${dias} Días</button>
                 `;
             }
-        };
+            html += `</div>`;
+            return html;
+        }
 
-        window.iniciarInversion = async () => {
-            let monto = parseInt(document.getElementById('monto-inversion').value);
+        window.iniciarInversion = async (campo, dias, porcentaje) => {
+            let input = document.getElementById(`monto-${campo}`);
+            let monto = parseInt(input.value);
             const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
-            if(isNaN(monto) || monto <= 0 || monto > yo.saldo) return alert("Monto inválido o saldo insuficiente.");
             
+            if(isNaN(monto) || monto <= 0) return alert("Monto inválido.");
+            if(monto > yo.saldo) return alert("❌ Saldo insuficiente.");
             if (monto % 10 !== 0) return alert("❌ Solo puedes invertir en múltiplos de 10 (ej: 10, 20, 30...).");
 
-            if(!confirm(`Tu dinero saldrá de circulación durante 10 días. Obtendrás un 10% de ganancia. ¿Proceder?`)) return;
+            if(!confirm(`Tu dinero saldrá de circulación durante ${dias} días. Obtendrás un ${porcentaje}% de ganancia. ¿Proceder?`)) return;
 
-            let retorno = Math.floor(monto * 1.10); 
-            let fechaFin = new Date().getTime() + (10 * 24 * 60 * 60 * 1000); // 10 Días
+            let retorno = Math.floor(monto * (1 + (porcentaje/100))); 
+            let fechaFin = new Date().getTime() + (dias * 24 * 60 * 60 * 1000); 
             
             try {
-                await updateDoc(doc(db, cursoID, yo.id.toString()), {
-                    saldo: yo.saldo - monto,
-                    inversion: { activa: true, monto: monto, retorno: retorno, fecha_fin: fechaFin }
-                });
+                let updates = { saldo: yo.saldo - monto };
+                updates[campo] = { activa: true, monto: monto, retorno: retorno, fecha_fin: fechaFin };
+
+                await updateDoc(doc(db, cursoID, yo.id.toString()), updates);
 
                 await addDoc(collection(db, "compras_" + cursoID), {
                     alumno: usuarioLogueado.nombre,
                     tipo: "inversion",
-                    item: "Depósito a Plazo",
+                    item: `Depósito ${dias} Días`,
                     precio: monto,
                     timestamp: new Date(),
                     oculto: false
@@ -621,36 +641,36 @@
                 if(nuevoCirculante <= 0) nuevoCirculante = 1;
                 await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
 
-                alert(`✅ Depositaste ${monto} VOD en el Banco Central.`);
+                alert(`✅ Depositaste ${monto} VOD en el Fondo a ${dias} Días.`);
                 renderizarInversion();
-            } catch(e) { alert("Error"); }
+            } catch(e) { alert("Error al conectar con el Banco Central."); }
         }
 
-        window.cobrarInversion = async () => {
+        window.cobrarInversion = async (campo) => {
             const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
-            if(!yo.inversion || !yo.inversion.activa) return;
+            if(!yo[campo] || !yo[campo].activa) return;
             try {
-                await updateDoc(doc(db, cursoID, yo.id.toString()), {
-                    saldo: yo.saldo + yo.inversion.retorno,
-                    inversion: { activa: false }
-                });
+                let updates = { saldo: yo.saldo + yo[campo].retorno };
+                updates[campo] = { activa: false };
+
+                await updateDoc(doc(db, cursoID, yo.id.toString()), updates);
 
                 await addDoc(collection(db, "compras_" + cursoID), {
                     alumno: usuarioLogueado.nombre,
                     tipo: "cobro_inversion",
-                    item: "Retorno de Inversión",
-                    precio: yo.inversion.retorno,
+                    item: `Retorno Fondo ${campo === 'inv10' ? '10' : '30'}D`,
+                    precio: yo[campo].retorno,
                     timestamp: new Date(),
                     oculto: false
                 });
 
                 let circulanteBase = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
-                let nuevoCirculante = circulanteBase + yo.inversion.retorno;
+                let nuevoCirculante = circulanteBase + yo[campo].retorno;
                 await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
 
-                alert(`¡Cobraste ${yo.inversion.retorno} VOD exitosamente!`);
-                document.getElementById('modal-inversiones').style.display='none';
-            } catch(e) { alert("Error"); }
+                alert(`¡Cobraste ${yo[campo].retorno} VOD exitosamente!`);
+                renderizarInversion();
+            } catch(e) { alert("Error al cobrar."); }
         }
 
         // --- SISTEMA DE GRÁFICO ESTABILIZADO ---
@@ -927,7 +947,7 @@
 
                 divLista.innerHTML += `
                 <div class="tarjeta-alumno ${extraClass}" ${onclickAttr} style="${extraStyle}">
-                    <div><b>${index + 1}. ${est.nombre}</b></div>
+                    <div><b style="color:#333;">${index + 1}. ${est.nombre}</b></div>
                     <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">${est.saldo} VOD</span>
                 </div>`;
 
@@ -1038,7 +1058,7 @@
                     htmlCompras += `
                         <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
                             <button class="btn-del-notif" onclick="eliminarNotificacion('${doc.id}')">X</button>
-                            <b>${data.alumno}</b> ${accionTxt} <span style="color:${colorItem}; font-weight:bold;">${data.item}</span> 
+                            <b style="color:#333;">${data.alumno}</b> <span style="color:#555;">${accionTxt}</span> <span style="color:${colorItem}; font-weight:bold;">${data.item}</span> 
                             <span style="color:${colorPrecio}; font-weight:bold;">(${textoPrecio})</span> 
                             <div style="color:#999; font-size:10px; margin-top:2px;">${horaFormateada}</div>
                         </div>`;
