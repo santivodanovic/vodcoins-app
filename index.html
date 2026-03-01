@@ -298,9 +298,22 @@
         let historialVivoLocal = []; 
         let historial24hDB = [];
         let historialLargoDB = [];
+        let todasLasTransacciones = []; // NUEVO: Para la auditoría de saldo sombra
 
         window.costoItem1 = 10;
         window.costoItem2 = 18;
+
+        // FUNCIONES DE ENCRIPTACIÓN DE PIN
+        function encodePIN(pin) {
+            return "ENC-" + btoa(pin).split('').reverse().join('');
+        }
+        function decodePIN(str) {
+            if(str && typeof str === 'string' && str.startsWith("ENC-")) {
+                let b64 = str.replace("ENC-", "").split('').reverse().join('');
+                try { return atob(b64); } catch(e) { return str; }
+            }
+            return str; // Si no está encriptada, la devuelve tal cual (para no romper BD actuales)
+        }
 
         const DATA_BASE = {
             "curso_8b": [
@@ -451,7 +464,8 @@
             }
 
             const alumno = estudiantes.find(e => e.id == idUser);
-            if(alumno && alumno.pin === pin) {
+            // Validamos desencriptando la clave de la base de datos
+            if(alumno && decodePIN(alumno.pin) === pin) {
                 usuarioLogueado = { ...alumno, esProfe: false };
                 entrar();
             } else { document.getElementById('error-login').textContent = "❌ Clave incorrecta"; }
@@ -468,6 +482,13 @@
                 document.getElementById('msg-profe-lista').style.display = 'block';
                 document.getElementById('panel-mision-profe').style.display = 'block';
                 escucharNotificaciones(); 
+                
+                // NUEVO: El profesor descarga todas las transacciones para la auditoría de saldo
+                onSnapshot(collection(db, "compras_" + cursoID), (snap) => {
+                    todasLasTransacciones = [];
+                    snap.forEach(doc => todasLasTransacciones.push(doc.data()));
+                    actualizarUI(); // Refresca la lista con los saldos sombra
+                });
             }
             actualizarUI();
             iniciarMercado(); 
@@ -946,10 +967,32 @@
                 let extraClass = usuarioLogueado.esProfe ? 'clickeable' : '';
                 let extraStyle = usuarioLogueado.esProfe ? 'cursor: pointer; border-left: 4px solid #4a90e2;' : '';
 
+                // NUEVO: Cálculos del saldo sombra solo para el panel de profesor
+                let shadowHtml = '';
+                if (usuarioLogueado.esProfe) {
+                    let auditBalance = 1; // Saldo base inicial
+                    todasLasTransacciones.forEach(t => {
+                        if (t.alumno === est.nombre) {
+                            if (['compra', 'inversion', 'transferencia'].includes(t.tipo)) auditBalance -= t.precio;
+                            if (t.tipo === 'cobro_inversion') auditBalance += t.precio;
+                        }
+                        if (t.item === est.nombre) {
+                            if (['transferencia', 'emision_directa'].includes(t.tipo)) auditBalance += t.precio;
+                        }
+                    });
+                    
+                    let icono = est.saldo === auditBalance ? '✅' : '🚨';
+                    let colorAuditoria = est.saldo === auditBalance ? '#888' : '#e74c3c';
+                    shadowHtml = `<span style="color:${colorAuditoria}; font-size:12px; margin-right:10px; font-weight:600;" title="Saldo Auditado (Suma del historial)">${icono} Real: ${auditBalance}</span>`;
+                }
+
                 divLista.innerHTML += `
                 <div class="tarjeta-alumno ${extraClass}" ${onclickAttr} style="${extraStyle}">
                     <div><b style="color:#333;">${index + 1}. ${est.nombre}</b></div>
-                    <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">${est.saldo} VOD</span>
+                    <div style="display:flex; align-items:center;">
+                        ${shadowHtml}
+                        <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">${est.saldo} VOD</span>
+                    </div>
                 </div>`;
 
                 if(usuarioLogueado.id != est.id) {
@@ -1151,8 +1194,9 @@
             let nuevoID = 1;
             if(estudiantes.length > 0) nuevoID = Math.max(...estudiantes.map(e => parseInt(e.id))) + 1;
             
+            let pinGenerado = Math.random().toString(36).substring(2,10).toUpperCase();
             await setDoc(doc(db, cursoID, nuevoID.toString()), {
-                id: nuevoID, nombre: nombre, saldo: 1, pin: Math.random().toString(36).substring(2,10).toUpperCase()
+                id: nuevoID, nombre: nombre, saldo: 1, pin: encodePIN(pinGenerado)
             });
             alert("✅ Alumno creado con 1 VodCoin inicial.");
             document.getElementById('nuevo-nombre').value = '';
@@ -1175,7 +1219,12 @@
             const tareasDeSubida = []; 
 
             for(let est of lista) {
-                if(!est.pin) est.pin = Math.random().toString(36).substring(2,10).toUpperCase();
+                // Encriptamos los pines al resetear la base de datos
+                if(!est.pin) {
+                    est.pin = encodePIN(Math.random().toString(36).substring(2,10).toUpperCase());
+                } else if (!est.pin.startsWith("ENC-")) {
+                    est.pin = encodePIN(est.pin);
+                }
                 const ref = doc(db, cursoID, est.id.toString());
                 tareasDeSubida.push(setDoc(ref, est)); 
             }
@@ -1208,7 +1257,7 @@
 
         window.mostrarClaves = () => {
             let txt = "CLAVES:\n";
-            estudiantes.forEach(e => txt += `${e.nombre}: ${e.pin}\n`);
+            estudiantes.forEach(e => txt += `${e.nombre}: ${decodePIN(e.pin)}\n`);
             alert(txt);
         };
     </script>
