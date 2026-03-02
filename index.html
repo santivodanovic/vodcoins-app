@@ -255,7 +255,7 @@
                 <label style="font-weight:bold; color:#555;">¿A quién?</label>
                 <select id="select-destino" style="color:#333;"></select>
                 <label style="font-weight:bold; color:#555;">¿Cuánto?</label>
-                <input type="number" id="monto" placeholder="Ej: 5 o -5" style="color:#333;">
+                <input type="number" id="monto" placeholder="Ej: 5 (Profe: -5)" style="color:#333;" step="1">
                 <button type="button" class="btn-grande" onclick="realizarTransferencia()">Confirmar Transacción</button>
             </div>
         </div>
@@ -304,7 +304,6 @@
         window.costoItem1 = 10;
         window.costoItem2 = 18;
 
-        // FUNCIONES DE ENCRIPTACIÓN DE PIN
         function encodePIN(pin) {
             return "ENC-" + btoa(pin).split('').reverse().join('');
         }
@@ -420,7 +419,7 @@
                 { id: 13, nombre: "Huillipán Lucas", saldo: 1 },
                 { id: 14, nombre: "López Santiago", saldo: 1 },
                 { id: 15, nombre: "Núñez Juan Pablo", saldo: 1 },
-                { id: 16, nombre: "Quevedo Fernando", saldo: 1 },
+                { id: 16, unified: "Quevedo Fernando", saldo: 1 },
                 { id: 17, nombre: "Salgado Agustín", saldo: 1 },
                 { id: 18, nombre: "Sanchez José Arturo", saldo: 1 },
                 { id: 19, nombre: "Sancy Zaid", saldo: 1 },
@@ -615,7 +614,7 @@
                 }
             } else {
                 html += `
-                    <input type="number" id="monto-${campo}" placeholder="Ingresa múltiplos de 10" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; color:#333;">
+                    <input type="number" id="monto-${campo}" placeholder="Ingresa múltiplos de 10" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; color:#333;" step="10">
                     <button onclick="iniciarInversion('${campo}', ${dias}, ${porcentaje})" class="btn-grande" style="margin-top:10px; background:#4a90e2; padding:10px; font-size:14px;">Depositar a ${dias} Días</button>
                 `;
             }
@@ -625,10 +624,10 @@
 
         window.iniciarInversion = async (campo, dias, porcentaje) => {
             let input = document.getElementById(`monto-${campo}`);
-            let monto = parseInt(input.value);
+            let monto = Number(input.value);
             const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
             
-            if(isNaN(monto) || monto <= 0) return alert("Monto inválido.");
+            if(isNaN(monto) || monto <= 0 || !Number.isInteger(monto)) return alert("Monto inválido.");
             if(monto > yo.saldo) return alert("❌ Saldo insuficiente.");
             if (monto % 10 !== 0) return alert("❌ Solo puedes invertir en múltiplos de 10 (ej: 10, 20, 30...).");
 
@@ -1111,24 +1110,15 @@
         };
 
         window.realizarTransferencia = async () => {
-            window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
-            // Usamos Number() en vez de parseFloat para evaluar el número exacto
             const monto = Number(document.getElementById('monto').value);
 
             if(!destinoId || isNaN(monto)) return alert("Datos inválidos");
-            
-            // 1. Bloqueo de decimales para TODOS (incluyendo al profe)
             if(!Number.isInteger(monto)) return alert("⛔ Solo se permiten números enteros (sin decimales).");
-            
-            // 2. Bloqueo de negativos y ceros para ESTUDIANTES (mínimo 1)
             if(!usuarioLogueado.esProfe && monto < 1) return alert("⛔ Solo puedes transferir montos de 1 VOD o superiores.");
-            
-            // 3. Regla para el PROFE (puede enviar negativos para multar, pero no cero)
             if(usuarioLogueado.esProfe && monto === 0) return alert("El monto no puede ser cero.");
             
             const destinoRef = doc(db, cursoID, destinoId.toString());
-// ... de aquí en adelante el código sigue exactamente igual que antes
             const nombreDestino = estudiantes.find(e => e.id == destinoId).nombre;
 
             try {
