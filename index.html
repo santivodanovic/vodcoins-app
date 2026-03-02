@@ -159,7 +159,8 @@
                     </div>
                 </div>
 
-                <button onclick="inicializarBaseDatosNube()" style="background:#2ecc71; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:15px;">🚀 Resetear DB del Curso</button>
+                <button onclick="inicializarBaseDatosNube()" style="background:#2ecc71; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:15px;">🚀 Resetear DB (Nuevas Claves)</button>
+                <button onclick="reiniciarSaldosSinClaves()" style="background:#f39c12; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:5px;">♻️ Reiniciar Economía (Mantener Claves)</button>
                 <button onclick="mostrarClaves()" style="background:#95a5a6; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:5px;">🔑 Ver Claves</button>
             </div>
         </div>
@@ -298,7 +299,7 @@
         let historialVivoLocal = []; 
         let historial24hDB = [];
         let historialLargoDB = [];
-        let todasLasTransacciones = []; // NUEVO: Para la auditoría de saldo sombra
+        let todasLasTransacciones = []; 
 
         window.costoItem1 = 10;
         window.costoItem2 = 18;
@@ -312,7 +313,7 @@
                 let b64 = str.replace("ENC-", "").split('').reverse().join('');
                 try { return atob(b64); } catch(e) { return str; }
             }
-            return str; // Si no está encriptada, la devuelve tal cual (para no romper BD actuales)
+            return str; 
         }
 
         const DATA_BASE = {
@@ -464,7 +465,6 @@
             }
 
             const alumno = estudiantes.find(e => e.id == idUser);
-            // Validamos desencriptando la clave de la base de datos
             if(alumno && decodePIN(alumno.pin) === pin) {
                 usuarioLogueado = { ...alumno, esProfe: false };
                 entrar();
@@ -483,11 +483,10 @@
                 document.getElementById('panel-mision-profe').style.display = 'block';
                 escucharNotificaciones(); 
                 
-                // NUEVO: El profesor descarga todas las transacciones para la auditoría de saldo
                 onSnapshot(collection(db, "compras_" + cursoID), (snap) => {
                     todasLasTransacciones = [];
                     snap.forEach(doc => todasLasTransacciones.push(doc.data()));
-                    actualizarUI(); // Refresca la lista con los saldos sombra
+                    actualizarUI(); 
                 });
             }
             actualizarUI();
@@ -504,7 +503,6 @@
             if(navBtn) navBtn.classList.add('active-nav');
         }
 
-        // --- SISTEMA DE TABLÓN DE MISIONES (COMPRESOR DE IMÁGENES) ---
         function iniciarMisiones() {
             onSnapshot(doc(db, "banco_central", "misiones_" + cursoID), (snap) => {
                 const panel = document.getElementById('mision-container');
@@ -575,7 +573,6 @@
             }
         }
 
-        // --- SISTEMA DE INVERSIONES DOBLES (10 DÍAS Y 30 DÍAS) ---
         window.renderizarInversion = () => {
             const div = document.getElementById('estado-inversion');
             if(!usuarioLogueado || usuarioLogueado.esProfe) {
@@ -586,10 +583,7 @@
             const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
             let html = '';
 
-            // Slot 1: Corto Plazo (10 Días, 10%)
             html += generarHTMLInversion(yo, 'inv10', 10, 10, 'Fondo Corto Plazo');
-            
-            // Slot 2: Largo Plazo (30 Días, 30%)
             html += generarHTMLInversion(yo, 'inv30', 30, 30, 'Fondo Largo Plazo');
 
             div.innerHTML = html;
@@ -695,7 +689,6 @@
             } catch(e) { alert("Error al cobrar."); }
         }
 
-        // --- SISTEMA DE GRÁFICO ESTABILIZADO ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -967,10 +960,9 @@
                 let extraClass = usuarioLogueado.esProfe ? 'clickeable' : '';
                 let extraStyle = usuarioLogueado.esProfe ? 'cursor: pointer; border-left: 4px solid #4a90e2;' : '';
 
-                // NUEVO: Cálculos del saldo sombra solo para el panel de profesor
                 let shadowHtml = '';
                 if (usuarioLogueado.esProfe) {
-                    let auditBalance = 1; // Saldo base inicial
+                    let auditBalance = 1; 
                     todasLasTransacciones.forEach(t => {
                         if (t.alumno === est.nombre) {
                             if (['compra', 'inversion', 'transferencia'].includes(t.tipo)) auditBalance -= t.precio;
@@ -1119,14 +1111,24 @@
         };
 
         window.realizarTransferencia = async () => {
+            window.realizarTransferencia = async () => {
             const destinoId = document.getElementById('select-destino').value;
-            const monto = parseFloat(document.getElementById('monto').value);
+            // Usamos Number() en vez de parseFloat para evaluar el número exacto
+            const monto = Number(document.getElementById('monto').value);
 
             if(!destinoId || isNaN(monto)) return alert("Datos inválidos");
-            if(!usuarioLogueado.esProfe && monto <= 0) return alert("⛔ Solo el Profesor puede enviar valores negativos.");
-            if(monto === 0) return alert("El monto no puede ser cero.");
+            
+            // 1. Bloqueo de decimales para TODOS (incluyendo al profe)
+            if(!Number.isInteger(monto)) return alert("⛔ Solo se permiten números enteros (sin decimales).");
+            
+            // 2. Bloqueo de negativos y ceros para ESTUDIANTES (mínimo 1)
+            if(!usuarioLogueado.esProfe && monto < 1) return alert("⛔ Solo puedes transferir montos de 1 VOD o superiores.");
+            
+            // 3. Regla para el PROFE (puede enviar negativos para multar, pero no cero)
+            if(usuarioLogueado.esProfe && monto === 0) return alert("El monto no puede ser cero.");
             
             const destinoRef = doc(db, cursoID, destinoId.toString());
+// ... de aquí en adelante el código sigue exactamente igual que antes
             const nombreDestino = estudiantes.find(e => e.id == destinoId).nombre;
 
             try {
@@ -1219,7 +1221,6 @@
             const tareasDeSubida = []; 
 
             for(let est of lista) {
-                // Encriptamos los pines al resetear la base de datos
                 if(!est.pin) {
                     est.pin = encodePIN(Math.random().toString(36).substring(2,10).toUpperCase());
                 } else if (!est.pin.startsWith("ENC-")) {
@@ -1250,7 +1251,50 @@
                 tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: tAyer, p: 11000}, {t: tHoy, p: 11000}] }));
 
                 await Promise.all(tareasDeSubida);
-                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000.`);
+                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000 con nuevas claves.`);
+                location.reload(); 
+            } catch (error) { alert("❌ Hubo un problema de conexión: " + error); }
+        };
+
+        window.reiniciarSaldosSinClaves = async () => {
+            const confirmacion = prompt("⚠️ Esto dejará a todos con 1 VOD, limpiará inversiones y borrará el historial, pero MANTENDRÁ las claves intactas.\n\nEscribe MANTENER para proceder:");
+            if (confirmacion !== "MANTENER") { alert("Cancelado."); return; }
+            
+            const tareasDeSubida = []; 
+
+            for(let est of estudiantes) {
+                if (est.id !== 'profe') {
+                    const ref = doc(db, cursoID, est.id.toString());
+                    tareasDeSubida.push(updateDoc(ref, {
+                        saldo: 1,
+                        inv10: { activa: false },
+                        inv30: { activa: false }
+                    }));
+                }
+            }
+
+            const reservaRef = doc(db, "banco_central", "config_" + cursoID);
+            tareasDeSubida.push(setDoc(reservaRef, { reserva: estudiantes.length * 11000 }));
+
+            try {
+                const snapshotHistorial = await getDocs(collection(db, "historial_" + cursoID));
+                snapshotHistorial.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
+                
+                const snapshotCompras = await getDocs(collection(db, "compras_" + cursoID));
+                snapshotCompras.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
+
+                const hoy = getHoyString();
+                const historialRef = doc(db, "historial_" + cursoID, hoy);
+                tareasDeSubida.push(setDoc(historialRef, { fecha: hoy, precio: 11000 }));
+
+                let ayer = new Date(); ayer.setDate(ayer.getDate() - 1);
+                const tAyer = ayer.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const tHoy = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const ref24h = doc(db, "banco_central", "memoria_24h_" + cursoID);
+                tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: tAyer, p: 11000}, {t: tHoy, p: 11000}] }));
+
+                await Promise.all(tareasDeSubida);
+                alert(`✅ ¡Éxito! Economía reiniciada a 1 VOD. Las claves se mantuvieron.`);
                 location.reload(); 
             } catch (error) { alert("❌ Hubo un problema de conexión: " + error); }
         };
