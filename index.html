@@ -126,11 +126,13 @@
                 <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Bolsa VOD</div>
                 <div class="menu-card" onclick="document.getElementById('modal-inversiones').style.display='flex'; renderizarInversion();"><span class="menu-icon">🏦</span>Banco</div>
                 <div class="menu-card" onclick="navegar('tienda')"><span class="menu-icon">🛍️</span>Tienda</div>
-                <div class="menu-card" onclick="navegar('misiones')"><span class="menu-icon">🎯</span>Misiones</div>
+                <div class="menu-card" onclick="navegar('paes')"><span class="menu-icon">🎓</span>Simula PAES</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
             </div>
-            <button class="btn-grande" style="background:#ff6b6b; margin-top:30px;" onclick="location.reload()">🔒 Cerrar Sesión</button>
+            
+            <button class="btn-grande" style="background:#8e44ad; margin-top:15px;" onclick="navegar('misiones')">🎯 Ver Tablón de Misiones</button>
+            <button class="btn-grande" style="background:#ff6b6b; margin-top:10px;" onclick="location.reload()">🔒 Cerrar Sesión</button>
 
             <div id="zona-profe" class="panel-admin">
                 <h3 style="color:#d35400; margin-top:0;">🔧 Panel de Profesor</h3>
@@ -242,6 +244,64 @@
                 <button onclick="borrarMision()" style="background:#e74c3c; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; margin-top:10px;">Eliminar Misión Actual</button>
             </div>
         </div>
+        
+        <div id="paes" class="seccion">
+            <h2 style="color:#333; margin-bottom: 5px;">🎓 Simulador PAES</h2>
+            <p style="font-size:13px; color:#666; margin-bottom: 20px;">Calcula tu puntaje ponderado. Ingresa tus proyecciones y los porcentajes que exige tu carrera.</p>
+
+            <div style="background:white; padding:20px; border-radius:15px; box-shadow:var(--shadow); margin-bottom: 20px;">
+                
+                <div style="display:flex; font-size:11px; color:#888; font-weight:bold; text-transform:uppercase; margin-bottom:10px; padding-bottom:5px; border-bottom:1px solid #eee;">
+                    <div style="flex:2;">Evaluación</div>
+                    <div style="flex:1; text-align:center;">Puntos</div>
+                    <div style="flex:1; text-align:center;">Ponderación</div>
+                </div>
+
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#444;">NEM</div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-nem-pts" placeholder="Ej: 850" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-nem-porc" placeholder="%" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                </div>
+                
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#444;">Ranking</div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-rank-pts" placeholder="Ej: 850" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-rank-porc" placeholder="%" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                </div>
+
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#444;">Comp. Lectora</div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-lec-pts" placeholder="Ej: 700" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-lec-porc" placeholder="%" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                </div>
+
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#444;">Matemática 1</div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-m1-pts" placeholder="Ej: 800" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-m1-porc" placeholder="%" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                </div>
+
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#444;">Matemática 2</div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-m2-pts" placeholder="Ej: 600" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-m2-porc" placeholder="%" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                </div>
+
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#444;">Electiva (Cienc/Hist)</div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-elec-pts" placeholder="Ej: 750" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                    <div style="flex:1; padding:0 2px;"><input type="number" id="paes-elec-porc" placeholder="%" style="padding:8px; margin:0; font-size:13px;" oninput="calcularPAES()"></div>
+                </div>
+
+                <div style="margin-top:20px; padding:15px; background:#f5f7fa; border-radius:10px; border-left:5px solid #ccc; text-align: center;" id="paes-box-resultado">
+                    <div style="font-size:11px; color:#555; font-weight:bold; text-transform:uppercase;">Puntaje Ponderado de Postulación</div>
+                    <div id="paes-resultado" style="font-size:38px; font-weight:800; color:#ccc; margin-top:0;">0.0</div>
+                    <div id="paes-alerta" style="font-size:12px; color:#e74c3c; font-weight:bold; margin-top:5px;">Ingresa tus datos para calcular</div>
+                </div>
+
+                <button class="btn-grande" style="background:#95a5a6; margin-top:15px;" onclick="limpiarPAES()">Limpiar Campos</button>
+            </div>
+        </div>
 
         <div id="lista" class="seccion">
             <h2 style="color:#333;">Listado del Curso</h2>
@@ -264,7 +324,7 @@
     <nav id="menu-inferior">
         <button onclick="navegar('inicio')" id="nav-inicio" class="active-nav">🏠</button>
         <button onclick="navegar('mercado')" id="nav-mercado">📉</button>
-        <button onclick="navegar('misiones')" id="nav-misiones">🎯</button>
+        <button onclick="navegar('paes')" id="nav-paes">🎓</button>
         <button onclick="navegar('lista')" id="nav-lista">👥</button>
         <button onclick="navegar('transferencias')" id="nav-transf">💸</button>
     </nav>
@@ -419,7 +479,7 @@
                 { id: 13, nombre: "Huillipán Lucas", saldo: 1 },
                 { id: 14, nombre: "López Santiago", saldo: 1 },
                 { id: 15, nombre: "Núñez Juan Pablo", saldo: 1 },
-                { id: 16, unified: "Quevedo Fernando", saldo: 1 },
+                { id: 16, nombre: "Quevedo Fernando", saldo: 1 },
                 { id: 17, nombre: "Salgado Agustín", saldo: 1 },
                 { id: 18, nombre: "Sanchez José Arturo", saldo: 1 },
                 { id: 19, nombre: "Sancy Zaid", saldo: 1 },
@@ -502,6 +562,7 @@
             if(navBtn) navBtn.classList.add('active-nav');
         }
 
+        // --- SISTEMA DE TABLÓN DE MISIONES ---
         function iniciarMisiones() {
             onSnapshot(doc(db, "banco_central", "misiones_" + cursoID), (snap) => {
                 const panel = document.getElementById('mision-container');
@@ -572,6 +633,7 @@
             }
         }
 
+        // --- SISTEMA DE INVERSIONES ---
         window.renderizarInversion = () => {
             const div = document.getElementById('estado-inversion');
             if(!usuarioLogueado || usuarioLogueado.esProfe) {
@@ -688,6 +750,7 @@
             } catch(e) { alert("Error al cobrar."); }
         }
 
+        // --- SISTEMA DE GRÁFICO DEL MERCADO ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -902,6 +965,7 @@
             } catch(e) {}
         };
 
+        // --- FUNCIONES DE ALUMNOS Y BASE DE DATOS ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
@@ -1294,6 +1358,62 @@
             estudiantes.forEach(e => txt += `${e.nombre}: ${decodePIN(e.pin)}\n`);
             alert(txt);
         };
+
+        // --- SISTEMA CALCULADORA PAES ---
+        window.calcularPAES = () => {
+            const ids = ['nem', 'rank', 'lec', 'm1', 'm2', 'elec'];
+            let totalScore = 0;
+            let totalPorc = 0;
+
+            for (let id of ids) {
+                let ptsInput = document.getElementById(`paes-${id}-pts`);
+                let pts = parseFloat(ptsInput.value) || 0;
+                let porc = parseFloat(document.getElementById(`paes-${id}-porc`).value) || 0;
+                
+                // Limitar visualmente los puntos entre 100 y 1000 si ya escribieron algo
+                if (ptsInput.value !== "") {
+                    if(pts > 1000) { pts = 1000; ptsInput.value = 1000; }
+                }
+
+                totalScore += (pts * (porc / 100));
+                totalPorc += porc;
+            }
+
+            const alerta = document.getElementById('paes-alerta');
+            const boxRes = document.getElementById('paes-box-resultado');
+            const resTexto = document.getElementById('paes-resultado');
+            
+            const resFormateado = totalScore.toFixed(1);
+
+            if (totalPorc === 0 && totalScore === 0) {
+                alerta.style.color = '#e74c3c';
+                alerta.innerHTML = 'Ingresa tus datos para calcular';
+                resTexto.innerText = '0.0';
+                resTexto.style.color = '#ccc';
+                boxRes.style.borderLeftColor = '#ccc';
+            } else if (totalPorc !== 100) {
+                alerta.style.color = '#e67e22';
+                alerta.innerHTML = `⚠️ Llevas ${totalPorc}% (Debe sumar exactamente 100%)`;
+                resTexto.innerText = resFormateado;
+                resTexto.style.color = '#ccc';
+                boxRes.style.borderLeftColor = '#e67e22';
+            } else {
+                alerta.style.color = '#00a86b';
+                alerta.innerHTML = `✅ Ponderación perfecta (100%)`;
+                resTexto.innerText = resFormateado;
+                resTexto.style.color = '#4a90e2';
+                boxRes.style.borderLeftColor = '#4a90e2';
+            }
+        }
+
+        window.limpiarPAES = () => {
+            const ids = ['nem', 'rank', 'lec', 'm1', 'm2', 'elec'];
+            for (let id of ids) {
+                document.getElementById(`paes-${id}-pts`).value = '';
+                document.getElementById(`paes-${id}-porc`).value = '';
+            }
+            calcularPAES(); // Forzar el recalculo para volver al estado inicial gris
+        }
     </script>
 </body>
 </html>
