@@ -970,7 +970,6 @@
                 snapshot.forEach((doc) => { nuevosEstudiantes.push(doc.data()); });
                 
                 estudiantes = nuevosEstudiantes;
-                // PARCHE DE SEGURIDAD: Previene colapso si un alumno en Firebase no tiene nombre
                 estudiantes.sort((a,b) => {
                     const nombreA = a.nombre || "";
                     const nombreB = b.nombre || "";
@@ -988,8 +987,7 @@
             estudiantes.forEach(est => {
                 let op = document.createElement('option');
                 op.value = est.id; 
-                // PARCHE DE SEGURIDAD: Mostrar advertencia si el alumno viene sin nombre desde la BD
-                op.text = est.nombre || "⚠️ Error en Base de Datos (Reiniciar)"; 
+                op.text = est.nombre || "⚠️ Error en Base de Datos"; 
                 sel.add(op);
             });
         }
@@ -1274,32 +1272,41 @@
             }
         };
 
+        // ESTA ES LA FUNCIÓN REESCRITA (La "Aspiradora")
         window.inicializarBaseDatosNube = async () => {
             const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado.\n\nEscribe CONFIRMAR para proceder:");
             if (confirmacion !== "CONFIRMAR") { alert("Cancelado."); return; }
             
             const lista = DATA_BASE[cursoID];
-            const tareasDeSubida = []; 
-
-            for(let est of lista) {
-                if(!est.pin) {
-                    est.pin = encodePIN(Math.random().toString(36).substring(2,10).toUpperCase());
-                } else if (!est.pin.startsWith("ENC-")) {
-                    est.pin = encodePIN(est.pin);
-                }
-                const ref = doc(db, cursoID, est.id.toString());
-                tareasDeSubida.push(setDoc(ref, est)); 
-            }
-
-            const reservaRef = doc(db, "banco_central", "config_" + cursoID);
-            tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
-
+            
             try {
+                // 1. LIMPIEZA PROFUNDA: Borrar todo lo viejo de la base de datos
+                const tareasDeBorrado = [];
+                const snapshotUsuarios = await getDocs(collection(db, cursoID));
+                snapshotUsuarios.forEach(docSnap => { tareasDeBorrado.push(deleteDoc(docSnap.ref)); });
+                
                 const snapshotHistorial = await getDocs(collection(db, "historial_" + cursoID));
-                snapshotHistorial.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
+                snapshotHistorial.forEach(docSnap => { tareasDeBorrado.push(deleteDoc(docSnap.ref)); });
                 
                 const snapshotCompras = await getDocs(collection(db, "compras_" + cursoID));
-                snapshotCompras.forEach(docSnap => { tareasDeSubida.push(deleteDoc(docSnap.ref)); });
+                snapshotCompras.forEach(docSnap => { tareasDeBorrado.push(deleteDoc(docSnap.ref)); });
+                
+                await Promise.all(tareasDeBorrado); 
+
+                // 2. CREACIÓN LIMPIA: Subir los datos nuevos sin fantasmas
+                const tareasDeSubida = []; 
+                for(let est of lista) {
+                    if(!est.pin) {
+                        est.pin = encodePIN(Math.random().toString(36).substring(2,10).toUpperCase());
+                    } else if (!est.pin.startsWith("ENC-")) {
+                        est.pin = encodePIN(est.pin);
+                    }
+                    const ref = doc(db, cursoID, est.id.toString());
+                    tareasDeSubida.push(setDoc(ref, est)); 
+                }
+
+                const reservaRef = doc(db, "banco_central", "config_" + cursoID);
+                tareasDeSubida.push(setDoc(reservaRef, { reserva: lista.length * 11000 }));
 
                 const hoy = getHoyString();
                 const historialRef = doc(db, "historial_" + cursoID, hoy);
@@ -1312,7 +1319,7 @@
                 tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: tAyer, p: 11000}, {t: tHoy, p: 11000}] }));
 
                 await Promise.all(tareasDeSubida);
-                alert(`✅ ¡Éxito! Base de datos reiniciada a $11.000 con nuevas claves.`);
+                alert(`✅ ¡Éxito! Base de datos reiniciada y LIMPIADA a $11.000 con nuevas claves.`);
                 location.reload(); 
             } catch (error) { alert("❌ Hubo un problema de conexión: " + error); }
         };
