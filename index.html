@@ -129,6 +129,7 @@
                 <div class="menu-card" onclick="navegar('paes')"><span class="menu-icon">🎓</span>Simula PAES</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
+                <div class="menu-card" id="btn-menu-ensayos" style="display:none;" onclick="navegar('ensayos')"><span class="menu-icon">📊</span>Mis Ensayos</div>
             </div>
             
             <button class="btn-grande" style="background:#8e44ad; margin-top:15px;" onclick="navegar('misiones')">🎯 Ver Tablón de Misiones</button>
@@ -143,6 +144,13 @@
                     <div id="lista-notificaciones" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
                         <em style="color:#aaa;">Cargando notificaciones...</em>
                     </div>
+                </div>
+
+                <div id="panel-ensayos-profe" style="display:none; background:#f4ebf7; padding:15px; border-radius:8px; margin-top:15px; border-left: 5px solid #8e44ad;">
+                    <h4 style="margin:0 0 5px 0; color:#8e44ad;">📊 Subir Puntaje Ensayo M1</h4>
+                    <select id="sel-alumno-ensayo" style="margin:5px 0; width:100%;"></select>
+                    <input type="number" id="input-puntaje-ensayo" placeholder="Puntaje (ej: 750)" style="margin:5px 0; width:100%;">
+                    <button onclick="guardarPuntajeEnsayo()" style="background:#8e44ad; color:white; border:none; border-radius:8px; padding:10px; width:100%; font-weight:bold; cursor:pointer; margin-top:5px;">Registrar Puntaje</button>
                 </div>
 
                 <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:15px;">
@@ -242,6 +250,18 @@
                 <input type="number" id="recompensa-mision" placeholder="Recompensa en VOD" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc; color:#333;">
                 <button onclick="publicarMision()" style="background:#3498db; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; margin-top:10px;">Subir y Publicar</button>
                 <button onclick="borrarMision()" style="background:#e74c3c; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; margin-top:10px;">Eliminar Misión Actual</button>
+            </div>
+        </div>
+
+        <div id="ensayos" class="seccion">
+            <h2 style="color:#333;">Mis Ensayos PAES M1</h2>
+            <p style="font-size:13px; color:#666;">Tu progreso personal. Este gráfico es privado y solo tú lo puedes ver.</p>
+            <div style="background:white; padding:20px; border-radius:15px; box-shadow:var(--shadow);">
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="graficoEnsayosCanvas"></canvas>
+                </div>
+                <div id="lista-puntajes-personales" style="margin-top:20px; text-align:left; font-size:13px; border-top: 1px solid #eee; padding-top: 15px;">
+                    </div>
             </div>
         </div>
         
@@ -352,6 +372,7 @@
         let reservaMundial = 11000; 
         
         let chartInstance = null; 
+        let chartEnsayosInstance = null; // Instancia del gráfico de M1
         let marketInterval = null; 
         let precioActualGlobal = 11000; 
         let modoGraficoActual = 'vivo';
@@ -560,6 +581,80 @@
             let navBtn = document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion));
             if(navBtn) navBtn.classList.add('active-nav');
         }
+
+        // --- NUEVAS FUNCIONES PARA PAES M1 ---
+        window.guardarPuntajeEnsayo = async () => {
+            const idAlumno = document.getElementById('sel-alumno-ensayo').value;
+            const puntaje = parseInt(document.getElementById('input-puntaje-ensayo').value);
+            
+            if(!idAlumno || isNaN(puntaje) || puntaje < 100 || puntaje > 1000) {
+                return alert("Por favor selecciona un alumno e ingresa un puntaje válido (entre 100 y 1000).");
+            }
+            
+            const alumnoRef = doc(db, cursoID, idAlumno);
+            const est = estudiantes.find(e => e.id == idAlumno);
+            let puntajesActuales = est.puntajesM1 || [];
+            puntajesActuales.push(puntaje);
+            
+            try {
+                await updateDoc(alumnoRef, { puntajesM1: puntajesActuales });
+                alert(`✅ Puntaje de ${puntaje} guardado correctamente para ${est.nombre || "el alumno"}.`);
+                document.getElementById('input-puntaje-ensayo').value = "";
+            } catch(e) {
+                alert("Error al guardar: " + e);
+            }
+        };
+
+        window.renderizarGraficoEnsayos = () => {
+            if(!usuarioLogueado || usuarioLogueado.esProfe) return;
+            const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+            if(!yo) return;
+            
+            const puntajes = yo.puntajesM1 || [];
+            const labels = puntajes.map((_, index) => `Ensayo ${index + 1}`);
+            
+            const listaDiv = document.getElementById('lista-puntajes-personales');
+            if(puntajes.length === 0) {
+                listaDiv.innerHTML = "<em style='color:#888;'>Aún no tienes ensayos registrados. ¡Pronto el profesor subirá tus resultados!</em>";
+            } else {
+                let html = "<strong>Historial de puntajes M1:</strong><ul style='margin-bottom:0;'>";
+                puntajes.forEach((p, i) => {
+                    html += `<li>Ensayo ${i+1}: <b style="color:#8e44ad">${p} pts</b></li>`;
+                });
+                html += "</ul>";
+                listaDiv.innerHTML = html;
+            }
+
+            const ctx = document.getElementById('graficoEnsayosCanvas').getContext('2d');
+            if (chartEnsayosInstance) chartEnsayosInstance.destroy();
+            
+            chartEnsayosInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Sin datos'],
+                    datasets: [{
+                        label: 'Puntaje M1',
+                        data: puntajes.length > 0 ? puntajes : [0],
+                        borderColor: '#8e44ad',
+                        backgroundColor: 'rgba(142, 68, 173, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#8e44ad',
+                        pointRadius: 5,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { min: 100, max: 1000 }
+                    }
+                }
+            });
+        };
+        // -------------------------------------
 
         function iniciarMisiones() {
             onSnapshot(doc(db, "banco_central", "misiones_" + cursoID), (snap) => {
@@ -1019,8 +1114,12 @@
 
             const divLista = document.getElementById('contenedor-lista');
             divLista.innerHTML = '';
+            
             const selDest = document.getElementById('select-destino');
             selDest.innerHTML = '<option value="">Seleccionar compañero</option>';
+
+            const selEnsayo = document.getElementById('sel-alumno-ensayo');
+            if(selEnsayo) selEnsayo.innerHTML = '<option value="">-- Seleccionar Alumno --</option>';
 
             estudiantes.forEach((est, index) => {
                 let nombreMostrado = est.nombre || "Alumno con error de registro";
@@ -1059,7 +1158,26 @@
                      let op = document.createElement('option');
                      op.value = est.id; op.text = nombreMostrado; selDest.add(op);
                 }
+
+                // Llenar selector de ensayos solo si es profe
+                if(usuarioLogueado.esProfe && selEnsayo) {
+                    let op2 = document.createElement('option');
+                    op2.value = est.id; op2.text = nombreMostrado; selEnsayo.add(op2);
+                }
             });
+
+            // Lógica de visualización exclusiva para IV Medio
+            if (cursoID === 'curso_4m') {
+                document.getElementById('btn-menu-ensayos').style.display = 'flex';
+                if (usuarioLogueado.esProfe) {
+                    document.getElementById('panel-ensayos-profe').style.display = 'block';
+                } else {
+                    renderizarGraficoEnsayos();
+                }
+            } else {
+                document.getElementById('btn-menu-ensayos').style.display = 'none';
+                if (document.getElementById('panel-ensayos-profe')) document.getElementById('panel-ensayos-profe').style.display = 'none';
+            }
         }
 
         window.abrirHistorialAlumno = async (nombreAlumno, saldoActual) => {
@@ -1272,15 +1390,13 @@
             }
         };
 
-        // ESTA ES LA FUNCIÓN REESCRITA (La "Aspiradora")
         window.inicializarBaseDatosNube = async () => {
-            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos y TODO el historial pasado.\n\nEscribe CONFIRMAR para proceder:");
+            const confirmacion = prompt("⚠️ PELIGRO: Esto borrará los saldos, puntajes PAES y TODO el historial pasado.\n\nEscribe CONFIRMAR para proceder:");
             if (confirmacion !== "CONFIRMAR") { alert("Cancelado."); return; }
             
             const lista = DATA_BASE[cursoID];
             
             try {
-                // 1. LIMPIEZA PROFUNDA: Borrar todo lo viejo de la base de datos
                 const tareasDeBorrado = [];
                 const snapshotUsuarios = await getDocs(collection(db, cursoID));
                 snapshotUsuarios.forEach(docSnap => { tareasDeBorrado.push(deleteDoc(docSnap.ref)); });
@@ -1293,7 +1409,6 @@
                 
                 await Promise.all(tareasDeBorrado); 
 
-                // 2. CREACIÓN LIMPIA: Subir los datos nuevos sin fantasmas
                 const tareasDeSubida = []; 
                 for(let est of lista) {
                     if(!est.pin) {
@@ -1325,7 +1440,7 @@
         };
 
         window.reiniciarSaldosSinClaves = async () => {
-            const confirmacion = prompt("⚠️ Esto dejará a todos con 1 VOD, limpiará inversiones y borrará el historial, pero MANTENDRÁ las claves intactas.\n\nEscribe MANTENER para proceder:");
+            const confirmacion = prompt("⚠️ Esto dejará a todos con 1 VOD, limpiará inversiones y borrará el historial, pero MANTENDRÁ los puntajes PAES y claves intactas.\n\nEscribe MANTENER para proceder:");
             if (confirmacion !== "MANTENER") { alert("Cancelado."); return; }
             
             const tareasDeSubida = []; 
@@ -1362,7 +1477,7 @@
                 tareasDeSubida.push(setDoc(ref24h, { puntos: [{t: tAyer, p: 11000}, {t: tHoy, p: 11000}] }));
 
                 await Promise.all(tareasDeSubida);
-                alert(`✅ ¡Éxito! Economía reiniciada a 1 VOD. Las claves se mantuvieron.`);
+                alert(`✅ ¡Éxito! Economía reiniciada a 1 VOD. Las claves y puntajes se mantuvieron.`);
                 location.reload(); 
             } catch (error) { alert("❌ Hubo un problema de conexión: " + error); }
         };
