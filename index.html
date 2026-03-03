@@ -970,7 +970,13 @@
                 snapshot.forEach((doc) => { nuevosEstudiantes.push(doc.data()); });
                 
                 estudiantes = nuevosEstudiantes;
-                estudiantes.sort((a,b) => a.nombre.localeCompare(b.nombre));
+                // PARCHE DE SEGURIDAD: Previene colapso si un alumno en Firebase no tiene nombre
+                estudiantes.sort((a,b) => {
+                    const nombreA = a.nombre || "";
+                    const nombreB = b.nombre || "";
+                    return nombreA.localeCompare(nombreB);
+                });
+                
                 llenarSelectores();
                 if(usuarioLogueado) { actualizarUI(); calcularPrecio(); }
             });
@@ -981,7 +987,10 @@
             sel.innerHTML = '<option value="">-- Selecciona tu nombre --</option><option value="profe">👨‍🏫 Profesor (Admin)</option>';
             estudiantes.forEach(est => {
                 let op = document.createElement('option');
-                op.value = est.id; op.text = est.nombre; sel.add(op);
+                op.value = est.id; 
+                // PARCHE DE SEGURIDAD: Mostrar advertencia si el alumno viene sin nombre desde la BD
+                op.text = est.nombre || "⚠️ Error en Base de Datos (Reiniciar)"; 
+                sel.add(op);
             });
         }
 
@@ -997,7 +1006,9 @@
                     selEliminar.innerHTML = '<option value="">-- Seleccionar --</option>';
                     estudiantes.forEach(est => {
                         let op = document.createElement('option');
-                        op.value = est.id; op.text = est.nombre; selEliminar.add(op);
+                        op.value = est.id; 
+                        op.text = est.nombre || "Sin Nombre"; 
+                        selEliminar.add(op);
                     });
                 }
             } else {
@@ -1014,7 +1025,8 @@
             selDest.innerHTML = '<option value="">Seleccionar compañero</option>';
 
             estudiantes.forEach((est, index) => {
-                let onclickAttr = usuarioLogueado.esProfe ? `onclick="abrirHistorialAlumno('${est.nombre}', ${est.saldo})"` : '';
+                let nombreMostrado = est.nombre || "Alumno con error de registro";
+                let onclickAttr = usuarioLogueado.esProfe ? `onclick="abrirHistorialAlumno('${nombreMostrado}', ${est.saldo})"` : '';
                 let extraClass = usuarioLogueado.esProfe ? 'clickeable' : '';
                 let extraStyle = usuarioLogueado.esProfe ? 'cursor: pointer; border-left: 4px solid #4a90e2;' : '';
 
@@ -1038,7 +1050,7 @@
 
                 divLista.innerHTML += `
                 <div class="tarjeta-alumno ${extraClass}" ${onclickAttr} style="${extraStyle}">
-                    <div><b style="color:#333;">${index + 1}. ${est.nombre}</b></div>
+                    <div><b style="color:#333;">${index + 1}. ${nombreMostrado}</b></div>
                     <div style="display:flex; align-items:center;">
                         ${shadowHtml}
                         <span style="color:#2e7d32; font-weight:bold; background:#e8f5e9; padding:5px 10px; border-radius:15px;">${est.saldo} VOD</span>
@@ -1047,7 +1059,7 @@
 
                 if(usuarioLogueado.id != est.id) {
                      let op = document.createElement('option');
-                     op.value = est.id; op.text = est.nombre; selDest.add(op);
+                     op.value = est.id; op.text = nombreMostrado; selDest.add(op);
                 }
             });
         }
