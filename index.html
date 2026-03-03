@@ -470,7 +470,6 @@
                 { id: 4, nombre: "Avila Alonso", saldo: 1 },
                 { id: 5, nombre: "Belmar Olivia", saldo: 1 },
                 { id: 6, nombre: "Bravo Daniel", saldo: 1 },
-                { id: 7, nombre: "Briones Cristóbal", saldo: 1 },
                 { id: 8, nombre: "Budaleo Francisca", saldo: 1 },
                 { id: 9, nombre: "Cases Benjamín", saldo: 1 },
                 { id: 10, nombre: "Cisternas Sofía", saldo: 1 },
@@ -562,7 +561,6 @@
             if(navBtn) navBtn.classList.add('active-nav');
         }
 
-        // --- SISTEMA DE TABLÓN DE MISIONES ---
         function iniciarMisiones() {
             onSnapshot(doc(db, "banco_central", "misiones_" + cursoID), (snap) => {
                 const panel = document.getElementById('mision-container');
@@ -633,7 +631,6 @@
             }
         }
 
-        // --- SISTEMA DE INVERSIONES ---
         window.renderizarInversion = () => {
             const div = document.getElementById('estado-inversion');
             if(!usuarioLogueado || usuarioLogueado.esProfe) {
@@ -750,7 +747,6 @@
             } catch(e) { alert("Error al cobrar."); }
         }
 
-        // --- SISTEMA DE GRÁFICO DEL MERCADO ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -965,7 +961,6 @@
             } catch(e) {}
         };
 
-        // --- FUNCIONES DE ALUMNOS Y BASE DE DATOS ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
@@ -1359,7 +1354,6 @@
             alert(txt);
         };
 
-        // --- SISTEMA CALCULADORA PAES ---
         window.calcularPAES = () => {
             const ids = ['nem', 'rank', 'lec', 'm1', 'm2', 'elec'];
             let totalScore = 0;
@@ -1370,7 +1364,6 @@
                 let pts = parseFloat(ptsInput.value) || 0;
                 let porc = parseFloat(document.getElementById(`paes-${id}-porc`).value) || 0;
                 
-                // Limitar visualmente los puntos entre 100 y 1000 si ya escribieron algo
                 if (ptsInput.value !== "") {
                     if(pts > 1000) { pts = 1000; ptsInput.value = 1000; }
                 }
@@ -1412,7 +1405,7 @@
                 document.getElementById(`paes-${id}-pts`).value = '';
                 document.getElementById(`paes-${id}-porc`).value = '';
             }
-            calcularPAES(); // Forzar el recalculo para volver al estado inicial gris
+            calcularPAES(); 
         }
     </script>
 </body>
