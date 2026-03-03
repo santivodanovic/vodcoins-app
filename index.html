@@ -470,27 +470,27 @@
                 { id: 4, nombre: "Avila Alonso", saldo: 1 },
                 { id: 5, nombre: "Belmar Olivia", saldo: 1 },
                 { id: 6, nombre: "Bravo Daniel", saldo: 1 },
-                { id: 8, nombre: "Budaleo Francisca", saldo: 1 },
-                { id: 9, nombre: "Cases Benjamín", saldo: 1 },
-                { id: 10, nombre: "Cisternas Sofía", saldo: 1 },
-                { id: 11, nombre: "Cuevas Magdalena", saldo: 1 },
-                { id: 12, nombre: "González Emilie", saldo: 1 },
-                { id: 13, nombre: "Huillipán Lucas", saldo: 1 },
-                { id: 14, nombre: "López Santiago", saldo: 1 },
-                { id: 15, nombre: "Núñez Juan Pablo", saldo: 1 },
-                { id: 16, unified: "Quevedo Fernando", saldo: 1 },
-                { id: 17, nombre: "Salgado Agustín", saldo: 1 },
-                { id: 18, nombre: "Sanchez José Arturo", saldo: 1 },
-                { id: 19, nombre: "Sancy Zaid", saldo: 1 },
-                { id: 20, nombre: "Sepúlveda Sophia", saldo: 1 },
-                { id: 21, nombre: "Sepúlveda Isidora", saldo: 1 },
-                { id: 22, nombre: "Silva Emilia", saldo: 1 },
-                { id: 23, nombre: "Silva Carlos", saldo: 1 },
-                { id: 24, nombre: "Silva Martina", saldo: 1 },
-                { id: 25, nombre: "Tapia Tomás", saldo: 1 },
-                { id: 26, nombre: "Valeria Paulo", saldo: 1 },
-                { id: 27, nombre: "Vera Martina", saldo: 1 },
-                { id: 28, nombre: "Villagran Agustina", saldo: 1 }
+                { id: 7, nombre: "Budaleo Francisca", saldo: 1 },
+                { id: 8, nombre: "Cases Benjamín", saldo: 1 },
+                { id: 9, nombre: "Cisternas Sofía", saldo: 1 },
+                { id: 10, nombre: "Cuevas Magdalena", saldo: 1 },
+                { id: 11, nombre: "González Emilie", saldo: 1 },
+                { id: 12, nombre: "Huillipán Lucas", saldo: 1 },
+                { id: 13, nombre: "López Santiago", saldo: 1 },
+                { id: 14, nombre: "Núñez Juan Pablo", saldo: 1 },
+                { id: 15, nombre: "Quevedo Fernando", saldo: 1 },
+                { id: 16, nombre: "Salgado Agustín", saldo: 1 },
+                { id: 17, nombre: "Sanchez José Arturo", saldo: 1 },
+                { id: 18, nombre: "Sancy Zaid", saldo: 1 },
+                { id: 19, nombre: "Sepúlveda Sophia", saldo: 1 },
+                { id: 20, nombre: "Sepúlveda Isidora", saldo: 1 },
+                { id: 21, nombre: "Silva Emilia", saldo: 1 },
+                { id: 22, nombre: "Silva Carlos", saldo: 1 },
+                { id: 23, nombre: "Silva Martina", saldo: 1 },
+                { id: 24, nombre: "Tapia Tomás", saldo: 1 },
+                { id: 25, nombre: "Valeria Paulo", saldo: 1 },
+                { id: 26, nombre: "Vera Martina", saldo: 1 },
+                { id: 27, nombre: "Villagran Agustina", saldo: 1 }
             ]
         };
 
@@ -561,6 +561,7 @@
             if(navBtn) navBtn.classList.add('active-nav');
         }
 
+        // --- SISTEMA DE TABLÓN DE MISIONES ---
         function iniciarMisiones() {
             onSnapshot(doc(db, "banco_central", "misiones_" + cursoID), (snap) => {
                 const panel = document.getElementById('mision-container');
@@ -631,6 +632,7 @@
             }
         }
 
+        // --- SISTEMA DE INVERSIONES ---
         window.renderizarInversion = () => {
             const div = document.getElementById('estado-inversion');
             if(!usuarioLogueado || usuarioLogueado.esProfe) {
@@ -747,6 +749,7 @@
             } catch(e) { alert("Error al cobrar."); }
         }
 
+        // --- SISTEMA DE GRÁFICO DEL MERCADO ---
         function iniciarMercado() {
             const ctx = document.getElementById('graficoCanvas').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -961,6 +964,7 @@
             } catch(e) {}
         };
 
+        // --- FUNCIONES DE ALUMNOS Y BASE DE DATOS ---
         function conectarBaseDatos(colName) {
             const selector = document.getElementById('login-selector');
             selector.innerHTML = '<option>Cargando...</option>';
@@ -1354,6 +1358,7 @@
             alert(txt);
         };
 
+        // --- SISTEMA CALCULADORA PAES ---
         window.calcularPAES = () => {
             const ids = ['nem', 'rank', 'lec', 'm1', 'm2', 'elec'];
             let totalScore = 0;
@@ -1364,6 +1369,7 @@
                 let pts = parseFloat(ptsInput.value) || 0;
                 let porc = parseFloat(document.getElementById(`paes-${id}-porc`).value) || 0;
                 
+                // Limitar visualmente los puntos entre 100 y 1000 si ya escribieron algo
                 if (ptsInput.value !== "") {
                     if(pts > 1000) { pts = 1000; ptsInput.value = 1000; }
                 }
@@ -1405,7 +1411,7 @@
                 document.getElementById(`paes-${id}-pts`).value = '';
                 document.getElementById(`paes-${id}-porc`).value = '';
             }
-            calcularPAES(); 
+            calcularPAES(); // Forzar el recalculo para volver al estado inicial gris
         }
     </script>
 </body>
