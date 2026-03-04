@@ -219,7 +219,7 @@
             <div class="tarjeta-alumno" style="border-left: 5px solid #ff9f43; display: flex; flex-direction: column; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                     <h3 style="margin:0; color:#333;">1 Décima</h3>
-                    <div style="color:#e67e22; font-weight:bold; font-size: 18px;"><span id="lbl-precio-1">10</span> VOD</div>
+                    <div style="color:#e67e22; font-weight:bold; font-size: 18px;"><span id="lbl-precio-1">7</span> VOD</div>
                 </div>
                 <button id="btn-comprar-1" style="background:#ff9f43; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer; margin-top: 10px;">COMPRAR</button>
             </div>
@@ -227,7 +227,7 @@
             <div class="tarjeta-alumno" style="border-left: 5px solid #9b59b6; display: flex; flex-direction: column; align-items: stretch;">
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                     <h3 style="margin:0; color:#333;">2 Décimas</h3>
-                    <div style="color:#9b59b6; font-weight:bold; font-size: 18px;"><span id="lbl-precio-2">18</span> VOD</div>
+                    <div style="color:#9b59b6; font-weight:bold; font-size: 18px;"><span id="lbl-precio-2">13</span> VOD</div>
                 </div>
                 <button id="btn-comprar-2" style="background:#9b59b6; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer; margin-top: 10px;">COMPRAR</button>
             </div>
@@ -261,7 +261,7 @@
                     <canvas id="graficoEnsayosCanvas"></canvas>
                 </div>
                 <div id="lista-puntajes-personales" style="margin-top:20px; text-align:left; font-size:13px; border-top: 1px solid #eee; padding-top: 15px;">
-                    </div>
+                </div>
             </div>
         </div>
         
@@ -372,7 +372,7 @@
         let reservaMundial = 11000; 
         
         let chartInstance = null; 
-        let chartEnsayosInstance = null; // Instancia del gráfico de M1
+        let chartEnsayosInstance = null; 
         let marketInterval = null; 
         let precioActualGlobal = 11000; 
         let modoGraficoActual = 'vivo';
@@ -382,8 +382,9 @@
         let historialLargoDB = [];
         let todasLasTransacciones = []; 
 
-        window.costoItem1 = 10;
-        window.costoItem2 = 18;
+        // AQUI ACTUALIZADO LOS VALORES BASE EN JAVASCRIPT
+        window.costoItem1 = 7;
+        window.costoItem2 = 13;
 
         function encodePIN(pin) {
             return "ENC-" + btoa(pin).split('').reverse().join('');
@@ -474,7 +475,7 @@
                 { id: 27, nombre: "Rios Mattei Marco", saldo: 1 },
                 { id: 28, nombre: "Salgado Carvallo Agustín", saldo: 1 },
                 { id: 29, nombre: "San Martin Iglesias Vicente", saldo: 1 },
-                { id: 30, nombre: "Silva Aguilera Emilia", saldo: 1 },
+                { id: 30, মুদ্রা: "Silva Aguilera Emilia", saldo: 1 },
                 { id: 31, nombre: "Silva Diaz Martina", saldo: 1 },
                 { id: 32, nombre: "Torres Salomon Ignacio", saldo: 1 },
                 { id: 33, nombre: "Uribe Pavez Felipe", saldo: 1 },
@@ -582,7 +583,6 @@
             if(navBtn) navBtn.classList.add('active-nav');
         }
 
-        // --- NUEVAS FUNCIONES PARA PAES M1 ---
         window.guardarPuntajeEnsayo = async () => {
             const idAlumno = document.getElementById('sel-alumno-ensayo').value;
             const puntaje = parseInt(document.getElementById('input-puntaje-ensayo').value);
@@ -654,7 +654,6 @@
                 }
             });
         };
-        // -------------------------------------
 
         function iniciarMisiones() {
             onSnapshot(doc(db, "banco_central", "misiones_" + cursoID), (snap) => {
@@ -1014,8 +1013,9 @@
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
-            window.costoItem1 = Math.max(1, Math.round((10 * 11000) / precioActualGlobal));
-            window.costoItem2 = Math.max(1, Math.round((18 * 11000) / precioActualGlobal));
+            // AQUI SE ACTUALIZO LA FORMULA MULTIPLICANDO POR 7 Y POR 13
+            window.costoItem1 = Math.max(1, Math.round((7 * 11000) / precioActualGlobal));
+            window.costoItem2 = Math.max(1, Math.round((13 * 11000) / precioActualGlobal));
             if(document.getElementById('lbl-precio-1')) document.getElementById('lbl-precio-1').innerText = window.costoItem1;
             if(document.getElementById('lbl-precio-2')) document.getElementById('lbl-precio-2').innerText = window.costoItem2;
             
@@ -1159,14 +1159,12 @@
                      op.value = est.id; op.text = nombreMostrado; selDest.add(op);
                 }
 
-                // Llenar selector de ensayos solo si es profe
                 if(usuarioLogueado.esProfe && selEnsayo) {
                     let op2 = document.createElement('option');
                     op2.value = est.id; op2.text = nombreMostrado; selEnsayo.add(op2);
                 }
             });
 
-            // Lógica de visualización exclusiva para IV Medio
             if (cursoID === 'curso_4m') {
                 document.getElementById('btn-menu-ensayos').style.display = 'flex';
                 if (usuarioLogueado.esProfe) {
