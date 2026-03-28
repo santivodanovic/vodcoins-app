@@ -129,7 +129,7 @@
                 <div class="menu-card" onclick="navegar('paes')"><span class="menu-icon">🎓</span>Simula PAES</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
-                <div class="menu-card" id="btn-menu-ensayos" style="display:none;" onclick="navegar('ensayos')"><span class="menu-icon">📊</span>Mis Ensayos</div>
+                <div class="menu-card" id="btn-menu-ensayos" style="display:none;" onclick="navegar('ensayos')"><span class="menu-icon">📊</span><span id="txt-boton-ensayos">Mis Ensayos</span></div>
             </div>
             
             <button class="btn-grande" style="background:#8e44ad; margin-top:15px;" onclick="navegar('misiones')">🎯 Ver Tablón de Misiones</button>
@@ -151,11 +151,6 @@
                     <select id="sel-alumno-ensayo" style="margin:5px 0; width:100%;"></select>
                     <input type="number" id="input-puntaje-ensayo" placeholder="Puntaje (ej: 750)" style="margin:5px 0; width:100%;">
                     <button onclick="guardarPuntajeEnsayo()" style="background:#8e44ad; color:white; border:none; border-radius:8px; padding:10px; width:100%; font-weight:bold; cursor:pointer; margin-top:5px;">Registrar Puntaje</button>
-                    
-                    <h4 style="margin:15px 0 5px 0; color:#8e44ad; border-top: 1px solid #dcd0ff; padding-top: 10px;">📈 Registro del Curso</h4>
-                    <div id="lista-ensayos-curso" style="max-height: 200px; overflow-y: auto; font-size: 13px; text-align: left; background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
-                        <em style="color:#aaa;">Cargando puntajes...</em>
-                    </div>
                 </div>
 
                 <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:15px;">
@@ -259,8 +254,13 @@
         </div>
 
         <div id="ensayos" class="seccion">
-            <h2 style="color:#333;">Mis Ensayos PAES M1</h2>
-            <p style="font-size:13px; color:#666;">Tu progreso personal. Este gráfico es privado y solo tú lo puedes ver.</p>
+            <h2 id="titulo-ensayos" style="color:#333;">Mis Ensayos PAES M1</h2>
+            <p id="desc-ensayos" style="font-size:13px; color:#666;">Tu progreso personal. Este gráfico es privado y solo tú lo puedes ver.</p>
+            
+            <div id="div-selector-ensayos" style="display:none; margin-bottom: 15px;">
+                <select id="sel-grafico-alumno" onchange="renderizarGraficoEnsayoSeleccionado()" style="padding: 12px; font-weight: bold; border: 2px solid #8e44ad; color: #8e44ad; font-size: 14px; margin: 0;"></select>
+            </div>
+
             <div style="background:white; padding:20px; border-radius:15px; box-shadow:var(--shadow);">
                 <div style="height: 250px; width: 100%;">
                     <canvas id="graficoEnsayosCanvas"></canvas>
@@ -612,9 +612,26 @@
             }
         };
 
-        window.renderizarGraficoEnsayos = () => {
-            if(!usuarioLogueado || usuarioLogueado.esProfe) return;
-            const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+        window.renderizarGraficoEnsayoSeleccionado = () => {
+            const idAlumno = document.getElementById('sel-grafico-alumno').value;
+            if(!idAlumno) {
+                document.getElementById('lista-puntajes-personales').innerHTML = '<em style="color:#888;">Selecciona un alumno en el menú de arriba.</em>';
+                if(chartEnsayosInstance) chartEnsayosInstance.destroy();
+                return;
+            }
+            renderizarGraficoEnsayos(idAlumno);
+        };
+
+        window.renderizarGraficoEnsayos = (idForzado = null) => {
+            let yo;
+            if (usuarioLogueado.esProfe && idForzado) {
+                yo = estudiantes.find(e => e.id == idForzado);
+            } else if (!usuarioLogueado.esProfe) {
+                yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+            } else {
+                return; 
+            }
+
             if(!yo) return;
             
             const puntajes = yo.puntajesM1 || [];
@@ -622,9 +639,12 @@
             
             const listaDiv = document.getElementById('lista-puntajes-personales');
             if(puntajes.length === 0) {
-                listaDiv.innerHTML = "<em style='color:#888;'>Aún no tienes ensayos registrados. ¡Pronto el profesor subirá tus resultados!</em>";
+                listaDiv.innerHTML = "<em style='color:#888;'>Aún no hay ensayos registrados para este alumno.</em>";
             } else {
-                let html = "<strong>Historial de puntajes M1:</strong><ul style='margin-bottom:0;'>";
+                let html = usuarioLogueado.esProfe ? 
+                    `<strong>Historial de puntajes M1 de ${yo.nombre}:</strong><ul style='margin-bottom:0;'>` : 
+                    `<strong>Tu historial de puntajes M1:</strong><ul style='margin-bottom:0;'>`;
+                
                 puntajes.forEach((p, i) => {
                     html += `<li>Ensayo ${i+1}: <b style="color:#8e44ad">${p} pts</b></li>`;
                 });
@@ -1175,25 +1195,27 @@
                 document.getElementById('btn-menu-ensayos').style.display = 'flex';
                 if (usuarioLogueado.esProfe) {
                     document.getElementById('panel-ensayos-profe').style.display = 'block';
+                    document.getElementById('txt-boton-ensayos').innerText = 'Ensayos Curso';
                     
-                    // --- NUEVA LÓGICA PARA RENDERIZAR PUNTAJES DEL CURSO ---
-                    let htmlPuntajes = '';
-                    let alumnosConPuntaje = estudiantes.filter(e => e.id !== 'profe' && e.puntajesM1 && e.puntajesM1.length > 0);
+                    // Configurar vista de profe para el tab de ensayos
+                    document.getElementById('titulo-ensayos').innerText = "Ensayos del Curso";
+                    document.getElementById('desc-ensayos').innerText = "Selecciona un alumno para ver su gráfica de progreso en PAES M1.";
+                    document.getElementById('div-selector-ensayos').style.display = 'block';
                     
-                    if (alumnosConPuntaje.length === 0) {
-                        htmlPuntajes = '<em style="color:#888;">Aún no hay puntajes registrados.</em>';
-                    } else {
-                        alumnosConPuntaje.forEach(est => {
-                            let spanPuntajes = est.puntajesM1.map((p, i) => `<span style="background:#f4ebf7; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-right:4px; font-weight:bold; font-size:11px;" title="Ensayo ${i+1}">${p}</span>`).join('');
-                            htmlPuntajes += `<div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:5px;">
-                                <b style="color:#333; display:block; margin-bottom:3px;">${est.nombre}</b>
-                                <div>${spanPuntajes}</div>
-                            </div>`;
+                    const selGrafico = document.getElementById('sel-grafico-alumno');
+                    if (selGrafico) {
+                        selGrafico.innerHTML = '<option value="">-- Seleccionar Alumno --</option>';
+                        estudiantes.forEach(est => {
+                            if (est.id !== 'profe') {
+                                let op = document.createElement('option');
+                                op.value = est.id; op.text = est.nombre || "Sin Nombre"; 
+                                selGrafico.add(op);
+                            }
                         });
                     }
-                    const contenedorPuntajes = document.getElementById('lista-ensayos-curso');
-                    if(contenedorPuntajes) contenedorPuntajes.innerHTML = htmlPuntajes;
-                    // -------------------------------------------------------
+                    
+                    document.getElementById('lista-puntajes-personales').innerHTML = '<em style="color:#888;">Selecciona un alumno en el menú de arriba.</em>';
+                    if(chartEnsayosInstance) chartEnsayosInstance.destroy();
                     
                 } else {
                     renderizarGraficoEnsayos();
