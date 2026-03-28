@@ -151,6 +151,11 @@
                     <select id="sel-alumno-ensayo" style="margin:5px 0; width:100%;"></select>
                     <input type="number" id="input-puntaje-ensayo" placeholder="Puntaje (ej: 750)" style="margin:5px 0; width:100%;">
                     <button onclick="guardarPuntajeEnsayo()" style="background:#8e44ad; color:white; border:none; border-radius:8px; padding:10px; width:100%; font-weight:bold; cursor:pointer; margin-top:5px;">Registrar Puntaje</button>
+                    
+                    <h4 style="margin:15px 0 5px 0; color:#8e44ad; border-top: 1px solid #dcd0ff; padding-top: 10px;">📈 Registro del Curso</h4>
+                    <div id="lista-ensayos-curso" style="max-height: 200px; overflow-y: auto; font-size: 13px; text-align: left; background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                        <em style="color:#aaa;">Cargando puntajes...</em>
+                    </div>
                 </div>
 
                 <div style="background:#fffcf0; padding:10px; border-radius:8px; margin-top:15px;">
@@ -382,7 +387,6 @@
         let historialLargoDB = [];
         let todasLasTransacciones = []; 
 
-        // AQUI ACTUALIZADO LOS VALORES BASE A 2 Y 3 EN JAVASCRIPT
         window.costoItem1 = 2;
         window.costoItem2 = 3;
 
@@ -1016,7 +1020,6 @@
             let precioAnterior = precioActualGlobal;
             precioActualGlobal = Math.floor(reservaMundial / circulante); 
 
-            // AQUI SE ACTUALIZO LA FORMULA MULTIPLICANDO POR 2 Y POR 3
             window.costoItem1 = Math.max(1, Math.round((2 * 11000) / precioActualGlobal));
             window.costoItem2 = Math.max(1, Math.round((3 * 11000) / precioActualGlobal));
             if(document.getElementById('lbl-precio-1')) document.getElementById('lbl-precio-1').innerText = window.costoItem1;
@@ -1172,6 +1175,26 @@
                 document.getElementById('btn-menu-ensayos').style.display = 'flex';
                 if (usuarioLogueado.esProfe) {
                     document.getElementById('panel-ensayos-profe').style.display = 'block';
+                    
+                    // --- NUEVA LÓGICA PARA RENDERIZAR PUNTAJES DEL CURSO ---
+                    let htmlPuntajes = '';
+                    let alumnosConPuntaje = estudiantes.filter(e => e.id !== 'profe' && e.puntajesM1 && e.puntajesM1.length > 0);
+                    
+                    if (alumnosConPuntaje.length === 0) {
+                        htmlPuntajes = '<em style="color:#888;">Aún no hay puntajes registrados.</em>';
+                    } else {
+                        alumnosConPuntaje.forEach(est => {
+                            let spanPuntajes = est.puntajesM1.map((p, i) => `<span style="background:#f4ebf7; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-right:4px; font-weight:bold; font-size:11px;" title="Ensayo ${i+1}">${p}</span>`).join('');
+                            htmlPuntajes += `<div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:5px;">
+                                <b style="color:#333; display:block; margin-bottom:3px;">${est.nombre}</b>
+                                <div>${spanPuntajes}</div>
+                            </div>`;
+                        });
+                    }
+                    const contenedorPuntajes = document.getElementById('lista-ensayos-curso');
+                    if(contenedorPuntajes) contenedorPuntajes.innerHTML = htmlPuntajes;
+                    // -------------------------------------------------------
+                    
                 } else {
                     renderizarGraficoEnsayos();
                 }
