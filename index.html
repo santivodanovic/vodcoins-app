@@ -86,6 +86,16 @@
         </div>
     </div>
 
+    <div id="modal-voucher" class="full-screen-bg" style="display: none; z-index: 2000;">
+        <div class="caja-central">
+            <button onclick="document.getElementById('modal-voucher').style.display='none'" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver</button>
+            <h3 style="margin: 0 0 15px 0; color: #333;">🎟️ Canjear Voucher</h3>
+            <p style="font-size:12px; color:#666;">Ingresa el código alfanumérico de 8 caracteres que recibiste en clases.</p>
+            <input type="text" id="input-voucher" placeholder="EJ: A1B2C3D4" maxlength="8" style="text-transform: uppercase; font-size: 20px; letter-spacing: 4px; font-weight: bold; color: #8e44ad;">
+            <button class="btn-grande" style="background: #8e44ad;" onclick="canjearVoucher()">Canjear Monedas</button>
+        </div>
+    </div>
+
     <div id="modal-historial" class="full-screen-bg" style="display: none; z-index: 2000;">
         <div class="caja-central" style="max-height: 80vh; display: flex; flex-direction: column;">
             <button onclick="cerrarHistorial()" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px; text-align: left;">← Volver a la lista</button>
@@ -126,13 +136,14 @@
                 <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Bolsa VOD</div>
                 <div class="menu-card" onclick="document.getElementById('modal-inversiones').style.display='flex'; renderizarInversion();"><span class="menu-icon">🏦</span>Banco</div>
                 <div class="menu-card" onclick="navegar('tienda')"><span class="menu-icon">🛍️</span>Tienda</div>
-                <div class="menu-card" onclick="navegar('paes')"><span class="menu-icon">🎓</span>Simula PAES</div>
+                <div class="menu-card" onclick="document.getElementById('modal-voucher').style.display='flex'"><span class="menu-icon">🎟️</span>Canjear</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
                 <div class="menu-card" id="btn-menu-ensayos" style="display:none;" onclick="navegar('ensayos')"><span class="menu-icon">📊</span><span id="txt-boton-ensayos">Mis Ensayos</span></div>
             </div>
             
-            <button class="btn-grande" style="background:#8e44ad; margin-top:15px;" onclick="navegar('misiones')">🎯 Ver Tablón de Misiones</button>
+            <button class="btn-grande" style="background:#8e44ad; margin-top:15px;" onclick="navegar('paes')">🎓 Simulador Ponderación PAES</button>
+            <button class="btn-grande" style="background:#ff9f43; margin-top:10px;" onclick="navegar('misiones')">🎯 Ver Tablón de Misiones</button>
             <button class="btn-grande" style="background:#ff6b6b; margin-top:10px;" onclick="location.reload()">🔒 Cerrar Sesión</button>
 
             <div id="zona-profe" class="panel-admin">
@@ -144,6 +155,21 @@
                     <div id="lista-notificaciones" style="max-height: 150px; overflow-y: auto; font-size: 13px; text-align: left;">
                         <em style="color:#aaa;">Cargando notificaciones...</em>
                     </div>
+                </div>
+
+                <div style="background:#f4fcf7; padding:15px; border-radius:8px; margin-top:15px; border-left: 5px solid #2ecc71;">
+                    <h4 style="margin:0 0 5px 0; color:#27ae60;">🎟️ Generar Vouchers</h4>
+                    <p style="font-size: 11px; color:#555; margin-top: 0;">Crea códigos únicos para imprimir o proyectar. Son de un solo uso.</p>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <select id="voucher-valor" style="margin:0; flex:1;">
+                            <option value="1">1 VOD</option>
+                            <option value="2">2 VOD</option>
+                            <option value="5">5 VOD</option>
+                        </select>
+                        <input type="number" id="voucher-cantidad" placeholder="Cantidad" style="margin:0; flex:1;" min="1" max="50">
+                    </div>
+                    <button onclick="generarVouchers()" style="background:#2ecc71; color:white; border:none; border-radius:8px; padding:10px; width:100%; font-weight:bold; cursor:pointer; margin-top:10px;">Crear Códigos</button>
+                    <textarea id="voucher-salida" rows="5" readonly style="margin-top:10px; font-size:13px; width: 100%; display:none; border: 1px dashed #2ecc71; resize: none;"></textarea>
                 </div>
 
                 <div id="panel-ensayos-profe" style="display:none; background:#f4ebf7; padding:15px; border-radius:8px; margin-top:15px; border-left: 5px solid #8e44ad;">
@@ -589,6 +615,92 @@
             let navBtn = document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion));
             if(navBtn) navBtn.classList.add('active-nav');
         }
+
+        // --- SISTEMA DE VOUCHERS ---
+        window.generarVouchers = async () => {
+            const valor = parseInt(document.getElementById('voucher-valor').value);
+            const cantidad = parseInt(document.getElementById('voucher-cantidad').value);
+
+            if(isNaN(cantidad) || cantidad <= 0 || cantidad > 50) {
+                return alert("Ingresa una cantidad válida (máximo 50 a la vez para no saturar).");
+            }
+
+            let codigosGenerados = [];
+            const promesas = [];
+
+            const txtSalida = document.getElementById('voucher-salida');
+            txtSalida.style.display = 'block';
+            txtSalida.value = "Generando códigos y conectando con Firebase...";
+
+            for(let i=0; i<cantidad; i++) {
+                // Genera string alfanumérico aleatorio de 8 caracteres
+                let codigo = Math.random().toString(36).substring(2, 10).toUpperCase();
+                codigosGenerados.push(codigo);
+                promesas.push(setDoc(doc(db, "vouchers_" + cursoID, codigo), { valor: valor, activo: true }));
+            }
+
+            try {
+                await Promise.all(promesas);
+                let textoMostrar = `--- VOUCHERS DE ${valor} VOD ---\n` + codigosGenerados.join('\n');
+                txtSalida.value = textoMostrar;
+                alert(`✅ Se han generado ${cantidad} códigos de ${valor} VOD con éxito.`);
+            } catch(e) {
+                txtSalida.value = "Error en la generación.";
+                alert("Hubo un error al generar los códigos: " + e);
+            }
+        };
+
+        window.canjearVoucher = async () => {
+            if(usuarioLogueado.esProfe) return alert("El profesor no puede canjear vouchers.");
+            
+            const inputStr = document.getElementById('input-voucher').value.trim().toUpperCase();
+            if(inputStr.length !== 8) return alert("El código debe tener exactamente 8 caracteres.");
+
+            const voucherRef = doc(db, "vouchers_" + cursoID, inputStr);
+            const yoRef = doc(db, cursoID, usuarioLogueado.id.toString());
+
+            try {
+                await runTransaction(db, async (t) => {
+                    const docV = await t.get(voucherRef);
+                    if (!docV.exists() || !docV.data().activo) {
+                        throw "Código inválido o ya ha sido utilizado.";
+                    }
+
+                    const docYo = await t.get(yoRef);
+                    let miSaldo = docYo.data().saldo;
+                    let valorVoucher = docV.data().valor;
+
+                    // Le sumamos el saldo al alumno
+                    t.update(yoRef, { saldo: miSaldo + valorVoucher });
+                    
+                    // Borramos el voucher para que nadie más lo pueda usar
+                    t.delete(voucherRef);
+
+                    return valorVoucher;
+                }).then(async (valorGanado) => {
+                    // Registramos en el log general y sumamos al circulante
+                    await addDoc(collection(db, "compras_" + cursoID), {
+                        alumno: usuarioLogueado.nombre,
+                        tipo: "canje_voucher",
+                        item: "Voucher de Clase",
+                        precio: valorGanado,
+                        timestamp: new Date(),
+                        oculto: false
+                    });
+
+                    let circulante = estudiantes.reduce((total, e) => (e.id !== 'profe' ? total + (e.saldo || 0) : total), 0);
+                    let nuevoCirculante = circulante + valorGanado; 
+                    await registrarCambio24h(Math.floor(reservaMundial / nuevoCirculante));
+
+                    alert(`🎉 ¡Éxito total! Has canjeado un voucher por ${valorGanado} VOD. El saldo ya está en tu cuenta.`);
+                    document.getElementById('input-voucher').value = '';
+                    document.getElementById('modal-voucher').style.display = 'none';
+                });
+            } catch (error) {
+                alert("❌ " + error);
+            }
+        };
+        // -----------------------------
 
         window.guardarPuntajeEnsayo = async () => {
             const idAlumno = document.getElementById('sel-alumno-ensayo').value;
@@ -1159,7 +1271,7 @@
                     todasLasTransacciones.forEach(t => {
                         if (t.alumno === est.nombre) {
                             if (['compra', 'inversion', 'transferencia'].includes(t.tipo)) auditBalance -= t.precio;
-                            if (t.tipo === 'cobro_inversion') auditBalance += t.precio;
+                            if (t.tipo === 'cobro_inversion' || t.tipo === 'canje_voucher') auditBalance += t.precio;
                         }
                         if (t.item === est.nombre) {
                             if (['transferencia', 'emision_directa'].includes(t.tipo)) auditBalance += t.precio;
@@ -1197,7 +1309,6 @@
                     document.getElementById('panel-ensayos-profe').style.display = 'block';
                     document.getElementById('txt-boton-ensayos').innerText = 'Ensayos Curso';
                     
-                    // Configurar vista de profe para el tab de ensayos
                     document.getElementById('titulo-ensayos').innerText = "Ensayos del Curso";
                     document.getElementById('desc-ensayos').innerText = "Selecciona un alumno para ver su gráfica de progreso en PAES M1.";
                     document.getElementById('div-selector-ensayos').style.display = 'block';
@@ -1257,6 +1368,12 @@
                             html += `
                                 <div class="movimiento-item">
                                     <div><span>🟢</span> Cobró <b>${data.item}</b><span class="movimiento-fecha">${time}</span></div>
+                                    <div style="color: #2ecc71; font-weight: bold;">+${data.precio} VOD</div>
+                                </div>`;
+                        } else if (data.tipo === 'canje_voucher') {
+                            html += `
+                                <div class="movimiento-item">
+                                    <div><span>🎟️</span> Canjeó <b>Voucher</b><span class="movimiento-fecha">${time}</span></div>
                                     <div style="color: #2ecc71; font-weight: bold;">+${data.precio} VOD</div>
                                 </div>`;
                         }
@@ -1321,6 +1438,8 @@
                         accionTxt = "invirtió en"; colorItem = "#3498db";
                     } else if (data.tipo === 'cobro_inversion') {
                         accionTxt = "cobró su"; colorItem = "#00a86b"; textoPrecio = `+${Math.abs(data.precio)} VOD`; colorPrecio = "#00a86b";
+                    } else if (data.tipo === 'canje_voucher') {
+                        accionTxt = "canjeó un"; colorItem = "#8e44ad"; textoPrecio = `+${Math.abs(data.precio)} VOD`; colorPrecio = "#00a86b";
                     }
 
                     htmlCompras += `
