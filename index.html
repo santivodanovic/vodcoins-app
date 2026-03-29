@@ -159,7 +159,7 @@
 
                 <div style="background:#f4fcf7; padding:15px; border-radius:8px; margin-top:15px; border-left: 5px solid #2ecc71;">
                     <h4 style="margin:0 0 5px 0; color:#27ae60;">🎟️ Generar Vouchers</h4>
-                    <p style="font-size: 11px; color:#555; margin-top: 0;">Crea códigos únicos para imprimir o proyectar. Son de un solo uso.</p>
+                    <p style="font-size: 11px; color:#555; margin-top: 0;">Crea códigos únicos para imprimir o proyectar. ¡Son universales para todos tus cursos!</p>
                     <div style="display:flex; gap:10px; margin-top:10px;">
                         <select id="voucher-valor" style="margin:0; flex:1;">
                             <option value="1">1 VOD</option>
@@ -616,7 +616,7 @@
             if(navBtn) navBtn.classList.add('active-nav');
         }
 
-        // --- SISTEMA DE VOUCHERS ---
+        // --- SISTEMA DE VOUCHERS GLOBALES ---
         window.generarVouchers = async () => {
             const valor = parseInt(document.getElementById('voucher-valor').value);
             const cantidad = parseInt(document.getElementById('voucher-cantidad').value);
@@ -636,7 +636,8 @@
                 // Genera string alfanumérico aleatorio de 8 caracteres
                 let codigo = Math.random().toString(36).substring(2, 10).toUpperCase();
                 codigosGenerados.push(codigo);
-                promesas.push(setDoc(doc(db, "vouchers_" + cursoID, codigo), { valor: valor, activo: true }));
+                // Ahora se guardan en la colección universal "vouchers_global"
+                promesas.push(setDoc(doc(db, "vouchers_global", codigo), { valor: valor, activo: true }));
             }
 
             try {
@@ -656,7 +657,8 @@
             const inputStr = document.getElementById('input-voucher').value.trim().toUpperCase();
             if(inputStr.length !== 8) return alert("El código debe tener exactamente 8 caracteres.");
 
-            const voucherRef = doc(db, "vouchers_" + cursoID, inputStr);
+            // Ahora busca en la colección universal "vouchers_global"
+            const voucherRef = doc(db, "vouchers_global", inputStr);
             const yoRef = doc(db, cursoID, usuarioLogueado.id.toString());
 
             try {
