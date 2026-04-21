@@ -617,6 +617,17 @@
         }
 
         // --- SISTEMA DE VOUCHERS GLOBALES ---
+        
+        // Nueva función auxiliar para crear códigos sin letras ni números confusos
+        function generarCodigoSeguro() {
+            const caracteres = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+            let codigo = '';
+            for (let i = 0; i < 8; i++) {
+                codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return codigo;
+        }
+
         window.generarVouchers = async () => {
             const valor = parseInt(document.getElementById('voucher-valor').value);
             const cantidad = parseInt(document.getElementById('voucher-cantidad').value);
@@ -633,10 +644,8 @@
             txtSalida.value = "Generando códigos y conectando con Firebase...";
 
             for(let i=0; i<cantidad; i++) {
-                // Genera string alfanumérico aleatorio de 8 caracteres
-                let codigo = Math.random().toString(36).substring(2, 10).toUpperCase();
+                let codigo = generarCodigoSeguro(); // USO DE LA NUEVA FUNCIÓN
                 codigosGenerados.push(codigo);
-                // Ahora se guardan en la colección universal "vouchers_global"
                 promesas.push(setDoc(doc(db, "vouchers_global", codigo), { valor: valor, activo: true }));
             }
 
@@ -657,30 +666,30 @@
             const inputStr = document.getElementById('input-voucher').value.trim().toUpperCase();
             if(inputStr.length !== 8) return alert("El código debe tener exactamente 8 caracteres.");
 
-            // Ahora busca en la colección universal "vouchers_global"
             const voucherRef = doc(db, "vouchers_global", inputStr);
             const yoRef = doc(db, cursoID, usuarioLogueado.id.toString());
 
             try {
                 await runTransaction(db, async (t) => {
                     const docV = await t.get(voucherRef);
-                    if (!docV.exists() || !docV.data().activo) {
-                        throw "Código inválido o ya ha sido utilizado.";
+                    
+                    // SEPARACIÓN DE ERRORES
+                    if (!docV.exists()) {
+                        throw "El código no existe. Revisa si copiaste mal una letra o número.";
+                    }
+                    if (!docV.data().activo) {
+                        throw "Este código ya fue utilizado por alguien más.";
                     }
 
                     const docYo = await t.get(yoRef);
                     let miSaldo = docYo.data().saldo;
                     let valorVoucher = docV.data().valor;
 
-                    // Le sumamos el saldo al alumno
                     t.update(yoRef, { saldo: miSaldo + valorVoucher });
-                    
-                    // Borramos el voucher para que nadie más lo pueda usar
                     t.delete(voucherRef);
 
                     return valorVoucher;
                 }).then(async (valorGanado) => {
-                    // Registramos en el log general y sumamos al circulante
                     await addDoc(collection(db, "compras_" + cursoID), {
                         alumno: usuarioLogueado.nombre,
                         tipo: "canje_voucher",
