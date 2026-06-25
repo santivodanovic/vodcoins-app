@@ -141,6 +141,16 @@
         </div>
     </div>
 
+    <div id="modal-claves" class="full-screen-bg" style="display: none; z-index: 2000;">
+        <div class="caja-central" style="max-height: 80vh; display: flex; flex-direction: column;">
+            <button onclick="document.getElementById('modal-claves').style.display='none'" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px; text-align: left;">← Volver</button>
+            <h3 style="margin: 0 0 10px 0; color: #333;">🔑 Claves del Curso</h3>
+            <div id="contenido-claves" style="overflow-y: auto; flex-grow: 1; background: #f9f9f9; border-radius: 10px; padding: 15px; border: 1px solid #eee; text-align: left; font-size: 13px; font-family: monospace; line-height: 1.6;">
+                Cargando...
+            </div>
+        </div>
+    </div>
+
     <div class="container" id="app-container">
         <div class="user-header">
             <div>
@@ -442,7 +452,7 @@
         let historial24hDB = [];
         let historialLargoDB = [];
         let todasLasTransacciones = []; 
-        let html5QrCode = null; // Variable global para el escáner QR
+        let html5QrCode = null;
 
         window.costoItem1 = 2;
         window.costoItem2 = 3;
@@ -718,17 +728,14 @@
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
             html5QrCode.start(
-                { facingMode: "environment" }, // Intenta usar la cámara trasera por defecto
+                { facingMode: "environment" }, 
                 config,
                 (decodedText, decodedResult) => {
-                    // Éxito al leer el QR
                     document.getElementById('input-voucher').value = decodedText.toUpperCase().trim();
                     detenerEscaner();
-                    canjearVoucher(); // Ejecuta el canje automáticamente
+                    canjearVoucher(); 
                 },
-                (errorMessage) => {
-                    // Se ignora: ocurre constantemente cuando no detecta un QR en el frame actual
-                }
+                (errorMessage) => {}
             ).catch(err => {
                 alert("No se pudo iniciar la cámara. Asegúrate de dar permisos o revisa tu conexión segura (HTTPS).");
                 detenerEscaner();
@@ -843,7 +850,6 @@
                 alert("❌ " + error);
             }
         };
-        // -----------------------------
 
         window.guardarPuntajeEnsayo = async () => {
             const idAlumno = document.getElementById('sel-alumno-ensayo').value;
@@ -989,7 +995,6 @@
                             activa: true
                         });
 
-                        // Enviar notificación a todos los estudiantes
                         let updatePromises = [];
                         estudiantes.forEach(est => {
                             if(est.id !== 'profe') {
@@ -1910,10 +1915,16 @@
             } catch (error) { alert("❌ Hubo un problema de conexión: " + error); }
         };
 
+        // --- SOLUCIÓN APLICADA AQUÍ: NUEVA FUNCIÓN PARA MOSTRAR CLAVES EN MODAL ---
         window.mostrarClaves = () => {
-            let txt = "CLAVES:\n";
-            estudiantes.forEach(e => txt += `${e.nombre}: ${decodePIN(e.pin)}\n`);
-            alert(txt);
+            let html = "";
+            estudiantes.forEach(e => {
+                if (e.id !== 'profe') {
+                    html += `<div style="border-bottom:1px solid #ddd; padding:5px 0;"><b>${e.nombre}</b><br><span style="color:#8e44ad; font-weight:bold; font-size:15px;">${decodePIN(e.pin)}</span></div>`;
+                }
+            });
+            document.getElementById('contenido-claves').innerHTML = html;
+            document.getElementById('modal-claves').style.display = 'flex';
         };
 
         window.calcularPAES = () => {
