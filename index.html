@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
         :root { --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --shadow: 0 8px 30px rgba(0,0,0,0.12); --primary: #4a90e2; --fintual-green: #00a86b; --fintual-red: #e74c3c; }
@@ -58,6 +59,11 @@
         .movimiento-item:last-child { border-bottom: none; }
         .movimiento-fecha { font-size: 10px; color: #999; display: block; margin-top: 3px; }
 
+        /* Estilo para el escáner QR */
+        #qr-reader { border: 2px solid #8e44ad !important; border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
+        #qr-reader__scan_region { background: #f9f9f9; }
+        #qr-reader__dashboard_section_csr button { background: #4a90e2; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -88,11 +94,24 @@
     </div>
 
     <div id="modal-voucher" class="full-screen-bg" style="display: none; z-index: 2000;">
-        <div class="caja-central">
-            <button onclick="document.getElementById('modal-voucher').style.display='none'" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver</button>
-            <h3 style="margin: 0 0 15px 0; color: #333;">🎟️ Canjear Voucher</h3>
-            <p style="font-size:12px; color:#666;">Ingresa el código alfanumérico de 8 caracteres que recibiste en clases.</p>
-            <input type="text" id="input-voucher" placeholder="EJ: A1B2C3D4" maxlength="8" style="text-transform: uppercase; font-size: 20px; letter-spacing: 4px; font-weight: bold; color: #8e44ad;">
+        <div class="caja-central" style="max-height: 90vh; overflow-y: auto;">
+            <button onclick="cerrarModalVoucher()" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px;">← Volver</button>
+            <h3 style="margin: 0 0 10px 0; color: #333;">🎟️ Canjear Voucher</h3>
+            
+            <p style="font-size:12px; color:#666; margin-bottom: 15px;">Apunta con la cámara al código QR de tu voucher o ingresa el código manual abajo.</p>
+
+            <div id="qr-reader" style="width: 100%; display: none;"></div>
+            
+            <button id="btn-iniciar-escaner" class="btn-grande" style="background: #34495e; margin-bottom: 10px; margin-top: 0;" onclick="iniciarEscaner()">📷 Escanear QR</button>
+            <button id="btn-detener-escaner" class="btn-grande" style="background: #e74c3c; margin-bottom: 10px; margin-top: 0; display: none;" onclick="detenerEscaner()">Detener Cámara</button>
+
+            <div style="display:flex; align-items:center; margin: 15px 0;">
+                <div style="flex:1; height:1px; background:#ddd;"></div>
+                <div style="padding:0 10px; font-size:11px; color:#aaa; font-weight: bold;">O INGRESA MANUALMENTE</div>
+                <div style="flex:1; height:1px; background:#ddd;"></div>
+            </div>
+
+            <input type="text" id="input-voucher" placeholder="EJ: A1B2C3D4" maxlength="8" style="text-transform: uppercase; font-size: 20px; letter-spacing: 4px; font-weight: bold; color: #8e44ad; margin-top: 0;">
             <button class="btn-grande" style="background: #8e44ad;" onclick="canjearVoucher()">Canjear Monedas</button>
         </div>
     </div>
@@ -137,7 +156,7 @@
                 <div class="menu-card" onclick="navegar('mercado')"><span class="menu-icon">📉</span>Bolsa VOD</div>
                 <div class="menu-card" onclick="document.getElementById('modal-inversiones').style.display='flex'; renderizarInversion();"><span class="menu-icon">🏦</span>Banco</div>
                 <div class="menu-card" onclick="navegar('tienda')"><span class="menu-icon">🛍️</span>Tienda</div>
-                <div class="menu-card" onclick="document.getElementById('modal-voucher').style.display='flex'"><span class="menu-icon">🎟️</span>Canjear</div>
+                <div class="menu-card" onclick="abrirModalVoucher()"><span class="menu-icon">🎟️</span>Canjear</div>
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
                 <div class="menu-card" id="btn-menu-ensayos" style="display:none;" onclick="navegar('ensayos')"><span class="menu-icon">📊</span><span id="txt-boton-ensayos">Mis Ensayos</span></div>
@@ -413,6 +432,7 @@
         let historial24hDB = [];
         let historialLargoDB = [];
         let todasLasTransacciones = []; 
+        let html5QrCode = null; // Variable global para el escáner QR
 
         window.costoItem1 = 2;
         window.costoItem2 = 3;
@@ -666,7 +686,55 @@
 
         // --- SISTEMA DE VOUCHERS GLOBALES ---
         
-        // Nueva función auxiliar para crear códigos sin letras ni números confusos
+        window.abrirModalVoucher = () => {
+            document.getElementById('modal-voucher').style.display = 'flex';
+        }
+
+        window.cerrarModalVoucher = () => {
+            detenerEscaner();
+            document.getElementById('modal-voucher').style.display = 'none';
+        }
+
+        window.iniciarEscaner = () => {
+            document.getElementById('qr-reader').style.display = 'block';
+            document.getElementById('btn-iniciar-escaner').style.display = 'none';
+            document.getElementById('btn-detener-escaner').style.display = 'block';
+
+            html5QrCode = new Html5Qrcode("qr-reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start(
+                { facingMode: "environment" }, // Intenta usar la cámara trasera por defecto
+                config,
+                (decodedText, decodedResult) => {
+                    // Éxito al leer el QR
+                    document.getElementById('input-voucher').value = decodedText.toUpperCase().trim();
+                    detenerEscaner();
+                    canjearVoucher(); // Ejecuta el canje automáticamente
+                },
+                (errorMessage) => {
+                    // Se ignora: ocurre constantemente cuando no detecta un QR en el frame actual
+                }
+            ).catch(err => {
+                alert("No se pudo iniciar la cámara. Asegúrate de dar permisos o revisa tu conexión segura (HTTPS).");
+                detenerEscaner();
+            });
+        };
+
+        window.detenerEscaner = () => {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                }).catch(err => {
+                    console.log("Error al detener el escáner", err);
+                });
+            }
+            document.getElementById('qr-reader').style.display = 'none';
+            document.getElementById('btn-iniciar-escaner').style.display = 'block';
+            document.getElementById('btn-detener-escaner').style.display = 'none';
+        };
+
         function generarCodigoSeguro() {
             const caracteres = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
             let codigo = '';
@@ -692,7 +760,7 @@
             txtSalida.value = "Generando códigos y conectando con Firebase...";
 
             for(let i=0; i<cantidad; i++) {
-                let codigo = generarCodigoSeguro(); // USO DE LA NUEVA FUNCIÓN
+                let codigo = generarCodigoSeguro(); 
                 codigosGenerados.push(codigo);
                 promesas.push(setDoc(doc(db, "vouchers_global", codigo), { valor: valor, activo: true }));
             }
@@ -721,7 +789,6 @@
                 await runTransaction(db, async (t) => {
                     const docV = await t.get(voucherRef);
                     
-                    // SEPARACIÓN DE ERRORES
                     if (!docV.exists()) {
                         throw "El código no existe. Revisa si copiaste mal una letra o número.";
                     }
@@ -753,7 +820,7 @@
 
                     alert(`🎉 ¡Éxito total! Has canjeado un voucher por ${valorGanado} VOD. El saldo ya está en tu cuenta.`);
                     document.getElementById('input-voucher').value = '';
-                    document.getElementById('modal-voucher').style.display = 'none';
+                    cerrarModalVoucher();
                 });
             } catch (error) {
                 alert("❌ " + error);
