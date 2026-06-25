@@ -30,7 +30,7 @@
         .saldo-badge { background: #d4fc79; color: #2e7d32; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 1.2em; }
         
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .menu-card { background: white; padding: 15px 10px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; font-size: 13px; color: #555; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .menu-card { background: white; padding: 15px 10px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; font-size: 13px; color: #555; transition: transform 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         .menu-card:active { transform: scale(0.95); }
         .menu-icon { font-size: 26px; display: block; margin-bottom: 5px; }
 
@@ -160,6 +160,10 @@
                 <div class="menu-card" onclick="navegar('transferencias')"><span class="menu-icon">💸</span>Transferir</div>
                 <div class="menu-card" onclick="navegar('lista')"><span class="menu-icon">👥</span>Curso</div>
                 <div class="menu-card" id="btn-menu-ensayos" style="display:none;" onclick="navegar('ensayos')"><span class="menu-icon">📊</span><span id="txt-boton-ensayos">Mis Ensayos</span></div>
+                <div class="menu-card" onclick="navegar('notificaciones')">
+                    <span class="menu-icon">🔔</span>Notificaciones
+                    <span id="badge-notif" style="background:#e74c3c; color:white; border-radius:50%; padding:2px 6px; position:absolute; top:5px; right:5px; font-size:10px; display:none; font-weight:bold;">0</span>
+                </div>
             </div>
             
             <button class="btn-grande" style="background:#8e44ad; margin-top:15px;" onclick="navegar('paes')">🎓 Simulador Ponderación PAES</button>
@@ -219,6 +223,12 @@
                 <button onclick="reiniciarSaldosSinClaves()" style="background:#f39c12; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:5px;">♻️ Reiniciar Economía (Mantener Claves)</button>
                 <button onclick="mostrarClaves()" style="background:#95a5a6; color:white; padding:10px; border:none; border-radius:8px; width:100%; margin-top:5px;">🔑 Ver Claves</button>
             </div>
+        </div>
+
+        <div id="notificaciones" class="seccion">
+            <h2 style="color:#333;">🔔 Centro de Notificaciones</h2>
+            <div id="lista-mis-notificaciones" style="background:white; padding:15px; border-radius:15px; box-shadow:var(--shadow); max-height:400px; overflow-y:auto;">
+                </div>
         </div>
 
         <div id="mercado" class="seccion">
@@ -402,7 +412,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, runTransaction, query, orderBy, limit, addDoc } 
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, getDoc, getDocs, runTransaction, query, orderBy, limit, addDoc, arrayUnion } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -682,6 +692,10 @@
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
             let navBtn = document.getElementById('nav-'+ (seccion=='transferencias'?'transf':seccion));
             if(navBtn) navBtn.classList.add('active-nav');
+
+            if(seccion === 'notificaciones') {
+                marcarNotificacionesLeidas();
+            }
         }
 
         // --- SISTEMA DE VOUCHERS GLOBALES ---
@@ -799,8 +813,11 @@
                     const docYo = await t.get(yoRef);
                     let miSaldo = docYo.data().saldo;
                     let valorVoucher = docV.data().valor;
+                    let myNotifs = docYo.data().notificaciones || [];
+                    
+                    myNotifs.push({ id: Date.now(), msg: 'Has canjeado un voucher por ' + valorVoucher + ' VOD', leida: false, fecha: Date.now(), icono: '🎟️' });
 
-                    t.update(yoRef, { saldo: miSaldo + valorVoucher });
+                    t.update(yoRef, { saldo: miSaldo + valorVoucher, notificaciones: myNotifs });
                     t.delete(voucherRef);
 
                     return valorVoucher;
@@ -971,6 +988,24 @@
                             recompensa: rec, 
                             activa: true
                         });
+
+                        // Enviar notificación a todos los estudiantes
+                        let updatePromises = [];
+                        estudiantes.forEach(est => {
+                            if(est.id !== 'profe') {
+                                updatePromises.push(updateDoc(doc(db, cursoID, est.id.toString()), {
+                                    notificaciones: arrayUnion({ 
+                                        id: Date.now() + Math.random(), 
+                                        msg: '¡Nueva misión en el tablón! Recompensa: ' + rec + ' VOD', 
+                                        leida: false, 
+                                        fecha: Date.now(), 
+                                        icono: '🎯' 
+                                    })
+                                }));
+                            }
+                        });
+                        await Promise.all(updatePromises);
+
                         alert("✅ Misión publicada con éxito!");
                         fileInput.value = "";
                         document.getElementById('recompensa-mision').value = "";
@@ -1057,6 +1092,7 @@
             try {
                 let updates = { saldo: yo.saldo - monto };
                 updates[campo] = { activa: true, monto: monto, retorno: retorno, fecha_fin: fechaFin };
+                updates.notificaciones = arrayUnion({ id: Date.now(), msg: 'Depositaste ' + monto + ' VOD a ' + dias + ' días.', leida: false, fecha: Date.now(), icono: '🏦' });
 
                 await updateDoc(doc(db, cursoID, yo.id.toString()), updates);
 
@@ -1351,6 +1387,84 @@
             });
         }
 
+        window.renderizarNotificaciones = () => {
+            const contenedor = document.getElementById('lista-mis-notificaciones');
+            if(!usuarioLogueado || usuarioLogueado.esProfe) {
+                contenedor.innerHTML = '<p style="color:#666;">El profesor utiliza el panel de Registro de Movimientos para auditoría.</p>';
+                return;
+            }
+
+            const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+            if(!yo) return;
+
+            let todas = [];
+            
+            if(yo.inv10 && yo.inv10.activa && yo.inv10.fecha_fin <= Date.now()) {
+                todas.push({ dinamica: true, msg: `¡Tu Fondo Corto Plazo está listo para cobrar! (${yo.inv10.retorno} VOD)`, icono: '💰', fecha: Date.now() });
+            }
+            if(yo.inv30 && yo.inv30.activa && yo.inv30.fecha_fin <= Date.now()) {
+                todas.push({ dinamica: true, msg: `¡Tu Fondo Largo Plazo está listo para cobrar! (${yo.inv30.retorno} VOD)`, icono: '💰', fecha: Date.now() });
+            }
+
+            if(yo.notificaciones && yo.notificaciones.length > 0) {
+                todas = todas.concat(yo.notificaciones);
+            }
+
+            todas.sort((a,b) => b.fecha - a.fecha);
+
+            if(todas.length === 0) {
+                contenedor.innerHTML = '<em style="color:#aaa; text-align:center; display:block;">No tienes notificaciones recientes.</em>';
+                actualizarBadgeNotificaciones(todas);
+                return;
+            }
+
+            let html = '';
+            todas.forEach(n => {
+                let bgColor = n.leida ? '#f9f9f9' : '#e8f4fd';
+                let fw = n.leida ? 'normal' : 'bold';
+                let timeStr = new Date(n.fecha).toLocaleDateString() + ' ' + new Date(n.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                let clickAction = n.dinamica ? 'document.getElementById(`modal-inversiones`).style.display=`flex`; renderizarInversion();' : '';
+
+                html += `
+                    <div style="background:${bgColor}; padding:10px 15px; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; cursor:${n.dinamica ? 'pointer':'default'};" onclick="${clickAction}">
+                        <div style="font-size:24px; margin-right:15px;">${n.icono || '🔔'}</div>
+                        <div style="flex:1; text-align:left;">
+                            <div style="font-size:13px; font-weight:${fw}; color:#333;">${n.msg}</div>
+                            <div style="font-size:10px; color:#888; margin-top:3px;">${timeStr}</div>
+                        </div>
+                        ${!n.leida && !n.dinamica ? '<div style="width:8px; height:8px; background:#e74c3c; border-radius:50%;"></div>' : ''}
+                    </div>
+                `;
+            });
+
+            contenedor.innerHTML = html;
+            actualizarBadgeNotificaciones(todas);
+        };
+
+        window.actualizarBadgeNotificaciones = (todas) => {
+            const badge = document.getElementById('badge-notif');
+            if(!badge) return;
+            let count = todas.filter(n => !n.leida || n.dinamica).length;
+            if(count > 0) {
+                badge.innerText = count;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        };
+
+        window.marcarNotificacionesLeidas = async () => {
+            if(!usuarioLogueado || usuarioLogueado.esProfe) return;
+            const yo = estudiantes.find(e => e.id == usuarioLogueado.id);
+            if(yo && yo.notificaciones) {
+                let hayNoLeidas = yo.notificaciones.some(n => !n.leida);
+                if(hayNoLeidas) {
+                    let actualizadas = yo.notificaciones.map(n => ({...n, leida: true}));
+                    await updateDoc(doc(db, cursoID, yo.id.toString()), { notificaciones: actualizadas });
+                }
+            }
+        };
+
         function actualizarUI() {
             if(!usuarioLogueado) return;
 
@@ -1374,6 +1488,7 @@
                     document.getElementById('lbl-nombre').textContent = yo.nombre;
                     document.getElementById('lbl-saldo').textContent = yo.saldo + " VOD";
                 }
+                renderizarNotificaciones();
             }
 
             const divLista = document.getElementById('contenedor-lista');
@@ -1602,7 +1717,17 @@
             try {
                 if(usuarioLogueado.esProfe) {
                     const dDoc = await getDoc(destinoRef);
-                    await updateDoc(destinoRef, { saldo: dDoc.data().saldo + monto });
+                    await updateDoc(destinoRef, { 
+                        saldo: dDoc.data().saldo + monto,
+                        notificaciones: arrayUnion({ 
+                            id: Date.now(), 
+                            msg: (monto > 0 ? 'El profesor te inyectó ' : 'El profesor te multó con ') + Math.abs(monto) + ' VOD', 
+                            leida: false, 
+                            fecha: Date.now(), 
+                            icono: monto > 0 ? '👨‍🏫' : '🚨' 
+                        })
+                    });
+                    
                     let circulante = estudiantes.reduce((t, e) => (e.id !== 'profe' ? t + (e.saldo || 0) : t), 0);
                     let nuevoCirculante = circulante + monto;
                     if(nuevoCirculante <= 0) nuevoCirculante = DATA_BASE[cursoID] ? DATA_BASE[cursoID].length : 1;
@@ -1619,8 +1744,18 @@
                         const oDoc = await t.get(origenRef);
                         const dDoc = await t.get(destinoRef);
                         if(oDoc.data().saldo < monto) throw "Saldo insuficiente";
+                        
+                        let notifs = dDoc.data().notificaciones || [];
+                        notifs.push({ 
+                            id: Date.now(), 
+                            msg: usuarioLogueado.nombre + ' te ha transferido ' + monto + ' VOD', 
+                            leida: false, 
+                            fecha: Date.now(), 
+                            icono: '💸' 
+                        });
+
                         t.update(origenRef, { saldo: oDoc.data().saldo - monto });
-                        t.update(destinoRef, { saldo: dDoc.data().saldo + monto });
+                        t.update(destinoRef, { saldo: dDoc.data().saldo + monto, notificaciones: notifs });
                     });
                     
                     await addDoc(collection(db, "compras_" + cursoID), {
@@ -1666,7 +1801,7 @@
             
             let pinGenerado = Math.random().toString(36).substring(2,10).toUpperCase();
             await setDoc(doc(db, cursoID, nuevoID.toString()), {
-                id: nuevoID, nombre: nombre, saldo: 1, pin: encodePIN(pinGenerado)
+                id: nuevoID, nombre: nombre, saldo: 1, pin: encodePIN(pinGenerado), notificaciones: []
             });
             alert("✅ Alumno creado con 1 VodCoin inicial.");
             document.getElementById('nuevo-nombre').value = '';
@@ -1707,6 +1842,7 @@
                     } else if (!est.pin.startsWith("ENC-")) {
                         est.pin = encodePIN(est.pin);
                     }
+                    est.notificaciones = [];
                     const ref = doc(db, cursoID, est.id.toString());
                     tareasDeSubida.push(setDoc(ref, est)); 
                 }
@@ -1742,7 +1878,8 @@
                     tareasDeSubida.push(updateDoc(ref, {
                         saldo: 1,
                         inv10: { activa: false },
-                        inv30: { activa: false }
+                        inv30: { activa: false },
+                        notificaciones: []
                     }));
                 }
             }
