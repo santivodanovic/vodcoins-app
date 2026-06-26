@@ -145,7 +145,7 @@
         <div class="caja-central" style="max-height: 80vh; display: flex; flex-direction: column;">
             <button onclick="document.getElementById('modal-claves').style.display='none'" style="background:none; border:none; color:#4a90e2; font-weight:bold; font-size:14px; cursor:pointer; margin-bottom: 10px; text-align: left;">← Volver</button>
             <h3 style="margin: 0 0 10px 0; color: #333;">🔑 Claves del Curso</h3>
-            <div id="contenido-claves" style="overflow-y: auto; flex-grow: 1; background: #f9f9f9; border-radius: 10px; padding: 15px; border: 1px solid #eee; text-align: left; font-size: 13px; font-family: monospace; line-height: 1.6;">
+            <div id="contenido-claves" style="overflow-y: auto; flex-grow: 1; background: #f9f9f9; border-radius: 10px; padding: 15px; border: 1px solid #eee; text-align: left; font-size: 13px; font-family: monospace; line-height: 1.6; color: #333;">
                 Cargando...
             </div>
         </div>
@@ -1915,12 +1915,13 @@
             } catch (error) { alert("❌ Hubo un problema de conexión: " + error); }
         };
 
-        // --- SOLUCIÓN APLICADA AQUÍ: NUEVA FUNCIÓN PARA MOSTRAR CLAVES EN MODAL ---
+        // --- SOLUCIÓN APLICADA AQUÍ: CLAVES CORREGIDAS PARA SER VISIBLES ---
         window.mostrarClaves = () => {
             let html = "";
             estudiantes.forEach(e => {
                 if (e.id !== 'profe') {
-                    html += `<div style="border-bottom:1px solid #ddd; padding:5px 0;"><b>${e.nombre}</b><br><span style="color:#8e44ad; font-weight:bold; font-size:15px;">${decodePIN(e.pin)}</span></div>`;
+                    // Forzamos el nombre a un color oscuro (#333) para que no herede el blanco del fondo superior
+                    html += `<div style="border-bottom:1px solid #ddd; padding:8px 0;"><div style="color: #333; font-weight: 600;">${e.nombre}</div><div style="color:#8e44ad; font-weight:bold; font-size:15px; margin-top:2px;">${decodePIN(e.pin)}</div></div>`;
                 }
             });
             document.getElementById('contenido-claves').innerHTML = html;
